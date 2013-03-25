@@ -1,0 +1,5 @@
+display: Waiter Bot
+description: The turtlebot navigate around the cafe to serve beverages. Fake version
+platform: linux.ros.pc
+launch: waiterbot/waiter_soft.launch
+interface: waiterbot/waiter.interface
