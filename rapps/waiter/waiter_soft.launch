@@ -1,3 +1,13 @@
 <launch>
   <include file="$(find kobuki_softnode)/launch/full.launch"/>
+  <node pkg="fake_localization" name="fake_localization" type="fake_localization">
+    <remap from="base_pose_ground_truth" to="odom"/>
+    <remap from="particlecloud" to="robot_pose"/>
+  </node>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="combined_robot_state_publisher" output="screen">
+    <param name="publish_frequency" type="double" value="30.0" />
+    <param name="~tf_prefix" value="kobuki"/>
+    <remap from="/tf" to="/tf_combined"/>
+  </node>
 </launch>

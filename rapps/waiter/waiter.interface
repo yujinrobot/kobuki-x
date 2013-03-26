@@ -1,5 +1,9 @@
 subscribers: 
   - mobile_base/commands/velocity
   - mobile_base/commands/motor_power
-publishers: [] 
+  - map
+  - map_metadata
+publishers: 
+  - robot_pose
+  - tf_combined
 services: []
