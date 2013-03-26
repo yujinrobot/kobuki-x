@@ -1,3 +1,5 @@
-subscribers: []
-publishers: []
+subscribers: 
+  - mobile_base/commands/velocity
+  - mobile_base/commands/motor_power
+publishers: [] 
 services: []
