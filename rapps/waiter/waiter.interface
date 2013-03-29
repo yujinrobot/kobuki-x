@@ -5,5 +5,4 @@ subscribers:
   - map_metadata
 publishers: 
   - robot_pose
-  - tf_combined
 services: []
