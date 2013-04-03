@@ -1,8 +1,11 @@
 subscribers: 
-  - mobile_base/commands/velocity
-  - mobile_base/commands/motor_power
   - map
   - map_metadata
+  - move_base_simple/goal
+  - initialpose
 publishers: 
   - robot_pose
 services: []
+action_clients: []
+action_servers:
+  - move_base

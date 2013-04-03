@@ -1,5 +1,6 @@
 <launch>
   <include file="$(find kobuki_softnode)/launch/nav.launch"/>
+
   <node pkg="robot_pose_publisher" name="robot_pose_publisher" type="robot_pose_publisher">
     <rosparam>
       is_stamped: true
