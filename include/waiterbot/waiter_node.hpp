@@ -18,6 +18,7 @@
 #include <cafe_msgs/DeliverOrderAction.h>
 
 #include "waiterbot/ar_markers.hpp"
+#include "waiterbot/nav_watchdog.hpp"
 
 namespace waiterbot
 {
@@ -50,13 +51,13 @@ protected:
   ** Subscribers
   **********************/
   ros::Subscriber sensors_sub_;
-  ros::Subscriber ar_pose_sub_;
   ros::Subscriber odometry_sub_;
 
+  ARMarkers   ar_markers_;
+  NavWatchdog nav_watchd_;
 
-  ARMarkers ar_markers_;
+  ar_track_alvar::AlvarMarker base_marker_;
   uint16_t  dock_marker_;   /**< AR marker identifying this robot's docking station */
-  ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
   kobuki_msgs::SensorState core_sensors_;
   nav_msgs::Odometry   odometry_;
   cafe_msgs::Order  order_;
@@ -67,10 +68,10 @@ protected:
 public:
 
   WaiterNode(std::string name) :
-    as_(nh_, name, boost::bind(&WaiterNode::deliveryCB, this, _1), false),
+    as_(nh_, "deliver_order", false),
     node_name_(name),
-    SPOT_BASE_MARKER_TIMEOUT(5.0),
-    SPOT_POSE_MARKER_TIMEOUT(8.0)
+    SPOT_BASE_MARKER_TIMEOUT(10.0),
+    SPOT_POSE_MARKER_TIMEOUT(15.0)
   {
   }
 
@@ -80,9 +81,11 @@ public:
 
   bool init();
 
-  void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
   void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
-  void deliveryCB(const cafe_msgs::DeliverOrderGoal::ConstPtr &goal);
+  void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
+
+  void deliverOrderCB();
+  void preemptOrderCB();
 };
 
 } /* namespace waiterbot */

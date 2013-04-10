@@ -5,8 +5,6 @@
  *      Author: jorge
  */
 
-#include <tf/tf.h>
-
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
 #include <kobuki_msgs/Led.h>
@@ -19,10 +17,9 @@ namespace waiterbot
 
 bool WaiterNode::init()
 {
-  global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
-
-
-
+  // register the goal and feeback callbacks
+  as_.registerGoalCallback(boost::bind(&WaiterNode::deliverOrderCB, this));
+  as_.registerPreemptCallback(boost::bind(&WaiterNode::preemptOrderCB, this));
   as_.start();
 
 //  deliver_as_  = nh_., name, boost::bind(&WaiterNode::deliverOrderCB, this, _1), false),
@@ -34,14 +31,21 @@ bool WaiterNode::init()
 
   sensors_sub_  = nh_.subscribe("core_sensors",   5, &WaiterNode::coreSensorsCB, this);
   odometry_sub_ = nh_.subscribe("odometry",       5, &WaiterNode::odometryCB,    this);
-  ar_pose_sub_  = nh_.subscribe("ar_pose_marker", 5, &ARMarkers::arPoseMarkerCB, &ar_markers_);
+
+  nav_watchd_.init();
+  ar_markers_.init();
+
+  ar_markers_.setRobotPoseCB(boost::bind(&NavWatchdog::arMarkerMsgCB, &nav_watchd_, _1));
 
   return true;
 }
 
-void WaiterNode::deliveryCB(const cafe_msgs::DeliverOrderGoal::ConstPtr& goal)
+void WaiterNode::deliverOrderCB()
 {
-  order_ = goal->order;
+  //  if (status_ == busy o jodido )   reject
+
+  // accept the new goal
+  order_ = as_.acceptNewGoal()->order;
   ROS_INFO("Deliver order action requested [order: %d, table: %d]", order_.order_id, order_.table_id);
 
 //  if (status_ == robot IDLE)
@@ -49,6 +53,7 @@ void WaiterNode::deliveryCB(const cafe_msgs::DeliverOrderGoal::ConstPtr& goal)
     boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
 //  }
   //order_status_ = cafe_msgs::Status::IDLE;//TODO ojo; mato la thread????
+
 
   // publish the feedback
   feedback_.status = cafe_msgs::Status::IDLE;//order_status_;
@@ -61,6 +66,12 @@ void WaiterNode::deliveryCB(const cafe_msgs::DeliverOrderGoal::ConstPtr& goal)
 //    // set the action state to succeeded
 //    as_.setSucceeded(result_);
 //  }
+}
+void WaiterNode::preemptOrderCB()
+{
+  ROS_WARN("Current order preempted [order: %d, table: %d]", order_.order_id, order_.table_id);
+  // set the action state to preempted
+  //  TODO WE REALLY WANT???  as_.setPreempted();
 }
 
 void WaiterNode::coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg)
@@ -80,14 +91,14 @@ void WaiterNode::wakeUp()
   // move back until we detect the AR marker identifying this robot's docking station
   geometry_msgs::Twist vel;
   vel.linear.x = - 0.1;
-  cmd_vel_pub_.publish(vel);
 
   bool timeout = false;
   ros::Time t0 = ros::Time::now();
   ar_track_alvar::AlvarMarkers spotted_markers;
-  while ((ar_markers_.spotted(0.1, ar_track_alvar::AlvarMarkers(), global_markers_, spotted_markers) == false) &&
+  while ((ar_markers_.spotted(0.1, 10, true, spotted_markers) == false) &&
          (timeout == false))
   {
+    cmd_vel_pub_.publish(vel);
     ros::Duration(0.1).sleep();
     if ((ros::Time::now() - t0).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
     {
@@ -95,8 +106,7 @@ void WaiterNode::wakeUp()
     }
   }
 
-  // stop after moving a bit more
-  ros::Duration(1.0).sleep();
+  // stop
   vel.linear.x = 0.0;
   cmd_vel_pub_.publish(vel);
 
@@ -110,12 +120,92 @@ void WaiterNode::wakeUp()
   }
 
   ar_track_alvar::AlvarMarker closest_marker;
-  ar_markers_.closest(spotted_markers, global_markers_, closest_marker);
+  ar_markers_.closest(0.1, 10, true, closest_marker);
   ROS_DEBUG("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
 
+  uint32_t base_marker_id = closest_marker.id;
+  //base_marker_.header.frame_id = "map";
+
+  // Now look for a global marker to initialize our localization
+  vel.angular.z = 0.5;
+  cmd_vel_pub_.publish(vel);
+  ros::Duration(0.1).sleep();
+  while (tf::getYaw(odometry_.pose.pose.orientation) > 0.0)
+  {
+    cmd_vel_pub_.publish(vel);
+    ros::Duration(0.1).sleep();
+  }
+  while (tf::getYaw(odometry_.pose.pose.orientation) < 0.0)
+  {
+    cmd_vel_pub_.publish(vel);
+    ros::Duration(0.1).sleep();
+  }
+
+  // After a full spin, we should be localized and in front of our docking base marker
+  if (nav_watchd_.localized() == false)
+  {
+    // Something went wrong... we should have a fall-back mechanism, but this is TODO
+    ROS_WARN("Still not localized! Probably we cannot see a globally localized marker");
+    return;
+  }
+
+  // Look (again) for our docking station marker; should be just in front of us!
+  if (ar_markers_.spotDockMarker(base_marker_id) == false)
+  {
+    // Nope! again something went wrong... and again the fall-back mechanism is TODO
+    ROS_WARN("Unable to detect docking station AR marker; aborting wake up!");
+    return;
+  }
+
+  ROS_DEBUG("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
+
+  // Now... we are ready to go!   -> go to kitchen
+
+  /*
+  vel.angular.z = 0.0;
+  cmd_vel_pub_.publish(vel);
+
+  timeout = false;
+  t0 = ros::Time::now();
+  while ((ar_markers_.spotted(0.1, global_markers_, ar_track_alvar::AlvarMarkers(), spotted_markers) == false) &&
+         (timeout == false))
+  {
+    ros::Duration(0.1).sleep();
+    if ((ros::Time::now() - t0).toSec() >= SPOT_POSE_MARKER_TIMEOUT)
+    {
+      timeout = true;
+    }
+  }
+
+  // stop after moving a bit more (TODO move until we have the marker in front)
+  ros::Duration(1.0).sleep();
+  vel.angular.z = 0.0;
+  cmd_vel_pub_.publish(vel);
+
+  if (timeout == true)
+  {
+    ROS_WARN("Unable to detect globally localized AR marker; aborting wake up!");
+    return;
+
+    // TODO do nothing more by now, but we will want to make an error sound, red leds, etc.
+  }
+
+  ar_markers_.closest(spotted_markers, ar_track_alvar::AlvarMarkers(), closest_marker);
+  ROS_DEBUG("Global localization AR marker %d spotted! Initialize amcl...", closest_marker.id);
 
 
+  // Check the localization watchdog; we should be localized now
 
+  // Complete a loop looking again for OUR docking base marker; it should be more or less in front
+  vel.angular.z = 0.5;
+  cmd_vel_pub_.publish(vel);
+//  ros::Duration(5.0).sleep();
+  while (tf::getYaw(odometry_.pose.pose.orientation) > 0.0)  ros::Duration(0.1).sleep();
+  while (tf::getYaw(odometry_.pose.pose.orientation) < 0.0)  ros::Duration(0.1).sleep();
+
+  vel.angular.z = 0.0;
+  cmd_vel_pub_.publish(vel);
+*/
 }
 
 
