@@ -42,6 +42,14 @@ public:
   bool closest(const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding,
                ar_track_alvar::AlvarMarker& closest_marker);
 
+  /**
+   * Return spotted markers satisfying the constraints specified by the parameters
+   * @param younger_than    Elapsed time between now and markers timestamp must be below this limit.
+   * @param min_confidence
+   * @param exclude_globals
+   * @param spotted_markers
+   * @return
+   */
   bool spotted(double younger_than, int min_confidence, bool exclude_globals,
                ar_track_alvar::AlvarMarkers& spotted_markers);
   bool closest(double younger_than, int min_confidence, bool exclude_globals,
@@ -68,6 +76,9 @@ private:
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
   void tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose);
+  void tf2pose(const tf::StampedTransform& tf, geometry_msgs::PoseStamped& pose);
+  void pose2tf(const geometry_msgs::Pose& pose, tf::Transform& tf);
+  void pose2tf(const geometry_msgs::PoseStamped& pose, tf::StampedTransform& tf);
 
   bool included(const uint32_t id, const ar_track_alvar::AlvarMarkers& v,
                 ar_track_alvar::AlvarMarker* e = NULL)

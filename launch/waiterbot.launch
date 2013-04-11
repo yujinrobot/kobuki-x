@@ -1,0 +1,70 @@
+<!--
+  Waiterbot global navigation:
+  - turtlebot
+  - 3d sensor
+  - map_server
+  - move_base
+  - static map
+  - amcl
+  - ar_track
+  - rviz view
+ -->
+
+<launch>
+  <!-- Name of the map to use (without path nor extension) and initial position -->
+  <arg name="map_name"       default="robopark_plan"/>
+  <arg name="initial_pose_x" value="2.0"/>
+  <arg name="initial_pose_y" value="2.0"/>
+  <arg name="initial_pose_a" value="0.0"/>
+
+  <!--  *********** Turtlebot and 3d sensor ***********  -->
+  <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
+
+  <!--  ********** Alvar AR markers tracker ***********  -->
+  <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
+
+  <!--  ************* Navigation manager **************  -->  
+  <node name="waiterbot" pkg="waiterbot" type="waiterbot_node">
+    <param name="check_localized" value="true"/>
+    <param name="amcl_max_error" value="1.0"/>
+    <param name="global_frame" value="map"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="base_frame" value="base_footprint"/>
+
+    <!-- Incoming remaps -->
+    <remap from="new_goal"    to="move_base_simple/goal"/>
+    <remap from="amcl_init"   to="initialpose"/>
+    <remap from="amcl_pose"   to="amcl_pose"/>
+    <remap from="odometry"    to="odom"/>
+
+    <!-- Outgoing remaps -->
+    <remap from="cancel_goal" to="move_base/cancel"/>
+    <remap from="reset_pose"  to="initialpose"/>
+  </node>
+
+  <!--  ************** Rosnav move base ***************  -->
+  <include file="$(find waiterbot)/launch/includes/_move_base.launch">
+  </include>
+
+  <!--  ***************** Map Server ******************  -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/stage/maps/$(arg map_name).yaml">
+    <param name="frame_id" value="/map"/>
+  </node>
+
+  <!--  ******************** Amcl *********************  -->
+    <include file="$(find turtlebot_navigation)/launch/includes/_amcl.launch">
+<!--       <arg name="tf_broadcast" value="false"/>
+-->
+      <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+      <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+      <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+<!--
+    <arg name="initial_cov_xx" value="0.01"/>
+    <arg name="initial_cov_yy" value="0.01"/>
+    <arg name="initial_cov_aa" value="0.01"/>
+-->    </include>
+
+  <!--  ***************** Visualisation *****************  -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />
+</launch>

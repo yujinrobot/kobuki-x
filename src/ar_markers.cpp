@@ -15,9 +15,8 @@ ARMarkers::ARMarkers()
   global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
   global_markers_.markers[0].pose.pose.position.x = 3.0;
   global_markers_.markers[0].pose.pose.position.y = 4.0;
-  global_markers_.markers[0].pose.pose.position.x = 0.3;
-
-
+  global_markers_.markers[0].pose.pose.position.z = 0.3;
+  global_markers_.markers[0].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, -M_PI/2.0, 0.0);
 }
 
 ARMarkers::~ARMarkers()
@@ -59,33 +58,41 @@ void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
     times_spotted_[msg->markers[i].id] += 2;
 
     ar_track_alvar::AlvarMarker global_marker;
-    if (included(msg->markers[i].id, global_markers_, &global_marker) == true)
+    if ((included(msg->markers[i].id, global_markers_, &global_marker) == true) &&
+        (times_spotted_[msg->markers[i].id] > 6))  // publish only with 5 or more spots
     {
       boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
 
-      std::string marker_frame("ar_marker_");
-      marker_frame += msg->markers[i].id;
+      char marker_frame[32];
+      sprintf(marker_frame, "ar_marker_%d", msg->markers[i].id);
 
-      tf::StampedTransform marker_gb; // marker on global reference system
-      tf_listener_.waitForTransform(global_frame_, marker_frame, ros::Time(0), ros::Duration(0.05));
-      tf_listener_.lookupTransform(global_frame_, marker_frame, ros::Time(0), marker_gb);
+      try
+      {
+        tf::StampedTransform marker_gb; // marker on global reference system
+        pose2tf(global_marker.pose, marker_gb);
 
-      tf::StampedTransform robot_mk;  // robot on marker reference system
-      tf_listener_.waitForTransform(marker_frame, base_frame_, ros::Time(0), ros::Duration(0.05));
-      tf_listener_.lookupTransform(marker_frame, base_frame_, ros::Time(0), robot_mk);
+        tf::StampedTransform robot_mk;  // robot on marker reference system
+        tf_listener_.waitForTransform(marker_frame, base_frame_, ros::Time(0), ros::Duration(0.05));
+        tf_listener_.lookupTransform(marker_frame, base_frame_, ros::Time(0), robot_mk);
 
-      tf::Transform robot_gb = marker_gb*robot_mk;
+        tf::Transform robot_gb = marker_gb*robot_mk;
+        tf2pose(robot_gb, pwcs->pose.pose);
+      }
+      catch (tf::TransformException& e)
+      {
+        ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), marker_frame, e.what());
+        continue;
+      }
 
-      tf2pose(robot_gb, pwcs->pose.pose);
       pwcs->header.stamp = msg->header.stamp;
       pwcs->header.frame_id = global_frame_;
 
       robot_pose_cb_(pwcs);
     }
-
-    ROS_ERROR("MK  %d  %d", spotted_markers_.markers[i].id, times_spotted_[spotted_markers_.markers[i].id]);
   }
   spotted_markers_ = *msg;
+
+//if (spotted_markers_.markers.size()> 0)   ROS_ERROR("MK  %d  %d   %f", spotted_markers_.markers[0].id, times_spotted_[spotted_markers_.markers[0].id], spotted_markers_.header.stamp.toSec());
 
   for (unsigned int i = 0; i < times_spotted_.size(); i++)
   {
@@ -99,7 +106,10 @@ bool ARMarkers::spotted(double younger_than,
                         const ar_track_alvar::AlvarMarkers& excluding,
                               ar_track_alvar::AlvarMarkers& spotted)
 {
-  if ((ros::Time::now() - spotted_markers_.header.stamp).toSec() >= younger_than)
+  if (spotted_markers_.markers.size() == 0)
+    return false;
+
+  if ((ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec() >= younger_than)
   {
     return false;
   }
@@ -143,9 +153,15 @@ bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
 bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_globals,
                         ar_track_alvar::AlvarMarkers& spotted)
 {
-  if ((ros::Time::now() - spotted_markers_.header.stamp).toSec() >= younger_than)
+  if (spotted_markers_.markers.size() == 0)
+    return false;
+
+  if ((ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec() >= younger_than)
   {
-    ROS_ERROR("OOOOOOOOOOOOOOOOOOLD");
+    // We must check the timestamp from an element in the markers list, as the one on message's header is always zero!
+    // WARNING: parameter younger_than must well above 0.1, as ar_track_alvar publish at Kinect rate but only updates
+    // timestamps every 0.1 seconds
+    ROS_WARN("Spotted markers too old:   %f  >=  %f",   (ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec(), younger_than);
     return false;
   }
 
@@ -192,7 +208,7 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
   {
     if (spotted_markers_.markers[i].id == base_marker_id)
     {
-      if (spotted_markers_.markers[i].confidence < 2)
+      if (times_spotted_[spotted_markers_.markers[i].id] < 2)
       {
         ROS_WARN("Low confidence on spotted docking marker. Dangerous...", spotted_markers_.markers[i].confidence);
         // TODO   this can be catastrophic if we are very unlucky
@@ -203,8 +219,8 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
       docking_marker_.header.frame_id = global_frame_;
       docking_marker_.pose.header.frame_id = global_frame_;
 
-      std::string marker_frame("ar_marker_");
-      marker_frame += base_marker_id;
+      char marker_frame[32];
+      sprintf(marker_frame, "ar_marker_%d", base_marker_id);
 
       try
       {
@@ -212,29 +228,23 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
         tf_listener_.waitForTransform(global_frame_, marker_frame, ros::Time(0), ros::Duration(0.05));
         tf_listener_.lookupTransform(global_frame_, marker_frame, ros::Time(0), marker_gb);
 
-//        tf::transformStampedTFToMsg(marker_gb.,
-//        docking_marker_.pose.pose.position
-
-//        tf::Transform grasp_tf(gripperRotation, gripperOrigin);
-         tf::Stamped<tf::Pose> marker_tf_pose(marker_gb, ros::Time::now(), global_frame_);
-    //     geometry_msgs::PoseStamped msg;
-         tf::poseStampedTFToMsg(marker_tf_pose, docking_marker_.pose);
+        tf2pose(marker_gb, docking_marker_.pose.pose);
 
         global_markers_.markers.push_back(docking_marker_);
-        ROS_DEBUG("Docking AR marker registered with global pose: %.2f, %.2f              , %s",
+        ROS_DEBUG("Docking AR marker registered with global pose: %.2f, %.2f, %.2f",
                   docking_marker_.pose.pose.position.x, docking_marker_.pose.pose.position.y,
-                  docking_marker_.pose.header.frame_id.c_str());
+                  tf::getYaw(docking_marker_.pose.pose.orientation));
         return true;
       }
       catch (tf::TransformException& e)
       {
-        ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), marker_frame.c_str(), e.what());
+        ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), marker_frame, e.what());
         return false;
       }
     }
   }
 
-  ROS_WARN("Cannot spot docking marker");
+  // Cannot spot docking marker
   return false;
 }
 
@@ -244,6 +254,37 @@ void ARMarkers::tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose)
   pose.position.y = tf.getOrigin().y();
   pose.position.z = tf.getOrigin().z();
   tf::quaternionTFToMsg(tf.getRotation(), pose.orientation);
+}
+
+void ARMarkers::tf2pose(const tf::StampedTransform& tf, geometry_msgs::PoseStamped& pose)
+{
+  pose.header.stamp    = tf.stamp_;
+  pose.header.frame_id = tf.frame_id_;
+//  pose.pose.position.x = tf.getOrigin().x();
+//  pose.pose.position.y = tf.getOrigin().y();
+//  pose.pose.position.z = tf.getOrigin().z();
+//  tf::quaternionTFToMsg(tf.getRotation(), pose.pose.orientation);
+  tf2pose(tf, pose.pose);
+}
+
+void ARMarkers::pose2tf(const geometry_msgs::Pose& pose, tf::Transform& tf)
+{
+  tf.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
+  tf::Quaternion q;
+  tf::quaternionMsgToTF(pose.orientation, q);
+  tf.setRotation(q);
+}
+
+void ARMarkers::pose2tf(const geometry_msgs::PoseStamped& pose, tf::StampedTransform& tf)
+{
+
+  tf.stamp_    = pose.header.stamp;
+  tf.frame_id_ = pose.header.frame_id;
+//  pose.pose.position.x = tf.getOrigin().x();
+//  pose.pose.position.y = tf.getOrigin().y();
+//  pose.pose.position.z = tf.getOrigin().z();
+//  tf::quaternionTFToMsg(tf.getRotation(), pose.pose.orientation);
+  pose2tf(pose.pose, tf);
 }
 
 

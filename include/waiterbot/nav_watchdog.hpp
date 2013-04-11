@@ -36,19 +36,18 @@ public:
   ~NavWatchdog();
 
   bool init();
-  bool localized() { return localized_; };
+  bool localized() { return localized_ != 0; };
 
   void arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 
 private:
   bool   check_localized_;
-  double amcl_max_error_;
+  double  amcl_max_error_;
   uint16_t     localized_;
 
   geometry_msgs::PoseStamped last_amcl_pose_;
   geometry_msgs::PoseStamped last_amcl_init_;
 
-  ros::Subscriber marker_sub_;  /**< Robot's world pose estimated by known AR markers  */
   ros::Subscriber amcl_p_sub_;  /**< Robot's world pose estimated by amcl, with covariance */
   ros::Subscriber init_p_sub_;  /**< Mean and cov. to (re)initialize amcl particle filter  */
   ros::Subscriber feedbk_sub_;  /**< Feedback on current position of the base in the world */

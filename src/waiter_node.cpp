@@ -88,15 +88,14 @@ void WaiterNode::wakeUp()
 {
   ROS_DEBUG("Waking up! first try to recognize our own nest; slowly moving back...");
 
-  // move back until we detect the AR marker identifying this robot's docking station
+  // Move back until we detect the AR marker identifying this robot's docking station
   geometry_msgs::Twist vel;
   vel.linear.x = - 0.1;
 
   bool timeout = false;
   ros::Time t0 = ros::Time::now();
   ar_track_alvar::AlvarMarkers spotted_markers;
-  while ((ar_markers_.spotted(0.1, 10, true, spotted_markers) == false) &&
-         (timeout == false))
+  while ((ar_markers_.spotted(0.5, 10, true, spotted_markers) == false) && (timeout == false))
   {
     cmd_vel_pub_.publish(vel);
     ros::Duration(0.1).sleep();
@@ -120,25 +119,30 @@ void WaiterNode::wakeUp()
   }
 
   ar_track_alvar::AlvarMarker closest_marker;
-  ar_markers_.closest(0.1, 10, true, closest_marker);
+  ar_markers_.closest(0.5, 10, true, closest_marker);
   ROS_DEBUG("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
 
   uint32_t base_marker_id = closest_marker.id;
   //base_marker_.header.frame_id = "map";
 
-  // Now look for a global marker to initialize our localization
-  vel.angular.z = 0.5;
+  // Now look for a global marker to initialize our localization; full spin clockwise
+  vel.angular.z = -0.5;
   cmd_vel_pub_.publish(vel);
-  ros::Duration(0.1).sleep();
-  while (tf::getYaw(odometry_.pose.pose.orientation) > 0.0)
+  ros::Duration(0.2).sleep();
+
+  while (tf::getYaw(odometry_.pose.pose.orientation) <= 0.0)
   {
+//if(nav_watchd_.localized()){cmd_vel_pub_.publish(geometry_msgs::Twist());return;}
     cmd_vel_pub_.publish(vel);
     ros::Duration(0.1).sleep();
+  //  ROS_ERROR("%f   %d", tf::getYaw(odometry_.pose.pose.orientation), nav_watchd_.localized());
   }
-  while (tf::getYaw(odometry_.pose.pose.orientation) < 0.0)
+
+  while (tf::getYaw(odometry_.pose.pose.orientation) >  0.0)
   {
     cmd_vel_pub_.publish(vel);
     ros::Duration(0.1).sleep();
+//    ROS_ERROR("%f", tf::getYaw(odometry_.pose.pose.orientation));
   }
 
   // After a full spin, we should be localized and in front of our docking base marker
@@ -149,17 +153,40 @@ void WaiterNode::wakeUp()
     return;
   }
 
+  ROS_DEBUG("We are now localized; look again for our docking station marker...");
+
   // Look (again) for our docking station marker; should be just in front of us!
-  if (ar_markers_.spotDockMarker(base_marker_id) == false)
+  timeout = false;
+  t0 = ros::Time::now();
+  while ((ar_markers_.spotDockMarker(base_marker_id) == false) && (timeout == false))
+  {
+    cmd_vel_pub_.publish(vel);
+    ros::Duration(0.1).sleep();
+    if ((ros::Time::now() - t0).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
+    {
+      timeout = true;
+    }
+  }
+
+  // stop
+  vel.angular.z = 0.0;
+  cmd_vel_pub_.publish(vel);
+
+
+  if (timeout == true)
   {
     // Nope! again something went wrong... and again the fall-back mechanism is TODO
     ROS_WARN("Unable to detect docking station AR marker; aborting wake up!");
     return;
+
+    // TODO do nothing more by now, but we will want to make an error sound, red leds, etc.
   }
 
   ROS_DEBUG("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
 
   // Now... we are ready to go!   -> go to kitchen
+
+  //chijon  ->  plot MARKERS global
 
   /*
   vel.angular.z = 0.0;
@@ -167,7 +194,7 @@ void WaiterNode::wakeUp()
 
   timeout = false;
   t0 = ros::Time::now();
-  while ((ar_markers_.spotted(0.1, global_markers_, ar_track_alvar::AlvarMarkers(), spotted_markers) == false) &&
+  while ((ar_markers_.spotted(0.5, global_markers_, ar_track_alvar::AlvarMarkers(), spotted_markers) == false) &&
          (timeout == false))
   {
     ros::Duration(0.1).sleep();
@@ -197,7 +224,7 @@ void WaiterNode::wakeUp()
   // Check the localization watchdog; we should be localized now
 
   // Complete a loop looking again for OUR docking base marker; it should be more or less in front
-  vel.angular.z = 0.5;
+  vel.angular.z = -0.5;
   cmd_vel_pub_.publish(vel);
 //  ros::Duration(5.0).sleep();
   while (tf::getYaw(odometry_.pose.pose.orientation) > 0.0)  ros::Duration(0.1).sleep();

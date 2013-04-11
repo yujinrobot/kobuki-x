@@ -26,9 +26,9 @@ NavWatchdog::~NavWatchdog() {
 
 void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
-  ROS_DEBUG("AR marker localization received: %.2f, %.2f, %.2f",
-             msg->pose.pose.position.x, msg->pose.pose.position.y,
-             tf::getYaw(msg->pose.pose.orientation));
+  ROS_DEBUG_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f",
+                     msg->pose.pose.position.x, msg->pose.pose.position.y,
+                     tf::getYaw(msg->pose.pose.orientation));
 
   tf::Pose amcl_pose, armk_pose;
   tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
@@ -147,15 +147,13 @@ bool NavWatchdog::init()
 
   pnh.param("amcl_max_error", amcl_max_error_, 2.0);
 
+  // Publishers and subscribers
+  amcl_p_sub_ = nh.subscribe("amcl_pose", 1, &NavWatchdog::amclPoseMsgCB, this);
+  init_p_sub_ = nh.subscribe("amcl_init", 1, &NavWatchdog::initPoseMsgCB, this);
+  n_goal_sub_ = nh.subscribe("new_goal",  1, &NavWatchdog::newGoalMsgCB,  this);
 
-  // Publishers and subscriptors
-////  marker_sub  = nh.subscribe("stargazer",   1, &NavWatchdog::arMarkerMsgCB, this);
-  amcl_p_sub_ = nh.subscribe("amcl_pose",   1, &NavWatchdog::amclPoseMsgCB, this);
-  init_p_sub_ = nh.subscribe("amcl_init",   1, &NavWatchdog::initPoseMsgCB, this);
-  n_goal_sub_ = nh.subscribe("new_goal",    1, &NavWatchdog::newGoalMsgCB,  this);
-
-  init_pose_pub_   = nh.advertise <geometry_msgs::PoseWithCovarianceStamped> ("initial_pose", 1);
-  cancel_goal_pub_ = nh.advertise <actionlib_msgs::GoalID>                   ("cancel_goal",  1);
+  init_pose_pub_   = nh.advertise <geometry_msgs::PoseWithCovarianceStamped> ("reset_pose",  1);
+  cancel_goal_pub_ = nh.advertise <actionlib_msgs::GoalID>                   ("cancel_goal", 1);
 
   ROS_INFO("Navigation watchdog successfully initialized");
 
