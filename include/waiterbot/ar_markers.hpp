@@ -75,11 +75,6 @@ private:
   ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
-  void tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose);
-  void tf2pose(const tf::StampedTransform& tf, geometry_msgs::PoseStamped& pose);
-  void pose2tf(const geometry_msgs::Pose& pose, tf::Transform& tf);
-  void pose2tf(const geometry_msgs::PoseStamped& pose, tf::StampedTransform& tf);
-
   bool included(const uint32_t id, const ar_track_alvar::AlvarMarkers& v,
                 ar_track_alvar::AlvarMarker* e = NULL)
   {

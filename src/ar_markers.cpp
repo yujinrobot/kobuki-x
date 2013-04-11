@@ -5,6 +5,7 @@
  *      Author: jorge
  */
 
+#include "waiterbot/common.hpp"
 #include "waiterbot/ar_markers.hpp"
 
 namespace waiterbot
@@ -247,45 +248,5 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
   // Cannot spot docking marker
   return false;
 }
-
-void ARMarkers::tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose)
-{
-  pose.position.x = tf.getOrigin().x();
-  pose.position.y = tf.getOrigin().y();
-  pose.position.z = tf.getOrigin().z();
-  tf::quaternionTFToMsg(tf.getRotation(), pose.orientation);
-}
-
-void ARMarkers::tf2pose(const tf::StampedTransform& tf, geometry_msgs::PoseStamped& pose)
-{
-  pose.header.stamp    = tf.stamp_;
-  pose.header.frame_id = tf.frame_id_;
-//  pose.pose.position.x = tf.getOrigin().x();
-//  pose.pose.position.y = tf.getOrigin().y();
-//  pose.pose.position.z = tf.getOrigin().z();
-//  tf::quaternionTFToMsg(tf.getRotation(), pose.pose.orientation);
-  tf2pose(tf, pose.pose);
-}
-
-void ARMarkers::pose2tf(const geometry_msgs::Pose& pose, tf::Transform& tf)
-{
-  tf.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
-  tf::Quaternion q;
-  tf::quaternionMsgToTF(pose.orientation, q);
-  tf.setRotation(q);
-}
-
-void ARMarkers::pose2tf(const geometry_msgs::PoseStamped& pose, tf::StampedTransform& tf)
-{
-
-  tf.stamp_    = pose.header.stamp;
-  tf.frame_id_ = pose.header.frame_id;
-//  pose.pose.position.x = tf.getOrigin().x();
-//  pose.pose.position.y = tf.getOrigin().y();
-//  pose.pose.position.z = tf.getOrigin().z();
-//  tf::quaternionTFToMsg(tf.getRotation(), pose.pose.orientation);
-  pose2tf(pose.pose, tf);
-}
-
 
 } /* namespace waiterbot */
