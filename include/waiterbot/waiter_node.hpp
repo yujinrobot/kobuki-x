@@ -19,6 +19,7 @@
 
 #include "waiterbot/ar_markers.hpp"
 #include "waiterbot/nav_watchdog.hpp"
+#include "waiterbot/navigator.hpp"
 
 namespace waiterbot
 {
@@ -55,6 +56,7 @@ protected:
 
   ARMarkers   ar_markers_;
   NavWatchdog nav_watchd_;
+  Navigator   navigator_;
 
   ar_track_alvar::AlvarMarker base_marker_;
   uint16_t  dock_marker_;   /**< AR marker identifying this robot's docking station */

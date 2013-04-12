@@ -32,10 +32,24 @@ bool WaiterNode::init()
   sensors_sub_  = nh_.subscribe("core_sensors",   5, &WaiterNode::coreSensorsCB, this);
   odometry_sub_ = nh_.subscribe("odometry",       5, &WaiterNode::odometryCB,    this);
 
-  nav_watchd_.init();
-  ar_markers_.init();
+  if (nav_watchd_.init() == false)
+  {
+    ROS_ERROR("Navigation watchdog initialization failed; shutting down %s node", node_name_.c_str());
+    return false;
+  }
+  if (ar_markers_.init() == false)
+  {
+    ROS_ERROR("AR markers initialization failed; shutting down %s node", node_name_.c_str());
+    return false;
+  }
+  if (navigator_.init() == false)
+  {
+    ROS_ERROR("Navigator initialization failed; shutting down %s node", node_name_.c_str());
+    return false;
+  }
 
   ar_markers_.setRobotPoseCB(boost::bind(&NavWatchdog::arMarkerMsgCB, &nav_watchd_, _1));
+  ar_markers_.baseSpottedCB(boost::bind(&Navigator::baseSpottedMsgCB, &navigator_, _1, _2));
 
   return true;
 }
@@ -183,6 +197,10 @@ void WaiterNode::wakeUp()
   }
 
   ROS_DEBUG("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
+
+
+  navigator_.dockInBase(ar_markers_.getDockingBasePose());
+
 
   // Now... we are ready to go!   -> go to kitchen
 

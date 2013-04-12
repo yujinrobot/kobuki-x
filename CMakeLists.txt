@@ -68,7 +68,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 # )
 
 ## Declare a cpp executable
-add_executable(waiterbot_node src/waiter_node.cpp src/ar_markers.cpp src/nav_watchdog.cpp src/navigator.cpp)
+add_executable(waiterbot_node src/waiter_node.cpp src/ar_markers.cpp src/nav_watchdog.cpp src/navigator.cpp src/common.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

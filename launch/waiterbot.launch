@@ -21,11 +21,16 @@
   <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
 
+  <!--  ******** Kobuki auto-docking controller *******  -->
+  <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
+
   <!--  ********** Alvar AR markers tracker ***********  -->
   <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
 
   <!--  ************* Navigation manager **************  -->  
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node">
+    <param name="base_beacon_distance" value="0.4"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
+    <param name="base_marker_distance" value="1.4"/>   <!-- At which distance from the base we start relaying on ar markers -->  
     <param name="check_localized" value="true"/>
     <param name="amcl_max_error" value="1.0"/>
     <param name="global_frame" value="map"/>
@@ -39,6 +44,7 @@
     <remap from="odometry"    to="odom"/>
 
     <!-- Outgoing remaps -->
+    <remap from="issue_goal"  to="move_base_simple/goal"/>
     <remap from="cancel_goal" to="move_base/cancel"/>
     <remap from="reset_pose"  to="initialpose"/>
   </node>

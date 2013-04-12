@@ -18,6 +18,9 @@ ARMarkers::ARMarkers()
   global_markers_.markers[0].pose.pose.position.y = 4.0;
   global_markers_.markers[0].pose.pose.position.z = 0.3;
   global_markers_.markers[0].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, -M_PI/2.0, 0.0);
+
+  // Invalid id until we localize it globally
+  docking_marker_.id = std::numeric_limits<uint32_t>::max();
 }
 
 ARMarkers::~ARMarkers()
@@ -58,10 +61,20 @@ void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
 
     times_spotted_[msg->markers[i].id] += 2;
 
+    if ((msg->markers[i].id == docking_marker_.id) &&
+        (times_spotted_[msg->markers[i].id] > 4))  // publish only with 3 or more spots
+    {
+      // This is the docking base marker! call the registered callbacks
+      boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
+      *ps = msg->markers[i].pose;
+      base_spotted_cb_(ps, msg->markers[i].id);
+    }
+
     ar_track_alvar::AlvarMarker global_marker;
     if ((included(msg->markers[i].id, global_markers_, &global_marker) == true) &&
         (times_spotted_[msg->markers[i].id] > 6))  // publish only with 5 or more spots
     {
+      // This is a global marker! infer the robot's global pose and call the registered callbacks
       boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
 
       char marker_frame[32];
@@ -70,14 +83,14 @@ void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
       try
       {
         tf::StampedTransform marker_gb; // marker on global reference system
-        pose2tf(global_marker.pose, marker_gb);
+        tk::pose2tf(global_marker.pose, marker_gb);
 
         tf::StampedTransform robot_mk;  // robot on marker reference system
         tf_listener_.waitForTransform(marker_frame, base_frame_, ros::Time(0), ros::Duration(0.05));
         tf_listener_.lookupTransform(marker_frame, base_frame_, ros::Time(0), robot_mk);
 
         tf::Transform robot_gb = marker_gb*robot_mk;
-        tf2pose(robot_gb, pwcs->pose.pose);
+        tk::tf2pose(robot_gb, pwcs->pose.pose);
       }
       catch (tf::TransformException& e)
       {
@@ -139,7 +152,7 @@ bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
     if ((included(spotted_markers_.markers[i].id, including) == true) &&
         (excluded(spotted_markers_.markers[i].id, excluding) == true))
     {
-      double d = distance(spotted_markers_.markers[i].pose.pose.position, geometry_msgs::Point());
+      double d = tk::distance(spotted_markers_.markers[i].pose.pose.position);
       if (d < closest_dist)
       {
         closest_dist = d;
@@ -192,7 +205,7 @@ bool ARMarkers::closest(double younger_than, int min_confidence, bool exclude_gl
   double closest_dist = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < spotted_markers.markers.size(); i++)
   {
-    double d = distance(spotted_markers.markers[i].pose.pose.position, geometry_msgs::Point());
+    double d = tk::distance(spotted_markers.markers[i].pose.pose.position);
     if (d < closest_dist)
     {
       closest_dist = d;
@@ -229,7 +242,7 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
         tf_listener_.waitForTransform(global_frame_, marker_frame, ros::Time(0), ros::Duration(0.05));
         tf_listener_.lookupTransform(global_frame_, marker_frame, ros::Time(0), marker_gb);
 
-        tf2pose(marker_gb, docking_marker_.pose.pose);
+        tk::tf2pose(marker_gb, docking_marker_.pose.pose);
 
         global_markers_.markers.push_back(docking_marker_);
         ROS_DEBUG("Docking AR marker registered with global pose: %.2f, %.2f, %.2f",

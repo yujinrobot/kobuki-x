@@ -57,9 +57,26 @@
 	  </node>
   
     <!--  ************* Navigation manager **************  -->  
-    <node name="waiterbot" pkg="waiterbot" type="waiterbot_node">
-      <remap from="odometry" to="odom"/>
-    </node>
+  <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" >
+    <param name="base_beacon_distance" value="0.4"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
+    <param name="base_marker_distance" value="1.4"/>   <!-- At which distance from the base we start relaying on ar markers -->  
+    <param name="check_localized" value="true"/>
+    <param name="amcl_max_error" value="1.0"/>
+    <param name="global_frame" value="map"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="base_frame" value="base_footprint"/>
+
+    <!-- Incoming remaps -->
+    <remap from="new_goal"    to="move_base_simple/goal"/>
+    <remap from="amcl_init"   to="initialpose"/>
+    <remap from="amcl_pose"   to="amcl_pose"/>
+    <remap from="odometry"    to="odom"/>
+
+    <!-- Outgoing remaps -->
+    <remap from="issue_goal"  to="move_base_simple/goal"/>
+    <remap from="cancel_goal" to="move_base/cancel"/>
+    <remap from="reset_pose"  to="initialpose"/>
+  </node>
 
     <!--  ************** Rosnav move base ***************  -->
     <include file="$(find waiterbot)/launch/includes/_move_base.launch">
@@ -86,6 +103,7 @@
     <!--  ********** Mixing with the real world **********  -->
     <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
     <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
+    <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>
 
   <!--  ***************** Visualisation *****************  -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />

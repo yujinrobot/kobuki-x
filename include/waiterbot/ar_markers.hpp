@@ -29,12 +29,17 @@ public:
 
   bool init();
 
-  void arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
-
   void setRobotPoseCB(boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)> cb)
   {
     robot_pose_cb_ = cb;
-  }
+  };
+
+  void baseSpottedCB(boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)> cb)
+  {
+    base_spotted_cb_ = cb;
+  };
+
+  const geometry_msgs::PoseStamped& getDockingBasePose() {return docking_marker_.pose; };
 
   bool spotted(double younger_than,
                const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding,
@@ -63,7 +68,10 @@ private:
 
   ros::Subscriber ar_pose_sub_;
 
-  boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)> robot_pose_cb_;
+  void arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
+
+  boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)>  robot_pose_cb_;
+  boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)>    base_spotted_cb_;
 
   std::vector<uint32_t> times_spotted_;
 
@@ -101,11 +109,6 @@ private:
     }
 
     return true;
-  }
-
-  double distance(geometry_msgs::Point a, geometry_msgs::Point b)
-  {
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
   }
 };
 
