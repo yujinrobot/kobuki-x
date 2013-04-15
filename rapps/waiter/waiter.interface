@@ -3,9 +3,11 @@ subscribers:
   - map_metadata
   - move_base_simple/goal
   - initialpose
+  - table_pose_list
+  - ar_marker_list
 publishers: 
   - robot_pose
 services: []
 action_clients: []
 action_servers:
-  - move_base
+  - delivery_order
