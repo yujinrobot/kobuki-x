@@ -1,0 +1,30 @@
+<!--
+ Frames for the half-ring of IR sensors
+-->
+<launch>
+  <arg name="base_link" default="base_link" />
+  <arg name="pi/2" value="1.5707963267948966" />
+
+  <node pkg="tf" type="static_transform_publisher" name="IR0_tf_publisher"
+        args="0.000 0.155 0.090 1.571 0 0 $(arg base_link) IR0_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR1_tf_publisher"
+        args="0.048 0.147 0.090 1.257 0 0 $(arg base_link) IR1_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR2_tf_publisher"
+        args="0.091 0.125 0.090 0.942 0 0 $(arg base_link) IR2_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR3_tf_publisher"
+        args="0.125 0.091 0.090 0.628 0 0 $(arg base_link) IR3_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR4_tf_publisher"
+        args="0.147 0.048 0.090 0.314 0 0 $(arg base_link) IR4_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR5_tf_publisher"
+        args="0.155 0.000 0.090 0.000 0 0 $(arg base_link) IR5_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR6_tf_publisher"
+        args="0.147 -0.048 0.090 -0.314 0 0 $(arg base_link) IR6_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR7_tf_publisher"
+        args="0.125 -0.091 0.090 -0.628 0 0 $(arg base_link) IR7_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR8_tf_publisher"
+        args="0.091 -0.125 0.090 -0.942 0 0 $(arg base_link) IR8_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR9_tf_publisher"
+        args="0.048 -0.147 0.090 -1.257 0 0 $(arg base_link) IR9_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="IR10_tf_publisher"
+        args="0.000 -0.155 0.090 -1.571 0 0 $(arg base_link) IR10_link 100"/>
+</launch>

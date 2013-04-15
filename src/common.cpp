@@ -14,6 +14,23 @@ namespace waiterbot
 namespace tk
 {
 
+// TODO ... parameterized string composer   char ___buf___[256];  sprintf(marker_frame, "ar_marker_%d", msg->markers[i].id);
+
+
+double pitch(geometry_msgs::Pose pose)
+{
+  tf::Quaternion q;
+  double roll, pitch, yaw;
+  tf::quaternionMsgToTF(pose.orientation, q);
+  tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+  return pitch;
+}
+
+double pitch(geometry_msgs::PoseStamped pose)
+{
+  return tk::pitch(pose.pose);
+}
+
 double distance(geometry_msgs::Point a, geometry_msgs::Point b)
 {
   return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
@@ -54,6 +71,22 @@ void pose2tf(const geometry_msgs::PoseStamped& pose, tf::StampedTransform& tf)
   tf.frame_id_ = pose.header.frame_id;
   pose2tf(pose.pose, tf);
 }
+
+void halfRingPoses(double radius, double height, int poses)
+{
+  double ang_inc = M_PI/double(poses - 1);
+  for (unsigned int i = 0; i < poses; ++i)
+  {
+    tf::Transform r(tf::createQuaternionFromYaw(M_PI/2.0 -i*ang_inc));
+    tf::Transform t(tf::createIdentityQuaternion(), tf::Vector3(radius, 0.0, height));
+    tf::Transform p(r*t);
+    std::cout << std::setprecision(3) << std::fixed
+              << "  <node pkg=\"tf\" type=\"static_transform_publisher\" name=\"IR" << i << "_tf_publisher\"" << std::endl
+              << "        args=\"" << p.getOrigin().x() << " " << p.getOrigin().y() << " " << p.getOrigin().z() << " "
+              << (M_PI/2.0 -i*ang_inc) << " " << 0 << " " << 0 << " $(arg base_link) IR" << i << "_link 100\"/>" << std::endl;
+  }
+}
+
 
 } /* namespace toolkit */
 } /* namespace waiterbot */

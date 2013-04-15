@@ -62,11 +62,20 @@ void WaiterNode::deliverOrderCB()
   order_ = as_.acceptNewGoal()->order;
   ROS_INFO("Deliver order action requested [order: %d, table: %d]", order_.order_id, order_.table_id);
 
+  if (order_.table_id == 0)
 //  if (status_ == robot IDLE)
 //  {
     boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
 //  }
   //order_status_ = cafe_msgs::Status::IDLE;//TODO ojo; mato la thread????
+
+  if (order_.table_id == 1)
+    boost::thread dockingThread(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose());
+
+  if (order_.table_id == 10)
+  {
+
+  }
 
 
   // publish the feedback
@@ -109,7 +118,7 @@ void WaiterNode::wakeUp()
   bool timeout = false;
   ros::Time t0 = ros::Time::now();
   ar_track_alvar::AlvarMarkers spotted_markers;
-  while ((ar_markers_.spotted(0.5, 10, true, spotted_markers) == false) && (timeout == false))
+  while ((ar_markers_.spotted(1.0, 10, true, spotted_markers) == false) && (timeout == false))
   {
     cmd_vel_pub_.publish(vel);
     ros::Duration(0.1).sleep();
@@ -133,7 +142,7 @@ void WaiterNode::wakeUp()
   }
 
   ar_track_alvar::AlvarMarker closest_marker;
-  ar_markers_.closest(0.5, 10, true, closest_marker);
+  ar_markers_.closest(1.0, 10, true, closest_marker);
   ROS_DEBUG("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
 
   uint32_t base_marker_id = closest_marker.id;
@@ -199,9 +208,6 @@ void WaiterNode::wakeUp()
   ROS_DEBUG("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
 
 
-  navigator_.dockInBase(ar_markers_.getDockingBasePose());
-
-
   // Now... we are ready to go!   -> go to kitchen
 
   //chijon  ->  plot MARKERS global
@@ -212,7 +218,7 @@ void WaiterNode::wakeUp()
 
   timeout = false;
   t0 = ros::Time::now();
-  while ((ar_markers_.spotted(0.5, global_markers_, ar_track_alvar::AlvarMarkers(), spotted_markers) == false) &&
+  while ((ar_markers_.spotted(1.0, global_markers_, ar_track_alvar::AlvarMarkers(), spotted_markers) == false) &&
          (timeout == false))
   {
     ros::Duration(0.1).sleep();
@@ -255,7 +261,6 @@ void WaiterNode::wakeUp()
 
 
 } /* namespace waiterbot */
-
 
 int main(int argc, char** argv)
 {

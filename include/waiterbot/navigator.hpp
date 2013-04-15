@@ -54,6 +54,7 @@ private:
   uint32_t                   base_marker_id_;
   geometry_msgs::PoseStamped base_rel_pose_;  /**< Docking base ar marker pose relative to the robot */
 
+  ros::Publisher goal_poses_pub_;
   ros::Publisher issue_goal_pub_;
   ros::Publisher cancel_goal_pub_;
 };

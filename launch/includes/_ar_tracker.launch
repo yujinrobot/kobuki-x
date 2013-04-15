@@ -5,8 +5,14 @@
   
   <arg name="cam_image_topic" default="camera/depth_registered/points" />
   <arg name="cam_info_topic" default="camera/rgb/camera_info" />  	
-  <arg name="output_frame" default="camera_depth_frame" />
+  <arg name="output_frame" default="base_footprint" />
+  
+  <arg name="max_frequency" default="0.0" />
+
+  <!-- Make a slower camera feed available 
+  <node pkg="topic_tools" type="throttle" name="camera_pointcloud_throttle" output="screen"
+        args="messages $(arg cam_image_topic) 5"/> USES A LOT OF CPU!!!!!  -->
   
   <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" output="screen"
-        args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
+        args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg max_frequency)"/>
 </launch>

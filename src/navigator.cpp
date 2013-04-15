@@ -16,7 +16,8 @@ namespace waiterbot
 
 Navigator::Navigator() : NAME_("Navigator"), state_(IDLE),
     move_base_ac_("move_base", true),                // tell the action clients that we
-    auto_dock_ac_("dock_drive_action", true)         // want to spin a thread by default  TODO sure???
+    auto_dock_ac_("dock_drive_action", true),        // want to spin a thread by default  TODO sure???
+    base_marker_id_(std::numeric_limits<uint32_t>::max())
 {
 }
 
@@ -36,17 +37,28 @@ bool Navigator::init()
   pnh.param("base_beacon_distance", base_beacon_distance_, 0.5);
   pnh.param("base_marker_distance", base_marker_distance_, 0.5);
 
-  issue_goal_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("issue_goal",  1);
+  goal_poses_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("goal_pose", 1, true);
+  issue_goal_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("issue_goal", 1);
   cancel_goal_pub_ = nh.advertise <actionlib_msgs::GoalID>     ("cancel_goal", 1);
 
-  // Wait for the action server to come up
-  if ((move_base_ac_.waitForServer(ros::Duration(5.0)) == false) ||
-      (auto_dock_ac_.waitForServer(ros::Duration(5.0)) == false))
+  ros::Time t0 = ros::Time::now();
+
+  // Wait for the required action servers to come up; the huge timeout is not a whim; move_base
+  // action server takes around 20 seconds to initialize in the official turtlebot laptop!
+  if (move_base_ac_.waitForServer(ros::Duration(40.0)) == false)
   {
-    ROS_ERROR("Timeout while waiting for an action server to come up. Navigator is unavailable");
+    ROS_ERROR("Timeout while waiting for move base action server to come up. Navigator is unavailable");
     return false;
   }
+ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
+  t0 = ros::Time::now();
 
+  if (auto_dock_ac_.waitForServer(ros::Duration(10.0)) == false)
+  {
+    ROS_ERROR("Timeout while waiting for auto dock action server to come up. Navigator is unavailable");
+    return false;
+  }
+ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
   return true;
 }
 
@@ -65,27 +77,26 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
     return false;
   }
 
-  // Project a pose in front of the docking base and heading to it
+  // Project a pose relative to map frame in front of the docking base and heading to it
   ROS_INFO("Global navigation to docking base...");
 
-  tf::StampedTransform marker_gb;   // docking base marker on global reference system
-  tk::pose2tf(base_abs_pose, marker_gb);
+  // Compensate the vertical alignment of markers and put at ground level to adopt navistack goals format
+  tf::Transform marker_gb(tf::createQuaternionFromYaw(tf::getYaw(base_abs_pose.pose.orientation) - M_PI/2.0),
+                          tf::Vector3(base_abs_pose.pose.position.x, base_abs_pose.pose.position.y, 0.0));
 
-  tf::Transform goal_gb(marker_gb); // global pose facing the base
-  tf::Transform r(tf::createQuaternionFromRPY(-M_PI/2.0, 0.0, M_PI/2.0));
-  tf::Transform t(tf::Quaternion::getIdentity(),
-                  tf::Vector3(-base_marker_distance_/1.5, 0.0, -marker_gb.getOrigin().z()));
+  // Half turn and translate to put goal at some distance in front of the marker
+  tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
+                         tf::Vector3(base_marker_distance_/1.5, 0.0, 0.0));
 
-  marker_gb *= r;  // rotate to adopt mobile base Euler angles, facing the marker
-  marker_gb *= t;  // translate to put on the ground at some distance of the marker
-
-  // Note that goal is relative to map frame
   move_base_msgs::MoveBaseGoal mb_goal;
-  tk::tf2pose(marker_gb, mb_goal.target_pose);
+  tk::tf2pose(marker_gb*in_front, mb_goal.target_pose.pose);
+  mb_goal.target_pose.header.stamp = ros::Time::now();
+  mb_goal.target_pose.header.frame_id = base_abs_pose.header.frame_id;
 
   ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
             mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
             tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
+  goal_poses_pub_.publish(mb_goal.target_pose);
   move_base_ac_.sendGoal(mb_goal);
   state_ = GLOBAL_DOCKING;
 
@@ -109,20 +120,22 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
       mb_goal.target_pose.header.stamp = ros::Time::now();
 
       mb_goal.target_pose.pose.position.x = 0.0;
-      mb_goal.target_pose.pose.position.y = 0.0;
+      mb_goal.target_pose.pose.position.y = 0.0; // - mb_goal.target_pose.pose.position.y;
       mb_goal.target_pose.pose.position.z = base_beacon_distance_;
       mb_goal.target_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, 0.0);
+      mb_goal.target_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2.0, M_PI/2.0, 0.0);
 
       ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
                 mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
                 tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
+      goal_poses_pub_.publish(mb_goal.target_pose);
       move_base_ac_.sendGoal(mb_goal);
 
       state_ = MARKER_DOCKING;
     }
     else
     {
-      ROS_DEBUG_THROTTLE_NAMED(2.0, NAME_, "%s", move_base_ac_.getState().getText().c_str());
+      ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
     }
   }
 
@@ -138,9 +151,13 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
   if (state_ == GLOBAL_DOCKING)
   {
-    ROS_WARN_NAMED(NAME_, "Unable to spot docking base marker within the required distance (last spot was %f s ago at %f m)",
-                   (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
-    // TODO; why we cannot see the marker??? that's bad... probably autodocking will fail but we try anyway
+    ROS_WARN("Unable to spot docking base marker within the required distance");
+    if (base_marker_id_ < AR_MARKERS_COUNT)
+    {
+      ROS_WARN("Last spot was %f seconds ago at %f meters",
+               (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
+    }
+    // TODO; why we cannot see the marker??? that's bad... probably auto-docking will fail but we try anyway
   }
 
   // We should be in front of the docking base at base_beacon_distance_; switch on auto-docking
@@ -150,7 +167,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
   while (auto_dock_ac_.waitForResult(ros::Duration(2.0)) == false)
   {
-    ROS_DEBUG_THROTTLE_NAMED(2.0, NAME_, "%s", auto_dock_ac_.getState().getText().c_str());
+    ROS_DEBUG_THROTTLE(4.0, "Auto-dock action state: %s", auto_dock_ac_.getState().toString().c_str());
   }
 
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)

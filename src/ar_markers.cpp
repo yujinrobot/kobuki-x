@@ -13,19 +13,37 @@ namespace waiterbot
 
 ARMarkers::ARMarkers()
 {
-  global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
-  global_markers_.markers[0].pose.pose.position.x = 3.0;
-  global_markers_.markers[0].pose.pose.position.y = 4.0;
-  global_markers_.markers[0].pose.pose.position.z = 0.3;
-  global_markers_.markers[0].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, -M_PI/2.0, 0.0);
-
   // Invalid id until we localize it globally
   docking_marker_.id = std::numeric_limits<uint32_t>::max();
+
+
+//TODO kk  quitar cuando lea globals/docking OK
+  global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
+  global_markers_.markers[0].id = 0;
+  global_markers_.markers[0].pose.header.frame_id = "map";
+  global_markers_.markers[0].pose.pose.position.x = -0.2;
+  global_markers_.markers[0].pose.pose.position.y = 1.6;
+  global_markers_.markers[0].pose.pose.position.z = 0.3;
+  global_markers_.markers[0].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, M_PI/2.0);
+
+  global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
+  global_markers_.markers[1].id = 1;
+  global_markers_.markers[1].pose.header.frame_id = "map";
+  global_markers_.markers[1].pose.pose.position.x = +0.2;
+  global_markers_.markers[1].pose.pose.position.y = -1.6;
+  global_markers_.markers[1].pose.pose.position.z = 0.3;
+  global_markers_.markers[1].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, -M_PI/2.0);
+
+  docking_marker_.id = 4;
+  docking_marker_.pose.header.frame_id = "map";
+  docking_marker_.pose.pose.position.x = -0.1;
+  docking_marker_.pose.pose.position.y = -1.9;
+  docking_marker_.pose.pose.position.z = 0.1;
+  docking_marker_.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, M_PI);
 }
 
 ARMarkers::~ARMarkers()
 {
-  // TODO Auto-generated destructor stub
 }
 
 bool ARMarkers::init()
@@ -33,6 +51,7 @@ bool ARMarkers::init()
   ros::NodeHandle nh, pnh("~");
 
   // Parameters
+  pnh.param("tf_broadcast_freq", tf_brc_freq_, 0.0);  // disabled by default
   pnh.param("global_frame", global_frame_, std::string("map"));
   pnh.param("odom_frame",   odom_frame_,   std::string("odom"));
   pnh.param("base_frame",   base_frame_,   std::string("base_footprint"));
@@ -40,16 +59,69 @@ bool ARMarkers::init()
   ar_pose_sub_ = nh.subscribe("ar_pose_marker", 5, &ARMarkers::arPoseMarkerCB, this);
 
   // There are 18 different markers
-  times_spotted_.resize(18, 0);
+  times_spotted_.resize(AR_MARKERS_COUNT, 0);
+
+  if (tf_brc_freq_ > 0.0)
+  {
+    boost::thread(&ARMarkers::broadcastMarkersTF, this);
+  }
 
   return true;
+}
+
+void ARMarkers::broadcastMarkersTF()
+{
+  ros::Rate rate(tf_brc_freq_);
+
+  while (ros::ok())
+  {
+    char child_frame[32];
+    tf::StampedTransform tf;
+    tf.stamp_ = ros::Time::now();
+
+    for (unsigned int i = 0; i <global_markers_.markers.size(); i++)
+    {
+      sprintf(child_frame, "global_marker_%d", global_markers_.markers[i].id);
+      tk::pose2tf(global_markers_.markers[i].pose, tf);
+      tf.child_frame_id_ = child_frame;
+      tf.stamp_ = ros::Time::now();
+      tf_brcaster_.sendTransform(tf);
+    }
+
+//TODO esto sobra
+    sprintf(child_frame, "docking_base_%d", docking_marker_.id);
+    tk::pose2tf(docking_marker_.pose, tf);
+    tf.child_frame_id_ = child_frame;
+    tf.stamp_ = ros::Time::now();
+    tf_brcaster_.sendTransform(tf);
+
+    rate.sleep();
+    //ros::Duration(1.0/tf_brc_freq_).sleep();
+  }
 }
 
 void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
 {
   // TODO MAke pointer!!!!  to avoid copying    but take care of multi-threading
   // more TODO:  inc confidence is very shitty as quality measure ->  we need a filter!!!  >>>   and also incorporate on covariance!!!!
-  // and one more TODO:  sometimes markers are spotted "inverted" (pointing to -y) -> heuristic that says that y is always pointing up
+
+  for (unsigned int i = 0; i < msg->markers.size(); i++)
+  {
+    // Sometimes markers are spotted "inverted" (pointing to -y); as we assume that all the markers are
+    // aligned with y pointing up, x pointing right and z pointing to the observer, that's a recognition
+    // error. Instead of fixing, we discard the whole message, so tf with this timestamp are not used
+    tf::Quaternion q;
+    double roll, pitch, yaw;
+    tf::quaternionMsgToTF(msg->markers[i].pose.pose.orientation, q);
+    tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+//    ROS_DEBUG("RPY = (%lf, %lf, %lf)    %.2f  %.2f  %.2f  %.2f", roll, pitch, yaw,   msg->markers[i].pose.pose.orientation.x, msg->markers[i].pose.pose.orientation.y, msg->markers[i].pose.pose.orientation.z, msg->markers[i].pose.pose.orientation.w);
+    if (tk::pitch(msg->markers[i].pose.pose) > 1.0)
+    {
+      ROS_WARN("Discarding down-pointing AR marker (%d)     (%f, %f, %f)   %.2f  %.2f  %.2f  %.2f", msg->markers[i].id,      roll, pitch, yaw,    msg->markers[i].pose.pose.orientation.x, msg->markers[i].pose.pose.orientation.y, msg->markers[i].pose.pose.orientation.z, msg->markers[i].pose.pose.orientation.w);
+      return;
+    }
+  }
+
   for (unsigned int i = 0; i < msg->markers.size(); i++)
   {
     if (msg->markers[i].id >= times_spotted_.size())
@@ -72,7 +144,7 @@ void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
 
     ar_track_alvar::AlvarMarker global_marker;
     if ((included(msg->markers[i].id, global_markers_, &global_marker) == true) &&
-        (times_spotted_[msg->markers[i].id] > 6))  // publish only with 5 or more spots
+        (times_spotted_[msg->markers[i].id] > 4))  // publish only with 3 or more spots
     {
       // This is a global marker! infer the robot's global pose and call the registered callbacks
       boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
@@ -85,9 +157,11 @@ void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
         tf::StampedTransform marker_gb; // marker on global reference system
         tk::pose2tf(global_marker.pose, marker_gb);
 
-        tf::StampedTransform robot_mk;  // robot on marker reference system
-        tf_listener_.waitForTransform(marker_frame, base_frame_, ros::Time(0), ros::Duration(0.05));
-        tf_listener_.lookupTransform(marker_frame, base_frame_, ros::Time(0), robot_mk);
+        // Get marker tf on global reference system; note that we look for the same timestamp that
+        // the AlvarMarker message to avoid the inverted marker phenomenon; see above for details
+        tf::StampedTransform robot_mk;
+        tf_listener_.waitForTransform(marker_frame, base_frame_, msg->markers[i].header.stamp, ros::Duration(0.05));
+        tf_listener_.lookupTransform(marker_frame, base_frame_, msg->markers[i].header.stamp, robot_mk);
 
         tf::Transform robot_gb = marker_gb*robot_mk;
         tk::tf2pose(robot_gb, pwcs->pose.pose);
@@ -108,6 +182,7 @@ void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
 
 //if (spotted_markers_.markers.size()> 0)   ROS_ERROR("MK  %d  %d   %f", spotted_markers_.markers[0].id, times_spotted_[spotted_markers_.markers[0].id], spotted_markers_.header.stamp.toSec());
 
+  // Decay ALL markers; that's why spotted ones got a +2 on times spotted
   for (unsigned int i = 0; i < times_spotted_.size(); i++)
   {
     if (times_spotted_[i] > 0)
@@ -228,7 +303,6 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
         // TODO   this can be catastrophic if we are very unlucky
       }
 
-      base_marker_id_ = base_marker_id;
       docking_marker_ = spotted_markers_.markers[i];
       docking_marker_.header.frame_id = global_frame_;
       docking_marker_.pose.header.frame_id = global_frame_;
@@ -238,9 +312,14 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
 
       try
       {
-        tf::StampedTransform marker_gb; // marker on global reference system
-        tf_listener_.waitForTransform(global_frame_, marker_frame, ros::Time(0), ros::Duration(0.05));
-        tf_listener_.lookupTransform(global_frame_, marker_frame, ros::Time(0), marker_gb);
+        // Get marker tf on global reference system; note that we look for the same timestamp that
+        // the AlvarMarker message to avoid the inverted marker phenomenon; see comments on method
+        // ARMarkers::arPoseMarkerCB for more details
+        tf::StampedTransform marker_gb;
+        tf_listener_.waitForTransform(global_frame_, marker_frame,
+                                      docking_marker_.pose.header.stamp, ros::Duration(0.05));
+        tf_listener_.lookupTransform(global_frame_, marker_frame,
+                                     docking_marker_.pose.header.stamp, marker_gb);
 
         tk::tf2pose(marker_gb, docking_marker_.pose.pose);
 

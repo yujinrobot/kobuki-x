@@ -52,6 +52,7 @@
 	    <arg name="stacks" value="$(arg stacks)" />
 	    <arg name="3d_sensor" value="$(arg 3d_sensor)" />
 	  </include>
+    <include file="$(find waiterbot)/launch/includes/_ir_frames.launch"/>
 	  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
 	    <param name="use_gui" value="true"/>
 	  </node>
@@ -65,6 +66,7 @@
     <param name="global_frame" value="map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
+    <param name="tf_broadcast_freq" value="5.0"/>
 
     <!-- Incoming remaps -->
     <remap from="new_goal"    to="move_base_simple/goal"/>
@@ -88,7 +90,7 @@
     </node>
 
     <!--  ******************** Amcl *********************  -->
-    <include file="$(find turtlebot_navigation)/launch/includes/_amcl.launch">
+    <include file="$(find waiterbot)/launch/includes/_amcl.launch">
 <!--       <arg name="tf_broadcast" value="false"/>
 -->
       <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
