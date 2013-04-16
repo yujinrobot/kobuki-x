@@ -1,12 +1,9 @@
 subscribers: 
   - map
   - map_metadata
-  - move_base_simple/goal
-  - initialpose
   - table_pose_list
-  - ar_marker_list
-publishers: 
-  - robot_pose
+  - ar_list
+publishers: []
 services: []
 action_clients: []
 action_servers:
