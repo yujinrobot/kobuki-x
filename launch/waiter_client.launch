@@ -1,6 +1,6 @@
 <launch>
   <include file="$(find rocon_app_manager)/launch/concert_client.launch">
-    <arg name="robot_name" value="waiter_boy"/>
+    <arg name="robot_name" value="waiterbot"/>
     <arg name="robot_type" value="pc"/>
     <arg name="concert_name" value="cafe_concert"/>
     <arg name="app_lists" value="$(find waiterbot)/rapps/waiter.rapps"/>
