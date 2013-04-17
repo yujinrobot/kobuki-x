@@ -82,6 +82,10 @@ public:
                ar_track_alvar::AlvarMarker& closest_marker);
 
   bool spotDockMarker(uint32_t base_marker_id);
+
+  bool enableTracker();
+  bool disableTracker();
+
 private:
   std::string global_frame_;
   std::string odom_frame_;
@@ -97,13 +101,15 @@ private:
   ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
-  ros::Subscriber ar_pose_sub_;
+  ros::Subscriber tracked_markers_sub_;
+  ros::Subscriber global_markers_sub_;
 
   boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)>  robot_pose_cb_;
   boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)>    base_spotted_cb_;
 
   void broadcastMarkersTF();
-  void arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
+  void globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
+  void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
 
   bool included(const uint32_t id, const ar_track_alvar::AlvarMarkers& v,
                 ar_track_alvar::AlvarMarker* e = NULL)

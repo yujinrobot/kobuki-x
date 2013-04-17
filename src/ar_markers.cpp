@@ -16,7 +16,7 @@ ARMarkers::ARMarkers()
   // Invalid id until we localize it globally
   docking_marker_.id = std::numeric_limits<uint32_t>::max();
 
-
+/*
 //TODO kk  quitar cuando lea globals/docking OK
   global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
   global_markers_.markers[0].id = 0;
@@ -40,6 +40,9 @@ ARMarkers::ARMarkers()
   docking_marker_.pose.pose.position.y = -1.9;
   docking_marker_.pose.pose.position.z = 0.1;
   docking_marker_.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, M_PI);
+
+  ROS_DEBUG("%.2f %.2f  %.2f  %.2f", docking_marker_.pose.pose.orientation.x, docking_marker_.pose.pose.orientation.y, docking_marker_.pose.pose.orientation.z, docking_marker_.pose.pose.orientation.w);
+*/
 }
 
 ARMarkers::~ARMarkers()
@@ -56,7 +59,8 @@ bool ARMarkers::init()
   pnh.param("odom_frame",   odom_frame_,   std::string("odom"));
   pnh.param("base_frame",   base_frame_,   std::string("base_footprint"));
 
-  ar_pose_sub_ = nh.subscribe("ar_pose_marker", 5, &ARMarkers::arPoseMarkerCB, this);
+  tracked_markers_sub_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkers::arPoseMarkersCB, this);
+  global_markers_sub_  = nh.subscribe("semantic_map/marker_pose_list", 1, &ARMarkers::globalMarkersCB, this);
 
   // There are 18 different markers
   times_spotted_.resize(AR_MARKERS_COUNT, 0);
@@ -65,6 +69,9 @@ bool ARMarkers::init()
   {
     boost::thread(&ARMarkers::broadcastMarkersTF, this);
   }
+
+  // Disable tracking until needed
+  disableTracker();
 
   return true;
 }
@@ -89,18 +96,45 @@ void ARMarkers::broadcastMarkersTF()
     }
 
 //TODO esto sobra
-    sprintf(child_frame, "docking_base_%d", docking_marker_.id);
-    tk::pose2tf(docking_marker_.pose, tf);
-    tf.child_frame_id_ = child_frame;
-    tf.stamp_ = ros::Time::now();
-    tf_brcaster_.sendTransform(tf);
+    if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
+    {
+      sprintf(child_frame, "docking_base_%d", docking_marker_.id);
+      tk::pose2tf(docking_marker_.pose, tf);
+      tf.child_frame_id_ = child_frame;
+      tf.stamp_ = ros::Time::now();
+      tf_brcaster_.sendTransform(tf);
+    }
 
     rate.sleep();
     //ros::Duration(1.0/tf_brc_freq_).sleep();
   }
 }
 
-void ARMarkers::arPoseMarkerCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
+void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
+{
+  if ((global_markers_.markers.size() == 0) && (msg->markers.size() > 0))  // first message; ignore the rest
+  {
+    global_markers_ = *msg;
+    ROS_INFO("%d global marker pose(s) received", global_markers_.markers.size());
+    for (unsigned int i = 0; i < global_markers_.markers.size(); i++)
+    {
+
+//TODO cheat for debuging;  remove
+      if (global_markers_.markers[i].id >= 4)
+      {
+        ROS_DEBUG("Docking marker %d: %s", global_markers_.markers[i].id, tk::pose2str(global_markers_.markers[i].pose.pose));
+        docking_marker_ = global_markers_.markers[i];
+        global_markers_.markers.pop_back();
+      }
+      else
+
+
+      ROS_DEBUG("Marker %d: %s", global_markers_.markers[i].id, tk::pose2str(global_markers_.markers[i].pose.pose));
+    }
+  }
+}
+
+void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
 {
   // TODO MAke pointer!!!!  to avoid copying    but take care of multi-threading
   // more TODO:  inc confidence is very shitty as quality measure ->  we need a filter!!!  >>>   and also incorporate on covariance!!!!
@@ -340,5 +374,35 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
   // Cannot spot docking marker
   return false;
 }
+
+bool ARMarkers::enableTracker()
+{
+  int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
+
+  if (status != 0)
+  {
+    ROS_ERROR("Enable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));
+    return false;
+  }
+
+  return true;
+}
+
+bool ARMarkers::disableTracker()
+{
+//  char system_cmd[256];
+//  snprintf(system_cmd, 256,
+//           "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
+  int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: false }\"");
+
+  if (status != 0)
+  {
+    ROS_ERROR("Disable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));
+    return false;
+  }
+
+  return true;
+}
+
 
 } /* namespace waiterbot */

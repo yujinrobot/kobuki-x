@@ -14,7 +14,8 @@ namespace waiterbot
 namespace tk
 {
 
-// TODO ... parameterized string composer   char ___buf___[256];  sprintf(marker_frame, "ar_marker_%d", msg->markers[i].id);
+char ___buffer___[256];
+// TODO ... parameterized string composer     sprintf(marker_frame, "ar_marker_%d", msg->markers[i].id);
 
 
 double pitch(geometry_msgs::Pose pose)
@@ -66,10 +67,20 @@ void pose2tf(const geometry_msgs::Pose& pose, tf::Transform& tf)
 
 void pose2tf(const geometry_msgs::PoseStamped& pose, tf::StampedTransform& tf)
 {
-
   tf.stamp_    = pose.header.stamp;
   tf.frame_id_ = pose.header.frame_id;
   pose2tf(pose.pose, tf);
+}
+
+const char* pose2str(const geometry_msgs::Pose& pose)
+{
+  sprintf(___buffer___, "%.2f, %.2f, %.2f", pose.position.x, pose.position.y, tf::getYaw(pose.orientation));
+  return (const char*)___buffer___;
+}
+
+const char* pose2str(const geometry_msgs::PoseStamped& pose)
+{
+  return pose2str(pose.pose);
 }
 
 void halfRingPoses(double radius, double height, int poses)

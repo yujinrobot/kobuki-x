@@ -111,6 +111,12 @@ void WaiterNode::wakeUp()
 {
   ROS_DEBUG("Waking up! first try to recognize our own nest; slowly moving back...");
 
+  if (ar_markers_.enableTracker() == false)
+  {
+    ROS_ERROR("Unable to start AR markers tracker; aborting wake up!");
+    return;
+  }
+
   // Move back until we detect the AR marker identifying this robot's docking station
   geometry_msgs::Twist vel;
   vel.linear.x = - 0.1;
@@ -207,6 +213,12 @@ void WaiterNode::wakeUp()
 
   ROS_DEBUG("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
 
+
+  if (ar_markers_.disableTracker() == false)
+  {
+    ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
+    return;
+  }
 
   // Now... we are ready to go!   -> go to kitchen
 
