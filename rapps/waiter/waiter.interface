@@ -2,7 +2,7 @@ subscribers:
   - map
   - map_metadata
   - table_pose_list
-  - ar_list
+  - ar_marker_list
 publishers: []
 services: []
 action_clients: []
