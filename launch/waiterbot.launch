@@ -19,7 +19,11 @@
 
   <!--  *********** Turtlebot and 3d sensor ***********  -->
   <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
-  <include file="$(find waiterbot)/launch/includes/_3dsensor.launch"/>
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <arg name="rgb_processing" value="true" />
+    <arg name="depth_registration" value="true" />
+    <arg name="depth_processing" value="true" />
+  </include>
 
   <!--  ************* Kobuki IR half ring *************  -->
   <include file="$(find waiterbot)/launch/includes/_ir_frames.launch"/>
