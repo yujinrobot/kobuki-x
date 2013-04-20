@@ -394,7 +394,6 @@ bool ARMarkers::disableTracker()
 //  snprintf(system_cmd, 256,
 //           "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
   int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: false }\"");
-
   if (status != 0)
   {
     ROS_ERROR("Disable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));

@@ -24,6 +24,31 @@ static const uint32_t AR_MARKERS_COUNT = 18;
 namespace tk // toolkit
 {
 
+// Template functions
+template <typename T> T mean(std::vector<T> v)
+{
+  T acc = 0;
+  for (unsigned int i = 0; i < v.size(); i++)
+    acc += v[i];
+  return acc/v.size();
+};
+
+template <typename T> T variance(std::vector<T> v)
+{
+  T acc = 0;
+  T avg = tk::mean(v);
+  for (unsigned int i = 0; i < v.size(); i++)
+    acc += std::pow(v[i] - avg, 2);
+  return acc/(v.size() - 1);
+};
+
+template <typename T> T std_dev(std::vector<T> v)
+{
+  return std::sqrt(variance(v));
+}
+
+// Other functions
+
 double pitch(geometry_msgs::Pose pose);
 double pitch(geometry_msgs::PoseStamped pose);
 

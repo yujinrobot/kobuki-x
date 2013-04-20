@@ -1,6 +1,5 @@
 <launch>
-
-  <include file="$(find waiterbot)/launch/includes/_velocity_smoother.launch"/>
+  <include file="$(find waiterbot)/launch/includes/_vel_smoother.launch"/>
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
     <rosparam file="$(find waiterbot)/param/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
@@ -8,7 +7,8 @@
     <rosparam file="$(find waiterbot)/param/move_base/local_costmap_params.yaml"  command="load" />
     <rosparam file="$(find waiterbot)/param/move_base/global_costmap_params.yaml" command="load" />
     <rosparam file="$(find waiterbot)/param/move_base/base_local_planner_params.yaml" command="load" />
-    <remap from="cmd_vel" to="mobile_base/commands/velocity"/>
+    <rosparam file="$(find waiterbot)/param/move_base/move_base_params.yaml" command="load" />
+    <remap from="cmd_vel" to="navigation_velocity_smoother/raw_cmd_vel"/>
   </node>
 
 </launch>

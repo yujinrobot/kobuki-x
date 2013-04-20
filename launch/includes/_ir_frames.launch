@@ -5,7 +5,10 @@
   <arg name="base_link" default="base_link" />
   <arg name="pi/2" value="1.5707963267948966" />
 
-  <node pkg="tf" type="static_transform_publisher" name="IR0_tf_publisher"
+  <node pkg="tf" type="static_transform_publisher" name="ir_link_publisher"
+        args="0.0 0.0 0.09 0.0 0.0 0.0 $(arg base_link) ir_link 100"/>
+
+<!--   <node pkg="tf" type="static_transform_publisher" name="IR0_tf_publisher"
         args="0.000 0.155 0.090 1.571 0 0 $(arg base_link) IR0_link 100"/>
   <node pkg="tf" type="static_transform_publisher" name="IR1_tf_publisher"
         args="0.048 0.147 0.090 1.257 0 0 $(arg base_link) IR1_link 100"/>
@@ -27,4 +30,5 @@
         args="0.048 -0.147 0.090 -1.257 0 0 $(arg base_link) IR9_link 100"/>
   <node pkg="tf" type="static_transform_publisher" name="IR10_tf_publisher"
         args="0.000 -0.155 0.090 -1.571 0 0 $(arg base_link) IR10_link 100"/>
+ -->
 </launch>

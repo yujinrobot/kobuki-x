@@ -36,6 +36,9 @@ public:
 
   bool init();
 
+  void enableSafety() { safety_on_pub_.publish(std_msgs::Empty()); };
+  void disableSafety() { safety_off_pub_.publish(std_msgs::Empty()); };
+
   bool dockInBase(const geometry_msgs::PoseStamped& base_abs_pose);
 
   void baseSpottedMsgCB(const geometry_msgs::PoseStamped::ConstPtr& msg, uint32_t id);
@@ -57,6 +60,31 @@ private:
   ros::Publisher goal_poses_pub_;
   ros::Publisher issue_goal_pub_;
   ros::Publisher cancel_goal_pub_;
+  ros::Publisher safety_on_pub_;
+  ros::Publisher safety_off_pub_;
+
+
+  template <typename T>
+  bool waitForServer(actionlib::SimpleActionClient<T> & action_client, double timeout = 2.0)
+  {
+    // Wait for the required action servers to come up; the huge timeout is not a whim; move_base
+    // action server can take up to 20 seconds to initialize in the official turtlebot laptop!
+    ros::Time t0 = ros::Time::now();
+
+    while ((action_client.waitForServer(ros::Duration(1.0)) == false) && (ros::ok() == true))
+    {
+      if ((ros::Time::now() - t0).toSec() > timeout/2.0)
+        ROS_WARN_THROTTLE(3, "Waiting for action server to come up...");
+
+      if ((ros::Time::now() - t0).toSec() > timeout)
+      {
+        ROS_ERROR("Timeout while waiting for required action server to come up");
+        return false;
+      }
+    }
+
+    return true;
+  }
 };
 
 } /* namespace waiterbot */

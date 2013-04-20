@@ -46,18 +46,18 @@
   </node>
 
 
-    <!--  ***************** Robot Model *****************  -->
-	  <include file="$(find turtlebot_bringup)/launch/includes/_robot.launch">
-	    <arg name="base" value="$(arg base)" />
-	    <arg name="stacks" value="$(arg stacks)" />
-	    <arg name="3d_sensor" value="$(arg 3d_sensor)" />
-	  </include>
-    <include file="$(find waiterbot)/launch/includes/_ir_frames.launch"/>
-	  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-	    <param name="use_gui" value="true"/>
-	  </node>
+  <!--  ***************** Robot Model *****************  -->
+  <include file="$(find turtlebot_bringup)/launch/includes/_robot.launch">
+    <arg name="base" value="$(arg base)" />
+    <arg name="stacks" value="$(arg stacks)" />
+    <arg name="3d_sensor" value="$(arg 3d_sensor)" />
+  </include>
+   <include file="$(find waiterbot)/launch/includes/_ir_frames.launch"/>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="true"/>
+  </node>
   
-    <!--  ************* Navigation manager **************  -->  
+  <!--  ************* Navigation manager **************  -->  
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" >
     <param name="base_beacon_distance" value="0.4"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
     <param name="base_marker_distance" value="1.4"/>   <!-- At which distance from the base we start relaying on ar markers -->  
@@ -80,32 +80,32 @@
     <remap from="reset_pose"  to="initialpose"/>
   </node>
 
-    <!--  ************** Rosnav move base ***************  -->
-    <include file="$(find waiterbot)/launch/includes/_move_base.launch">
-    </include>
+  <!--  ************** Rosnav move base ***************  -->
+  <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
 
-    <!--  ***************** Map Server ******************  -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/stage/maps/$(arg map_name).yaml">
-      <param name="frame_id" value="/map"/>
-    </node>
+  <!--  ****** Geometric and semantic map servers *****  -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/stage/maps/$(arg map_name).yaml">
+    <param name="frame_id" value="/map"/>
+  </node>
+  <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/> 
 
-    <!--  ******************** Amcl *********************  -->
-    <include file="$(find waiterbot)/launch/includes/_amcl.launch">
+  <!--  ******************** Amcl *********************  -->
+  <include file="$(find waiterbot)/launch/includes/_amcl.launch">
 <!--       <arg name="tf_broadcast" value="false"/>
 -->
-      <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
-      <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
-      <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
 <!--
-      <arg name="initial_cov_xx" value="0.01"/>
-      <arg name="initial_cov_yy" value="0.01"/>
-      <arg name="initial_cov_aa" value="0.01"/>
- -->    </include>
+    <arg name="initial_cov_xx" value="0.01"/>
+    <arg name="initial_cov_yy" value="0.01"/>
+    <arg name="initial_cov_aa" value="0.01"/>
+-->    </include>
 
-    <!--  ********** Mixing with the real world **********  -->
-    <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
-    <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
-    <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>
+  <!--  ********** Mixing with the real world **********  -->
+  <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
+  <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>
 
   <!--  ***************** Visualisation *****************  -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />

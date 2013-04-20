@@ -12,6 +12,9 @@
 #include <ros/ros.h>
 #include <arduino_resources/Rangers.h>
 
+namespace waiterbot
+{
+
 class IrScanNode {
 public:
 
@@ -30,7 +33,11 @@ public:
     unsigned int           idx_value;  /**< Index of this sonar in the msg first echo data  */
     unsigned int           idx_buffer; /**< Index of current reading in the internal buffer */
     tf::Transform          transform;  /**< Frame according to which we transform reading   */
-    std::vector<double>    readings;   /**< Internal buffer to store the latest readings    */
+    double                 last_range; /**< Internal buffer to store the latest readings    */
+    int                    noisy_read;
+    std::vector<int16_t>   voltage;    /**< Internal buffer to store the latest readings    */
+    std::vector<double>    distance;   /**< Internal buffer to store the latest readings    */
+    std::vector<double>    filt_err;   /**< Internal buffer to store the latest readings    */
     std::vector<ros::Time> t_stamps;   /**< Internal buffer to store the latest timestamps  */
   };
 
@@ -47,7 +54,12 @@ public:
   int spin();
 
 private:
+  double max_mean_error;
+  double max_covariance;
   double farthest_contact;
+  double closest_rejected;
+  int    readings_buffer;
+  int    noisy_readings;
   double frequency;
   unsigned int sonar_buffer_size; /**< Sonar's internal buffer size */
   unsigned int sonar_max_reading; /**< Sonar's max reported distance */
@@ -70,5 +82,7 @@ private:
     return values[values.size()/2];
   }
 };
+
+} // namespace waiterbot
 
 #endif /* IR_SCAN_NODE_HPP_ */

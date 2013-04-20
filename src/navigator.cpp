@@ -5,6 +5,7 @@
  *      Author: jorge
  */
 
+#include <std_msgs/Empty.h>
 #include <actionlib_msgs/GoalID.h>
 #include <move_base_msgs/MoveBaseAction.h>
 
@@ -41,24 +42,21 @@ bool Navigator::init()
   issue_goal_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("issue_goal", 1);
   cancel_goal_pub_ = nh.advertise <actionlib_msgs::GoalID>     ("cancel_goal", 1);
 
-  ros::Time t0 = ros::Time::now();
+  safety_on_pub_   = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/disable", 1);
+  safety_off_pub_  = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/enable", 1);
 
-  // Wait for the required action servers to come up; the huge timeout is not a whim; move_base
-  // action server takes around 20 seconds to initialize in the official turtlebot laptop!
-  if (move_base_ac_.waitForServer(ros::Duration(40.0)) == false)
-  {
-    ROS_ERROR("Timeout while waiting for move base action server to come up. Navigator is unavailable");
-    return false;
-  }
-ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
-  t0 = ros::Time::now();
+  // Disable navigation safety controller until we start moving
+  // NOTE: it must be disable after completing any mission
 
-  if (auto_dock_ac_.waitForServer(ros::Duration(10.0)) == false)
-  {
-    ROS_ERROR("Timeout while waiting for auto dock action server to come up. Navigator is unavailable");
-    return false;
-  }
-ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
+  ROS_DEBUG("1");
+  std_msgs::Empty kk;
+  safety_off_pub_.publish(kk);
+  ROS_DEBUG("2");
+
+  safety_off_pub_.publish(std_msgs::Empty());
+  ROS_DEBUG("3");
+
+
   return true;
 }
 
@@ -70,6 +68,9 @@ void Navigator::baseSpottedMsgCB(const geometry_msgs::PoseStamped::ConstPtr& msg
 
 bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 {
+  // Enable safety controller on normal navigation
+  safety_on_pub_.publish(std_msgs::Empty());
+
   if (base_abs_pose.header.frame_id != global_frame_)
   {
     ROS_ERROR("Docking base pose not in global frame (%s != %s)",
@@ -92,6 +93,16 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   tk::tf2pose(marker_gb*in_front, mb_goal.target_pose.pose);
   mb_goal.target_pose.header.stamp = ros::Time::now();
   mb_goal.target_pose.header.frame_id = base_abs_pose.header.frame_id;
+
+  // Wait for move base action servers to come up; the huge timeout is not a whim; move_base
+  // action server can take up to 20 seconds to initialize in the official turtlebot laptop,
+  // so is this request is issued short after startup...
+  // WARN: move base server is not started unless global costmap has a positive update frequency
+  if (waitForServer(move_base_ac_, 10.0) == false)
+  {
+    ROS_ERROR("Move base action server not available; we cannot navigate!");
+    return false;
+  }
 
   ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
             mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
@@ -161,9 +172,20 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   }
 
   // We should be in front of the docking base at base_beacon_distance_; switch on auto-docking
+
+  // Wait for auto-docking action servers to come up (it should be already by now)
+  if (waitForServer(auto_dock_ac_, 2.0) == false)
+  {
+    ROS_ERROR("Auto-docking action server not available; we cannot dock!");
+    return false;
+  }
+
   ROS_INFO("Switching on beacon-based auto-docking...");
   kobuki_msgs::AutoDockingGoal ad_goal;
   auto_dock_ac_.sendGoal(ad_goal);
+
+  // Disable navigation safety controller on auto-docking to avoid bouncing against the base
+  safety_off_pub_.publish(std_msgs::Empty());
 
   while (auto_dock_ac_.waitForResult(ros::Duration(2.0)) == false)
   {
