@@ -37,7 +37,7 @@
         Args:
           -g : run in headless mode.
   --> 
-  <node pkg="stage" type="stageros" name="stageros" args="$(find waiterbot)/resources/stage/worlds/$(arg map_name).world">
+  <node pkg="stage" type="stageros" name="stageros" args="$(find waiterbot)/resources/maps/stage/$(arg map_name).world">
     <param name="base_watchdog_timeout" value="0.5"/>
     <remap from="odom" to="odom"/>
     <remap from="base_pose_ground_truth" to="base_pose_ground_truth"/>
@@ -84,7 +84,7 @@
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
 
   <!--  ****** Geometric and semantic map servers *****  -->
-  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/stage/maps/$(arg map_name).yaml">
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
   <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/> 

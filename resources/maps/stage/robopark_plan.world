@@ -1,0 +1,60 @@
+include "waiterbot.inc"
+
+# Definition for an obstacle placed on the map.
+define block model
+(
+  size [0.5 0.5 0.5]
+  gui_nose 0
+)
+
+define floorplan model
+(
+  # sombre, sensible, artistic
+  color "gray30"
+
+  # most maps will need a bounding box
+  boundary 1
+
+  gui_nose 0
+  gui_grid 0
+
+  gui_outline 0
+  gripper_return 0
+  fiducial_return 0
+  laser_return 1
+)
+
+# set the resolution of the underlying raytrace model in meters
+resolution 0.01
+
+interval_sim 100  # simulation timestep in milliseconds
+
+window
+(
+  size [ 600 424 ] 
+  rotate [ 0.000 0.000 ]
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "Robo Park floor"
+  bitmap "../maps/robopark2.bmp"
+  size [16.8 11.87 0.5]
+
+  pose [ 0.0 0.0 0.0 0.0 ]
+  #for test
+  origin [ 7.8 3.7 0.0 0.0] # specify the position of the object's center, relative to its pose 
+)
+
+# throw in a robot
+waiterbot
+(
+  pose [ 2.0 2.0 0.0 0.0 ]
+  name "waiterbot1"
+  color "gray"
+  gui_nose 1
+)
+
+# throw in an obstacle
+# block( pose [ -24.269 48.001 0 180.000 ] color "red")
