@@ -26,16 +26,7 @@
   </include>
 
   <!--  ************* Kobuki IR half ring *************  -->
-  <include file="$(find waiterbot)/launch/includes/_ir_frames.launch"/>
-  <node name="arduino_gateway" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM0"/>
-  <node name="ir_to_laserscan" pkg="waiterbot" type="ir_scan_node">
-    <param name="closest_rejected" value="0.35"/>
-    <param name="farthest_contact" value="0.8"/>
-    <param name="readings_buffer" value="15"/>
-    <param name="max_mean_error" value="10.0"/>
-    <param name="max_covariance" value="0.005"/>
-    <param name="noisy_readings" value="2"/>
-  </node>
+  <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
 
   <!--  ********** Kobuki mobile base extras **********  -->
   <include file="$(find turtlebot_bringup)/launch/includes/kobuki/_safety_controller.launch"/>
