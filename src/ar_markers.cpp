@@ -115,7 +115,7 @@ void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
   if ((global_markers_.markers.size() == 0) && (msg->markers.size() > 0))  // first message; ignore the rest
   {
     global_markers_ = *msg;
-    ROS_INFO("%d global marker pose(s) received", global_markers_.markers.size());
+    ROS_INFO("%u global marker pose(s) received", global_markers_.markers.size());
     for (unsigned int i = 0; i < global_markers_.markers.size(); i++)
     {
 
@@ -282,8 +282,8 @@ bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_gl
   if ((ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec() >= younger_than)
   {
     // We must check the timestamp from an element in the markers list, as the one on message's header is always zero!
-    // WARNING: parameter younger_than must well above 0.1, as ar_track_alvar publish at Kinect rate but only updates
-    // timestamps every 0.1 seconds
+    // WARNING: parameter younger_than must be high enough, as ar_track_alvar publish at Kinect rate but only updates
+    // timestamps about every 0.1 seconds (and now we can set it to run slower, as frequency is a dynamic parameter!)
     ROS_WARN("Spotted markers too old:   %f  >=  %f",   (ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec(), younger_than);
     return false;
   }
@@ -393,6 +393,8 @@ bool ARMarkers::disableTracker()
 //  char system_cmd[256];
 //  snprintf(system_cmd, 256,
 //           "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
+  // TODO I think I can also call /ar_track_alvar/set_parameters... if the server is not up, system call blocks,
+  // what is very shity; another option is create a generic tk::waitForServer and reuse for action servers
   int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: false }\"");
   if (status != 0)
   {

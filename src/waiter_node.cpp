@@ -32,6 +32,7 @@ bool WaiterNode::init()
   sensors_sub_  = nh_.subscribe("core_sensors",   5, &WaiterNode::coreSensorsCB, this);
   odometry_sub_ = nh_.subscribe("odometry",       5, &WaiterNode::odometryCB,    this);
 
+  // Initialize sub-modules
   if (nav_watchd_.init() == false)
   {
     ROS_ERROR("Navigation watchdog initialization failed; shutting down %s node", node_name_.c_str());
@@ -48,6 +49,7 @@ bool WaiterNode::init()
     return false;
   }
 
+  // Configure call-backs between submodules
   ar_markers_.setRobotPoseCB(boost::bind(&NavWatchdog::arMarkerMsgCB, &nav_watchd_, _1));
   ar_markers_.baseSpottedCB(boost::bind(&Navigator::baseSpottedMsgCB, &navigator_, _1, _2));
 
@@ -70,11 +72,33 @@ void WaiterNode::deliverOrderCB()
   //order_status_ = cafe_msgs::Status::IDLE;//TODO ojo; mato la thread????
 
   if (order_.table_id == 1)
+  {
+    if (ar_markers_.enableTracker() == false)
+    {
+      ROS_ERROR("Unable to start AR markers tracker; aborting wake up!");
+      return;
+    }
     boost::thread dockingThread(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose());
+
+  // TODO  ar_markers_.disableTracker()  >>> cuando decida la logica, decido donde y cuando enable disable AR track
+    ///>>>>  creo que mejor en el FSM , xq las task pueden abortar por muuuuuchas cosas,  y habria q poner un disable en cada una
+
+  }
 
   if (order_.table_id == 10)
   {
+    if (ar_markers_.enableTracker() == false)
+    {
+      ROS_WARN("Unable to start AR markers tracker");
+    }
+  }
 
+  if (order_.table_id == 11)
+  {
+    if (ar_markers_.disableTracker() == false)
+    {
+      ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
+    }
   }
 
 
@@ -217,10 +241,12 @@ void WaiterNode::wakeUp()
   if (ar_markers_.disableTracker() == false)
   {
     ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
-    return;
   }
 
   // Now... we are ready to go!   -> go to kitchen
+
+  // (Re)enable safety controller for normal operation
+  navigator_.enableSafety();
 
   //chijon  ->  plot MARKERS global
 
@@ -271,6 +297,16 @@ void WaiterNode::wakeUp()
 */
 }
 
+void WaiterNode::spin()
+{
+  ros::Rate rate(50.0);
+
+  while (ros::ok())
+  {
+    ros::spinOnce();
+    rate.sleep();
+  }
+}
 
 } /* namespace waiterbot */
 
@@ -285,7 +321,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  ros::spin();
+  node.spin();
 
   return 0;
 }

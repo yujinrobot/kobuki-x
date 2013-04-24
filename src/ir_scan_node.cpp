@@ -141,12 +141,11 @@ void IrScanNode::sonarsMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
     else
       sonars[i].noisy_read = std::max(sonars[i].noisy_read - 1, - noisy_readings);
 
-    scan.ranges[msg->ranges.size() - (i + 1)] = ((distanceKF <= farthest_contact) && (sonars[i].noisy_read <= 0.0)) || (distanceKF < closest_rejected)?(distanceKF + RADIUS):6.0;
-//    scan.intensities[msg->ranges.size() - (i + 1)] = r;//avg_abs_diff;//tk::variance(sonars[i].distance);//r + RADIUS;//(r <= 110.6)?(r + RADIUS):6.0;
+    scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF;//((distanceKF <= farthest_contact) && (sonars[i].noisy_read <= 0.0)) || (distanceKF < closest_rejected)?(distanceKF + RADIUS):6.0;
+    scan.intensities[msg->ranges.size() - (i + 1)] = r;//avg_abs_diff;//tk::variance(sonars[i].distance);//r + RADIUS;//(r <= 110.6)?(r + RADIUS):6.0;
 
 
-
-    if (i == 5)
+    if (i == 55555)
     {
       if (avg_abs_diff >= max_mean_error)
         scan.intensities[0] = 0.55;

@@ -12,7 +12,7 @@
 
 <launch>
   <!-- Name of the map to use (without path nor extension) and initial position -->
-  <arg name="map_name"       default="dorothy_cafe"/>
+  <arg name="map_name"       default="map"/>
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
@@ -43,7 +43,7 @@
   <!--  ************* Navigation manager **************  -->  
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node">
     <param name="base_beacon_distance" value="0.4"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
-    <param name="base_marker_distance" value="1.4"/>   <!-- At which distance from the base we start relaying on ar markers -->  
+    <param name="base_marker_distance" value="1.99999"/>   <!-- At which distance from the base we start relaying on ar markers -->  
     <param name="check_localized" value="true"/>
     <param name="amcl_max_error" value="1.0"/>
     <param name="global_frame" value="map"/>

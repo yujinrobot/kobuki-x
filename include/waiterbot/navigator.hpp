@@ -20,7 +20,7 @@ namespace waiterbot
 class Navigator
 {
 public:
-  const std::string NAME_;  /**< Waiterbot node sub-module name */
+  const double GO_TO_POSE_TIMEOUT;
 
   enum
   {

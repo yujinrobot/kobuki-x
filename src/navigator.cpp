@@ -15,7 +15,8 @@
 namespace waiterbot
 {
 
-Navigator::Navigator() : NAME_("Navigator"), state_(IDLE),
+Navigator::Navigator() :
+    GO_TO_POSE_TIMEOUT(30.0), state_(IDLE),
     move_base_ac_("move_base", true),                // tell the action clients that we
     auto_dock_ac_("dock_drive_action", true),        // want to spin a thread by default  TODO sure???
     base_marker_id_(std::numeric_limits<uint32_t>::max())
@@ -42,20 +43,13 @@ bool Navigator::init()
   issue_goal_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("issue_goal", 1);
   cancel_goal_pub_ = nh.advertise <actionlib_msgs::GoalID>     ("cancel_goal", 1);
 
-  safety_on_pub_   = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/disable", 1);
-  safety_off_pub_  = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/enable", 1);
+  safety_on_pub_   = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/enable", 1, true);
+  safety_off_pub_  = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/disable", 1, true);
 
   // Disable navigation safety controller until we start moving
-  // NOTE: it must be disable after completing any mission
-
-  ROS_DEBUG("1");
-  std_msgs::Empty kk;
-  safety_off_pub_.publish(kk);
-  ROS_DEBUG("2");
-
+  // NOTE: it must be disable after completing any mission. Note also that we use latched
+  // topics, as this first message can arrive before the controller gets up and running
   safety_off_pub_.publish(std_msgs::Empty());
-  ROS_DEBUG("3");
-
 
   return true;
 }
@@ -111,10 +105,12 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   move_base_ac_.sendGoal(mb_goal);
   state_ = GLOBAL_DOCKING;
 
+  ros::Time t0 = ros::Time::now();
+
   while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
   {
     if ((state_ == GLOBAL_DOCKING) &&
-        ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 0.5) &&
+        ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 1.0) &&
         (base_rel_pose_.pose.position.z <= base_marker_distance_))
     {
       ROS_INFO("Docking base spotted at %.2f m; switching to marker-based local navigation...",
@@ -122,6 +118,10 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
       // Docking base marker spotted at base_marker_distance; switch to relative goal
       move_base_ac_.cancelGoal();
+//      move_base_ac_.waitForResult(ros::Duration(1.0));
+      ROS_DEBUG("1 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
+      while (move_base_ac_.waitForResult(ros::Duration(0.05)) == false)
+        ROS_DEBUG("2 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
 
       // Send a goal at base_beacon_distance_ in front the marker
       char marker_frame[32];
@@ -144,11 +144,23 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
       state_ = MARKER_DOCKING;
     }
-    else
+    else if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
     {
       ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
     }
+    else
+    {
+      ROS_WARN("Cannot she the docking base after %.2f s; current state is %s. Aborting...",
+               GO_TO_POSE_TIMEOUT, move_base_ac_.getState().getText().c_str());
+      move_base_ac_.cancelGoal();
+      return false;
+    }
   }
+
+//TODO Deberia apagarlo!!!!  if (ar_markers_.disableTracker() == false)
+//  {
+//    ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
+//  }
 
   if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
@@ -156,6 +168,11 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   }
   else
   {
+//salta aqui porque el segundo goal cancela al primero!!!!
+
+//por cierto, donde desactivamos AR markers tracker?  creo que no lo estoy haciendo...
+
+
     ROS_WARN("Go to docking base failed: %s", move_base_ac_.getState().getText().c_str());
     return false;
   }

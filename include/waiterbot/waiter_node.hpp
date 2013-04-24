@@ -82,6 +82,7 @@ public:
   }
 
   bool init();
+  void spin();
 
   void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
   void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
