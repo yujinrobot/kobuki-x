@@ -26,6 +26,29 @@ namespace waiterbot
 
 class WaiterNode
 {
+public:
+
+  WaiterNode(std::string name) :
+    as_(nh_, "deliver_order", false),
+    node_name_(name),
+    SPOT_BASE_MARKER_TIMEOUT(10.0),
+    SPOT_POSE_MARKER_TIMEOUT(15.0)
+  {
+  }
+
+  ~WaiterNode(void)
+  {
+  }
+
+  bool init();
+  void spin();
+
+  void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
+  void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
+
+  void deliverOrderCB();
+  void preemptOrderCB();
+
 protected:
   const double SPOT_BASE_MARKER_TIMEOUT;
   const double SPOT_POSE_MARKER_TIMEOUT;
@@ -67,28 +90,44 @@ protected:
 
   void wakeUp();
 
-public:
+  /*********************
+  ** Simple commands
+  **********************/
 
-  WaiterNode(std::string name) :
-    as_(nh_, "deliver_order", false),
-    node_name_(name),
-    SPOT_BASE_MARKER_TIMEOUT(10.0),
-    SPOT_POSE_MARKER_TIMEOUT(15.0)
+  void slowForward()
   {
+    moveAt( 0.1,  0.0,  0.1);
   }
 
-  ~WaiterNode(void)
+  void slowBackward()
   {
+    moveAt(-0.1,  0.0,  0.1);
   }
 
-  bool init();
-  void spin();
+  void turnClockwise()
+  {
+    moveAt( 0.0, -0.5,  0.1);
+  }
 
-  void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
-  void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
+  void turnCounterClockwise()
+  {
+    moveAt( 0.0,  0.5,  0.1);
+  }
 
-  void deliverOrderCB();
-  void preemptOrderCB();
+  void stop()
+  {
+    moveAt( 0.0,  0.0,  0.0);
+  }
+
+  void moveAt(double v, double w, double t = 0.0)
+  {
+    geometry_msgs::Twist vel;
+    vel.linear.x  = v;
+    vel.angular.z = w;
+    cmd_vel_pub_.publish(vel);
+    ros::Duration(t).sleep();
+  }
+
 };
 
 } /* namespace waiterbot */

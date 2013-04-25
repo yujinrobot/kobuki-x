@@ -142,26 +142,27 @@ void WaiterNode::wakeUp()
   }
 
   // Move back until we detect the AR marker identifying this robot's docking station
-  geometry_msgs::Twist vel;
-  vel.linear.x = - 0.1;
-
   bool timeout = false;
   ros::Time t0 = ros::Time::now();
   ar_track_alvar::AlvarMarkers spotted_markers;
   while ((ar_markers_.spotted(1.0, 10, true, spotted_markers) == false) && (timeout == false))
   {
-    cmd_vel_pub_.publish(vel);
-    ros::Duration(0.1).sleep();
-    if ((ros::Time::now() - t0).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
+    if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT)
+    {
+      slowBackward();
+    }
+    else if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT + 2.0)
+    {
+      // Wait stopped an extra couple of seconds before giving up
+      stop();
+    }
+    else
     {
       timeout = true;
     }
   }
 
-  // stop
-  vel.linear.x = 0.0;
-  cmd_vel_pub_.publish(vel);
-
+  stop();
 
   if (timeout == true)
   {
@@ -179,22 +180,19 @@ void WaiterNode::wakeUp()
   //base_marker_.header.frame_id = "map";
 
   // Now look for a global marker to initialize our localization; full spin clockwise
-  vel.angular.z = -0.5;
-  cmd_vel_pub_.publish(vel);
-  ros::Duration(0.2).sleep();
+  turnClockwise();
+  turnClockwise();
 
   while (tf::getYaw(odometry_.pose.pose.orientation) <= 0.0)
   {
 //if(nav_watchd_.localized()){cmd_vel_pub_.publish(geometry_msgs::Twist());return;}
-    cmd_vel_pub_.publish(vel);
-    ros::Duration(0.1).sleep();
+    turnClockwise();
   //  ROS_ERROR("%f   %d", tf::getYaw(odometry_.pose.pose.orientation), nav_watchd_.localized());
   }
 
   while (tf::getYaw(odometry_.pose.pose.orientation) >  0.0)
   {
-    cmd_vel_pub_.publish(vel);
-    ros::Duration(0.1).sleep();
+    turnClockwise();
 //    ROS_ERROR("%f", tf::getYaw(odometry_.pose.pose.orientation));
   }
 
@@ -213,18 +211,14 @@ void WaiterNode::wakeUp()
   t0 = ros::Time::now();
   while ((ar_markers_.spotDockMarker(base_marker_id) == false) && (timeout == false))
   {
-    cmd_vel_pub_.publish(vel);
-    ros::Duration(0.1).sleep();
+    turnClockwise();
     if ((ros::Time::now() - t0).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
     {
       timeout = true;
     }
   }
 
-  // stop
-  vel.angular.z = 0.0;
-  cmd_vel_pub_.publish(vel);
-
+  stop();
 
   if (timeout == true)
   {

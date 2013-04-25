@@ -9,6 +9,10 @@
 #define NAVIGATOR_HPP_
 
 #include <ros/ros.h>
+
+#include <tf/tf.h>
+#include <tf/transform_listener.h>
+
 #include <actionlib/client/simple_action_client.h>
 
 #include <move_base_msgs/MoveBaseAction.h>
@@ -56,6 +60,7 @@ private:
 
   uint32_t                   base_marker_id_;
   geometry_msgs::PoseStamped base_rel_pose_;  /**< Docking base ar marker pose relative to the robot */
+  tf::TransformListener      tf_listener_;
 
   ros::Publisher goal_poses_pub_;
   ros::Publisher issue_goal_pub_;

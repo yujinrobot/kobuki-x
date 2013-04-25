@@ -7,21 +7,21 @@
 
 #include <tf/tf.h>
 
+#include "waiterbot/common.hpp"
 #include "waiterbot/nav_watchdog.hpp"
 
 
 namespace waiterbot
 {
 
-#define CDIST(tf_a, tf_b)  tf::tfDistance        ( tf_a.getOrigin(),   tf_b.getOrigin()   )
-#define YDIFF(tf_a, tf_b)  tf::angleShortestPath ( tf_a.getRotation(), tf_b.getRotation() )
 
-
-NavWatchdog::NavWatchdog() {
+NavWatchdog::NavWatchdog()
+{
   localized_ = 0;         // initially lost
 };
 
-NavWatchdog::~NavWatchdog() {
+NavWatchdog::~NavWatchdog()
+{
 }
 
 void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
@@ -34,17 +34,36 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
   tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
   tf::poseMsgToTF(msg->pose.pose,       armk_pose);
 
+  if (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 10.0)
+  {
+    geometry_msgs::PoseWithCovarianceStamped pose = *msg;
+    pose.header.stamp = ros::Time::now() + ros::Duration(0.1);
+    init_pose_pub_.publish(pose);
+    last_amcl_init_.header = msg->header;
+    last_amcl_init_.pose = msg->pose.pose;
+
+    ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
+              msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
+return;
+  }
+
+
+
+
+
   if ((! (localized_ & LOCALIZED_AMCL)) ||
       ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 0.2) &&
        (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 4.0) &&
-       ((CDIST(amcl_pose, armk_pose) > 1.5) || (YDIFF(amcl_pose, armk_pose) > 1.0)))) {
+       ((tk::distance(amcl_pose, armk_pose) > 1.5) || (tk::minAngle(amcl_pose, armk_pose) > 1.0))))
+  {
     // If amcl has not received an initial pose from the user, or it's reporting a pose
     // far away from the one reported by the AR marker, initialize it with this message.
     // Note that we check timings to ensure we are not comparing with an old amcl pose
 
     // Check if the covariance of the pose is low enough to use it to (re)initialize amcl
     const boost::array<double, 36u>& cov = msg->pose.covariance;
-    if (max(cov[0], cov[1], cov[6], cov[7], cov[35]) > 0.05) {  // TODO: very arbitrary...
+    if (max(cov[0], cov[1], cov[6], cov[7], cov[35]) > 0.05)
+    {  // TODO: very arbitrary...
       ROS_WARN("Amcl not (re)initialized by AR marker because its cov. is not low enough");
       return;
     }
@@ -60,7 +79,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
     ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
               msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
     ROS_DEBUG("Cartesian distance = %.2f, Yaw difference = %.2f, TIME = %f",    // explain the reason
-               CDIST(amcl_pose, armk_pose), YDIFF(amcl_pose, armk_pose),
+              tk::distance(amcl_pose, armk_pose), tk::minAngle(amcl_pose, armk_pose),
                (last_amcl_pose_.header.stamp - msg->header.stamp).toSec());
 
     // TODO reset global costmap!!!

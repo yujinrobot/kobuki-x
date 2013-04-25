@@ -49,11 +49,21 @@ template <typename T> T std_dev(std::vector<T> v)
 
 // Other functions
 
+double wrapAngle(double a);
+
+double roll(const tf::Transform& tf);
+double roll(geometry_msgs::Pose pose);
+double roll(geometry_msgs::PoseStamped pose);
+
+double pitch(const tf::Transform& tf);
 double pitch(geometry_msgs::Pose pose);
 double pitch(geometry_msgs::PoseStamped pose);
 
 double distance(geometry_msgs::Point a, geometry_msgs::Point b = geometry_msgs::Point());
 double distance(geometry_msgs::Pose a, geometry_msgs::Pose b = geometry_msgs::Pose());
+double distance(const tf::Transform& a, const tf::Transform& b);
+
+double minAngle(const tf::Transform& a, const tf::Transform& b);
 
 void tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose);
 void tf2pose(const tf::StampedTransform& tf, geometry_msgs::PoseStamped& pose);

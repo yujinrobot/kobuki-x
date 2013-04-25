@@ -5,6 +5,7 @@
  *      Author: jorge
  */
 
+#include <math.h>
 
 #include "waiterbot/common.hpp"
 
@@ -18,13 +19,45 @@ char ___buffer___[256];
 // TODO ... parameterized string composer     sprintf(marker_frame, "ar_marker_%d", msg->markers[i].id);
 
 
+double wrapAngle(double a)
+{
+  a = fmod(a + M_PI, 2*M_PI);
+  if (a < 0)
+      a += 2*M_PI;
+  return a - M_PI;
+}
+
+double roll(const tf::Transform& tf)
+{
+  double roll, pitch, yaw;
+  tf::Matrix3x3(tf.getRotation()).getRPY(roll, pitch, yaw);
+  return roll;
+}
+
+double roll(geometry_msgs::Pose pose)
+{
+  tf::Transform tf;
+  pose2tf(pose, tf);
+  return tk::roll(tf);
+}
+
+double roll(geometry_msgs::PoseStamped pose)
+{
+  return tk::roll(pose.pose);
+}
+
+double pitch(const tf::Transform& tf)
+{
+  double roll, pitch, yaw;
+  tf::Matrix3x3(tf.getRotation()).getRPY(roll, pitch, yaw);
+  return pitch;
+}
+
 double pitch(geometry_msgs::Pose pose)
 {
-  tf::Quaternion q;
-  double roll, pitch, yaw;
-  tf::quaternionMsgToTF(pose.orientation, q);
-  tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
-  return pitch;
+  tf::Transform tf;
+  pose2tf(pose, tf);
+  return tk::pitch(tf);
 }
 
 double pitch(geometry_msgs::PoseStamped pose)
@@ -40,6 +73,16 @@ double distance(geometry_msgs::Point a, geometry_msgs::Point b)
 double distance(geometry_msgs::Pose a, geometry_msgs::Pose b)
 {
   return tk::distance(a.position, b.position);
+}
+
+double distance(const tf::Transform& a, const tf::Transform& b)
+{
+  return tf::tfDistance(a.getOrigin(), b.getOrigin());
+}
+
+double minAngle(const tf::Transform& a, const tf::Transform& b)
+{
+  return tf::angleShortestPath(a.getRotation(), b.getRotation());
 }
 
 void tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose)

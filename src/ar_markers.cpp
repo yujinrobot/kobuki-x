@@ -33,16 +33,14 @@ ARMarkers::ARMarkers()
   global_markers_.markers[1].pose.pose.position.y = -1.6;
   global_markers_.markers[1].pose.pose.position.z = 0.3;
   global_markers_.markers[1].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, -M_PI/2.0);
-
-  docking_marker_.id = 4;
+*/
+  docking_marker_.id = 6;
   docking_marker_.pose.header.frame_id = "map";
   docking_marker_.pose.pose.position.x = -0.1;
   docking_marker_.pose.pose.position.y = -1.9;
   docking_marker_.pose.pose.position.z = 0.1;
   docking_marker_.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, M_PI);
 
-  ROS_DEBUG("%.2f %.2f  %.2f  %.2f", docking_marker_.pose.pose.orientation.x, docking_marker_.pose.pose.orientation.y, docking_marker_.pose.pose.orientation.z, docking_marker_.pose.pose.orientation.w);
-*/
 }
 
 ARMarkers::~ARMarkers()
@@ -106,7 +104,6 @@ void ARMarkers::broadcastMarkersTF()
     }
 
     rate.sleep();
-    //ros::Duration(1.0/tf_brc_freq_).sleep();
   }
 }
 
@@ -115,7 +112,7 @@ void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
   if ((global_markers_.markers.size() == 0) && (msg->markers.size() > 0))  // first message; ignore the rest
   {
     global_markers_ = *msg;
-    ROS_INFO("%u global marker pose(s) received", global_markers_.markers.size());
+    ROS_INFO("%lu global marker pose(s) received", global_markers_.markers.size());
     for (unsigned int i = 0; i < global_markers_.markers.size(); i++)
     {
 
@@ -139,22 +136,22 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
   // TODO MAke pointer!!!!  to avoid copying    but take care of multi-threading
   // more TODO:  inc confidence is very shitty as quality measure ->  we need a filter!!!  >>>   and also incorporate on covariance!!!!
 
-  for (unsigned int i = 0; i < msg->markers.size(); i++)
-  {
+//  for (unsigned int i = 0; i < msg->markers.size(); i++)
+//  {
     // Sometimes markers are spotted "inverted" (pointing to -y); as we assume that all the markers are
     // aligned with y pointing up, x pointing right and z pointing to the observer, that's a recognition
     // error. Instead of fixing, we discard the whole message, so tf with this timestamp are not used
-    tf::Quaternion q;
-    double roll, pitch, yaw;
-    tf::quaternionMsgToTF(msg->markers[i].pose.pose.orientation, q);
-    tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
-//    ROS_DEBUG("RPY = (%lf, %lf, %lf)    %.2f  %.2f  %.2f  %.2f", roll, pitch, yaw,   msg->markers[i].pose.pose.orientation.x, msg->markers[i].pose.pose.orientation.y, msg->markers[i].pose.pose.orientation.z, msg->markers[i].pose.pose.orientation.w);
-    if (tk::pitch(msg->markers[i].pose.pose) > 1.0)
-    {
-      ROS_WARN("Discarding down-pointing AR marker (%d)     (%f, %f, %f)   %.2f  %.2f  %.2f  %.2f", msg->markers[i].id,      roll, pitch, yaw,    msg->markers[i].pose.pose.orientation.x, msg->markers[i].pose.pose.orientation.y, msg->markers[i].pose.pose.orientation.z, msg->markers[i].pose.pose.orientation.w);
-      return;
-    }
-  }
+//    tf::Quaternion q;
+//    double roll, pitch, yaw;
+//    tf::quaternionMsgToTF(msg->markers[i].pose.pose.orientation, q);
+//    tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+////    ROS_DEBUG("RPY = (%lf, %lf, %lf)    %.2f  %.2f  %.2f  %.2f", roll, pitch, yaw,   msg->markers[i].pose.pose.orientation.x, msg->markers[i].pose.pose.orientation.y, msg->markers[i].pose.pose.orientation.z, msg->markers[i].pose.pose.orientation.w);
+//    if (tk::pitch(msg->markers[i].pose.pose) > 1.0)
+//    {
+//      ROS_WARN("Discarding down-pointing AR marker (%d)     (%f, %f, %f)   %.2f  %.2f  %.2f  %.2f", msg->markers[i].id,      roll, pitch, yaw,    msg->markers[i].pose.pose.orientation.x, msg->markers[i].pose.pose.orientation.y, msg->markers[i].pose.pose.orientation.z, msg->markers[i].pose.pose.orientation.w);
+//      return;
+//    }
+//  }
 
   for (unsigned int i = 0; i < msg->markers.size(); i++)
   {
@@ -173,6 +170,7 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
       // This is the docking base marker! call the registered callbacks
       boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
       *ps = msg->markers[i].pose;
+      ps->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
       base_spotted_cb_(ps, msg->markers[i].id);
     }
 
@@ -191,22 +189,56 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
         tf::StampedTransform marker_gb; // marker on global reference system
         tk::pose2tf(global_marker.pose, marker_gb);
 
-        // Get marker tf on global reference system; note that we look for the same timestamp that
-        // the AlvarMarker message to avoid the inverted marker phenomenon; see above for details
-        tf::StampedTransform robot_mk;
-        tf_listener_.waitForTransform(marker_frame, base_frame_, msg->markers[i].header.stamp, ros::Duration(0.05));
-        tf_listener_.lookupTransform(marker_frame, base_frame_, msg->markers[i].header.stamp, robot_mk);
+        // Get marker tf on base reference system
+        tf::StampedTransform marker_bs;
+        tf_listener_.waitForTransform(base_frame_, marker_frame, msg->markers[i].header.stamp, ros::Duration(0.05));
+        tf_listener_.lookupTransform(base_frame_, marker_frame, msg->markers[i].header.stamp, marker_bs);
 
-        tf::Transform robot_gb = marker_gb*robot_mk;
+//        marker_gb*=robot_mk;
+//        tf::Transform robot_gb = marker_gb;
+
+        tf::Quaternion q;
+        double roll, pitch, yaw;
+        tf::Matrix3x3(marker_bs.getRotation()).getRPY(roll, pitch, yaw);
+//        double yaw = tf::getYaw(marker_fp.getRotation());
+        ROS_DEBUG("RPY = (%lf, %lf, %lf)       (%lf, %lf, %lf)", roll, pitch, yaw, marker_bs.getOrigin().x(), marker_bs.getOrigin().y(), marker_bs.getOrigin().z());
+
+        if (tk::roll(marker_bs) < -1.0)
+        {
+          // Sometimes markers are spotted "inverted" (pointing to -y); as we assume that all the markers are
+          // aligned with y pointing up, x pointing right and z pointing to the observer, that's a recognition
+          // error. We fix this flipping the tf.
+          // TODO: while not to make tfs roll-invariant, so we avoid errors due to wrong markers alignment?
+          tf::Transform flip(tf::createQuaternionFromRPY(0.0, 0.0, M_PI));
+          marker_bs *= flip;
+        }
+
+//        tf::Transform marker_fp2(tf::createQuaternionFromYaw(yaw), marker_fp.getOrigin());//tf::Vector3(marker_fp.getOrigin().x(), marker_fp.getOrigin().y(), 0));
+        //ROS_DEBUG("%.2f         %.2f  %.2f", tf::getYaw(marker_fp.getRotation()), marker_fp.getOrigin().x(), marker_fp.getOrigin().y());
+
+//        tf::Transform marker_fp3(tf::createQuaternionFromRPY(- M_PI/2.0, - tk::wrapAngle(yaw + M_PI/2.0), 0.0),
+  //                               tf::Vector3(- marker_fp.getOrigin().x(), - marker_fp.getOrigin().y(), - marker_gb.getOrigin().z()));
+//        ROS_DEBUG("%.2f         %.2f  %.2f", tf::getYaw(marker_fp.getRotation()), marker_fp.getOrigin().x(), marker_fp.getOrigin().y());
+
+        // Calculate robot tf on global reference system multiplying the global marker tf (known a priori)
+        // by marker tf on base reference system, that is, "subtract" the relative tf to the absolute one
+        tf::Transform robot_gb = marker_gb*marker_bs.inverse();
+
+//        tf::StampedTransform tf1(marker_bs, ros::Time::now(),  base_frame_, "AR_MK");
+//        tf::StampedTransform tf2(robot_gb, ros::Time::now(),  "map", "ROBOT");
+//        tf_brcaster_.sendTransform(tf1);
+//        tf_brcaster_.sendTransform(tf2);
+
         tk::tf2pose(robot_gb, pwcs->pose.pose);
       }
       catch (tf::TransformException& e)
       {
-        ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), marker_frame, e.what());
+        // If this happens, I suppose it must be a bug in alvar tracker, as we use the msg timestamp
+        ROS_ERROR("Cannot get tf %s -> %s: %s", base_frame_.c_str(), marker_frame, e.what());
         continue;
       }
 
-      pwcs->header.stamp = msg->header.stamp;
+      pwcs->header.stamp = msg->markers[i].header.stamp;
       pwcs->header.frame_id = global_frame_;
 
       robot_pose_cb_(pwcs);

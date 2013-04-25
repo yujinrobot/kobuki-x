@@ -72,12 +72,33 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
     return false;
   }
 
+  // Get latest robot global pose
+  tf::StampedTransform robot_gb;
+
+  try
+  {
+    tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+  }
+  catch (tf::TransformException& e)
+  {
+    // If frames are well configured, this implies that some part of the localization chain is missing
+    ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
+    return false;
+  }
+
   // Project a pose relative to map frame in front of the docking base and heading to it
   ROS_INFO("Global navigation to docking base...");
 
   // Compensate the vertical alignment of markers and put at ground level to adopt navistack goals format
   tf::Transform marker_gb(tf::createQuaternionFromYaw(tf::getYaw(base_abs_pose.pose.orientation) - M_PI/2.0),
                           tf::Vector3(base_abs_pose.pose.position.x, base_abs_pose.pose.position.y, 0.0));
+
+  // Check that we are not already close to the docking base
+  if (tk::distance(robot_gb, marker_gb) < base_marker_distance_)
+  {
+    ROS_DEBUG("Already close to the docking base (%f m) , but we are not smart enough to make use of this... pabo io...",
+              tk::distance(robot_gb, marker_gb));
+  }
 
   // Half turn and translate to put goal at some distance in front of the marker
   tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
@@ -107,17 +128,22 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
   ros::Time t0 = ros::Time::now();
 
+  // Going to goal in front of the docking base marker
   while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
   {
+    ROS_DEBUG("%d %.2f %f", state_, (ros::Time::now() - base_rel_pose_.header.stamp).toSec(),
+             base_rel_pose_.pose.position.z);
+    // Keep an eye open to detect the marker as we approach it
     if ((state_ == GLOBAL_DOCKING) &&
         ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 1.0) &&
-        (base_rel_pose_.pose.position.z <= base_marker_distance_))
+        (base_rel_pose_.pose.position.z <= base_marker_distance_))  // NOTE: frontal approach assumed!
     {
+      // Here is!
       ROS_INFO("Docking base spotted at %.2f m; switching to marker-based local navigation...",
                base_rel_pose_.pose.position.z);
 
       // Docking base marker spotted at base_marker_distance; switch to relative goal
-      move_base_ac_.cancelGoal();
+      move_base_ac_.cancelAllGoals();
 //      move_base_ac_.waitForResult(ros::Duration(1.0));
       ROS_DEBUG("1 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
       while (move_base_ac_.waitForResult(ros::Duration(0.05)) == false)
@@ -136,23 +162,29 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
       mb_goal.target_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, 0.0);
       mb_goal.target_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2.0, M_PI/2.0, 0.0);
 
+      for (int var = 0; var < 20; ++var) {
+
       ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
                 mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
                 tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
       goal_poses_pub_.publish(mb_goal.target_pose);
       move_base_ac_.sendGoal(mb_goal);
 
+      ros::Duration(2.0).sleep();
+      }
+
       state_ = MARKER_DOCKING;
     }
     else if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
     {
-      ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
+      ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s; %s  %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str(),
+                         state_ == GLOBAL_DOCKING?"GLOBAL_DOCKING":"MARKER_DOCKING");
     }
     else
     {
       ROS_WARN("Cannot she the docking base after %.2f s; current state is %s. Aborting...",
                GO_TO_POSE_TIMEOUT, move_base_ac_.getState().getText().c_str());
-      move_base_ac_.cancelGoal();
+      move_base_ac_.cancelAllGoals();
       return false;
     }
   }
