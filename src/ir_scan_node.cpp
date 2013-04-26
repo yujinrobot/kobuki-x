@@ -28,25 +28,22 @@ IrScanNode::~IrScanNode()
 {
 }
 
-void IrScanNode::sonarsMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
+void IrScanNode::rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
 {
-  double RADIUS = 0.155;
-  double FREQUENCY = 20.0;
-
   sensor_msgs::LaserScan scan;
   scan.header = msg->header;
-  scan.header.frame_id = "ir_link";
+  scan.header.frame_id = ir_frame_id;
   scan.ranges.resize(msg->ranges.size(), 0.0);
   scan.intensities.resize(msg->ranges.size(), 0.0);
 //std algo   scan.intensities = msg->ranges;
 
-  scan.angle_min = -M_PI/2.0;// - 0.1;
+  scan.angle_min = -M_PI/2.0;
   scan.angle_max = +M_PI/2.0;
-  scan.angle_increment = M_PI/10; //(18.0*M_PI)/180.0;
+  scan.angle_increment = M_PI/10.0;
 //  scan.time_increment
-  scan.scan_time = 1/FREQUENCY;
-  scan.range_min = 0.10 + RADIUS;
-  scan.range_max = 11.00 + RADIUS;
+  scan.scan_time = 1.0 / read_frequency;
+  scan.range_min = 0.10 + ir_ring_radius;
+  scan.range_max = 11.00 + ir_ring_radius;
 
   for (unsigned int i = 0; i < msg->ranges.size(); i++)
   {
@@ -55,12 +52,12 @@ void IrScanNode::sonarsMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
              - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
 
     // identify the position of its reading in the incoming message data
-    int idx = sonars[i].idx_buffer;
+    int idx = rangers[i].idx_buffer;
     // store reading a timestamp in the proper place of its internal buffer
-//    sonars[i].readings[idx] = r;
-////    sonars[i].t_stamps[idx] = msg->header.stamp;
+//    rangers[i].readings[idx] = r;
+////    rangers[i].t_stamps[idx] = msg->header.stamp;
 //    // and increment the internal buffer index
-//    sonars[i].idx_buffer  = (sonars[i].idx_buffer + 1) % sonar_buffer_size;
+//    rangers[i].idx_buffer  = (rangers[i].idx_buffer + 1) % readings_buffer;
 
 
 //    FILE* f = fopen("COV.m", "w");
@@ -71,78 +68,78 @@ void IrScanNode::sonarsMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
 //    prevDist = 0;
 //
     // estimate - prediction
-    sonars[i].P = sonars[i].P + sonars[i].Q;
+    rangers[i].P = rangers[i].P + rangers[i].Q;
 
     // correction
    // double E = H * P * H';
 
-    double z = r - sonars[i].last_range;
-    double Z = sonars[i].R + sonars[i].P;
+    double z = r - rangers[i].last_range;
+    double Z = rangers[i].R + rangers[i].P;
 
-    double K = sonars[i].P/Z;
+    double K = rangers[i].P/Z;
 
-    double distanceKF = sonars[i].last_range + K*z;
-    sonars[i].P = sonars[i].P - K*sonars[i].P;
+    double distanceKF = rangers[i].last_range + K*z;
+    rangers[i].P = rangers[i].P - K*rangers[i].P;
 
     // collect data
-    sonars[i].last_range = distanceKF;
+    rangers[i].last_range = distanceKF;
 
-    sonars[i].voltage[idx]  = v;
-    sonars[i].distance[idx] = r;
-    sonars[i].filt_err[idx] = distanceKF - r;
+    rangers[i].voltage[idx]  = v;
+    rangers[i].distance[idx] = r;
+    rangers[i].filt_err[idx] = distanceKF - r;
 
-//    sonars[i].t_stamps[idx] = msg->header.stamp;
+//    rangers[i].t_stamps[idx] = msg->header.stamp;
     // and increment the internal buffer index
-    sonars[i].idx_buffer  = (sonars[i].idx_buffer + 1) % sonar_buffer_size;
+    rangers[i].idx_buffer  = (rangers[i].idx_buffer + 1) % readings_buffer;
 
-//    int idx1 = sonars[i].idx_buffer;
-//    int idx2 = (idx + 1) % sonar_buffer_size;
+//    int idx1 = rangers[i].idx_buffer;
+//    int idx2 = (idx + 1) % readings_buffer;
     //idx--;
-    //if (idx < 0) idx =  sonar_buffer_size-1;
+    //if (idx < 0) idx =  readings_buffer-1;
     //    return distanceKF;
 
     // inverse order, as for laser scan first value correspond to A10
-    //scan.intensities[msg->ranges.size() - (i + 1)] = r + RADIUS;//(r <= 110.6)?(r + RADIUS):6.0;
+    //scan.intensities[msg->ranges.size() - (i + 1)] = r + ir_ring_radius;//(r <= 110.6)?(r + ir_ring_radius):6.0;
 
-   // double var = tk::variance(sonars[i].distance);
+   // double var = tk::variance(rangers[i].distance);
 
     // Filter by checking accumulated difference between filtered and unfiltered ranges
     double acc_filt_err = 0.0;
-    for (unsigned int j = 0; j < sonar_buffer_size; j++)
+    for (unsigned int j = 0; j < readings_buffer; j++)
     {
-      acc_filt_err += std::abs(sonars[i].filt_err[j]);
+      acc_filt_err += std::abs(rangers[i].filt_err[j]);
     }
-    double avg_filt_err = acc_filt_err/sonar_buffer_size;
+    double avg_filt_err = acc_filt_err/readings_buffer;
 
     // Filter by checking accumulated difference between consecutive raw readings
     double acc_abs_diff = 0.0;
     double acc_sgn_diff = 0.0;
 
-    for (unsigned int j = 1; j < sonar_buffer_size; j++)
+    for (unsigned int j = 1; j < readings_buffer; j++)
     {
-      int idx1 = (idx  + j) % sonar_buffer_size;
-      int idx2 = (idx1 + 1) % sonar_buffer_size;
+      int idx1 = (idx  + j) % readings_buffer;
+      int idx2 = (idx1 + 1) % readings_buffer;
 
-      double diff = sonars[i].voltage[idx2] - sonars[i].voltage[idx1];
+      double diff = rangers[i].voltage[idx2] - rangers[i].voltage[idx1];
       acc_abs_diff += std::abs(diff);
       acc_sgn_diff +=          diff;
     }
 
-    double avg_abs_diff = acc_abs_diff/sonar_buffer_size - 1;
-    double avg_sgn_diff = acc_sgn_diff/sonar_buffer_size - 1;
+    double avg_abs_diff = acc_abs_diff/readings_buffer - 1;
+    double avg_sgn_diff = acc_sgn_diff/readings_buffer - 1;
 
- //   fprintf(f, "  %f  %f  %f  %f\n", avg_abs_diff, avg_sgn_diff, avg_sgn_diff/avg_abs_diff, tk::mean(sonars[i].distance));
+ //   fprintf(f, "  %f  %f  %f  %f\n", avg_abs_diff, avg_sgn_diff, avg_sgn_diff/avg_abs_diff, tk::mean(rangers[i].distance));
 
     // Filter by adaptive variance threshold
     double var_threshold = max_covariance*(0.5 + std::pow(std::max(0.0, std::min(1.0, (distanceKF - closest_rejected)/(farthest_contact - closest_rejected))), 2));
 
-    if (tk::variance(sonars[i].distance) > var_threshold)
-      sonars[i].noisy_read = std::min(sonars[i].noisy_read + 1, + noisy_readings);
+    if (tk::variance(rangers[i].distance) > var_threshold)
+      rangers[i].noisy_read = std::min(rangers[i].noisy_read + 1, + noisy_readings);
     else
-      sonars[i].noisy_read = std::max(sonars[i].noisy_read - 1, - noisy_readings);
+      rangers[i].noisy_read = std::max(rangers[i].noisy_read - 1, - noisy_readings);
 
-    scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF;//((distanceKF <= farthest_contact) && (sonars[i].noisy_read <= 0.0)) || (distanceKF < closest_rejected)?(distanceKF + RADIUS):6.0;
-    scan.intensities[msg->ranges.size() - (i + 1)] = r;//avg_abs_diff;//tk::variance(sonars[i].distance);//r + RADIUS;//(r <= 110.6)?(r + RADIUS):6.0;
+    scan.ranges[msg->ranges.size() - (i + 1)] = ((distanceKF <= farthest_contact) && (rangers[i].noisy_read <= 0.0)) || (distanceKF < closest_rejected)?(distanceKF + ir_ring_radius):6.0;
+    scan.intensities[msg->ranges.size() - (i + 1)] = r;//avg_abs_diff;//tk::variance(rangers[i].distance);//r + ir_ring_radius;//(r <= 110.6)?(r + ir_ring_radius):6.0;
 
 
     if (i == 55555)
@@ -157,245 +154,104 @@ void IrScanNode::sonarsMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
       else
         scan.intensities[1] = 0.0;
 
-      if (tk::variance(sonars[i].distance) >= max_covariance)
+      if (tk::variance(rangers[i].distance) >= max_covariance)
         scan.intensities[2] = 0.45;
       else
         scan.intensities[2] = 0.0;
 
-      if (tk::variance(sonars[i].voltage) >= max_mean_error*10.0)
+      if (tk::variance(rangers[i].voltage) >= max_mean_error*10.0)
         scan.intensities[3] = 0.4;
       else
         scan.intensities[3] = 0.0;
 
       double var_threshold = max_covariance*(0.5 + std::pow(std::max(0.0, std::min(1.0, (distanceKF - closest_rejected)/(farthest_contact - closest_rejected))), 2));
 
-      if (tk::variance(sonars[i].distance) >=  var_threshold)
+      if (tk::variance(rangers[i].distance) >=  var_threshold)
           scan.intensities[4] = 0.3;
       else
         scan.intensities[4] = 0.0;
 
-      scan.intensities[msg->ranges.size() - (i + 1)] = r+ RADIUS;//avg_abs_diff;//tk::variance(sonars[i].distance);//r + RADIUS;//(r <= 110.6)?(r + RADIUS):6.0;
+      scan.intensities[msg->ranges.size() - (i + 1)] = r + ir_ring_radius;//avg_abs_diff;//tk::variance(rangers[i].distance);//r + ir_ring_radius;//(r <= 110.6)?(r + ir_ring_radius):6.0;
 
       scan.intensities[6] = var_threshold;
-      scan.intensities[7] = tk::variance(sonars[i].distance);
-      scan.intensities[8] = sonars[i].noisy_read;
+      scan.intensities[7] = tk::variance(rangers[i].distance);
+      scan.intensities[8] = rangers[i].noisy_read;
 
-//      fprintf(f, "%f %f %f %f %f %f %f %f %d %d\n", v, r, distanceKF, tk::variance(sonars[i].distance), tk::std_dev(sonars[i].distance), avg_filt_err, avg_abs_diff, avg_sgn_diff,
+//      fprintf(f, "%f %f %f %f %f %f %f %f %d %d\n", v, r, distanceKF, tk::variance(rangers[i].distance), tk::std_dev(rangers[i].distance), avg_filt_err, avg_abs_diff, avg_sgn_diff,
 //              avg_filt_err >= max_covariance/100.0, avg_abs_diff >= max_covariance);
     }
   }
 
-//  if (sonars[0].idx_buffer == 0)
+//  if (rangers[0].idx_buffer == 0)
 //  {
 //    for (unsigned int i = 0; i < msg->ranges.size(); i++) {
 //
 //      double mean = 0;
-//      for (unsigned int j = 0; j < sonar_buffer_size; j++)
-//        mean += sonars[i].readings[j];
+//      for (unsigned int j = 0; j < readings_buffer; j++)
+//        mean += rangers[i].readings[j];
 //
-//      double v = mean/sonar_buffer_size;//     msg->ranges[i]; // no filter by now
+//      double v = mean/readings_buffer;//     msg->ranges[i]; // no filter by now
 //      double r = 1.06545479706866e-15*pow(v, 6) - 2.59219822235705e-12*pow(v, 5) + 2.52095247302813e-09*pow(v, 4)
 //               - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
 //
 //      scan.ranges[i] = r;
 //      scan.intensities[i] = v;
 //    }
-    pcloud_pub.publish(scan);
+  ir_scan_pub.publish(scan);
 //  }
 }
-/*
-void operator >> (const YAML::Node& node, IrScanNode::Sonar& sonar) {
-  node["name"]        >> sonar.name;
-  node["frame_id"]    >> sonar.frame_id;
-  node["index_fired"] >> sonar.idx_fired;
-  node["index_value"] >> sonar.idx_value;
-}
 
-bool IrScanNode::loadSonarsCfg(std::string path)
-{
-  std::ifstream ifs(path.c_str(), std::ifstream::in);
-  if (ifs.good() == false) {
-    ROS_ERROR("Unable to read sonars configuration file: %s", path.c_str());
-    return false;
-  }
-
-  bool result = true;
-
-  try {
-    YAML::Parser parser(ifs);
-
-    YAML::Node doc;
-    parser.GetNextDocument(doc);
-
-    doc["sonar_buffer_size"] >> sonar_buffer_size;
-    doc["sonar_max_reading"] >> sonar_max_reading;
-    doc["no_contact_range"]  >> no_contact_range;
-
-    for (unsigned int i = 0; i < doc["sonars"].size(); i++) {
-      Sonar sonar;
-      doc["sonars"][i] >> sonar;
-      sonars.push_back(sonar);
-    }
-  } catch(YAML::ParserException& e) {
-    ROS_ERROR("Sonars configuration file parse failed: %s", e.what());
-    result = false;
-  } catch(YAML::RepresentationException& e) {
-    ROS_ERROR("Sonars configuration file wrong format: %s", e.what());
-    result = false;
-  }
-
-  ifs.close();
-  return result;
-}
-*/
 int IrScanNode::init(ros::NodeHandle& nh)
 {
   // Parameters
-  std::string default_frame("/base_link");
-  std::string default_file("sonars_config.yaml");
-  nh.param("sonars_to_pc/frequency", frequency, 20.0);
-  nh.param("sonars_to_pc/pcloud_frame_id", pcloud_frame, default_frame);
-  nh.param("sonars_to_pc/sonars_cfg_file", sonars_cfg_file, default_file);
-
-
-  nh.param("ir_to_laserscan/max_mean_error",   max_mean_error,  0.01);
-  nh.param("ir_to_laserscan/max_covariance",   max_covariance,  0.01);
-  nh.param("ir_to_laserscan/readings_buffer",  readings_buffer,    5);
+  std::string default_frame("ir_link");
+  nh.param("ir_to_laserscan/ir_frame_id",      ir_frame_id, default_frame);
+  nh.param("ir_to_laserscan/max_mean_error",   max_mean_error,   0.01);
+  nh.param("ir_to_laserscan/max_covariance",   max_covariance,   0.01);
+  nh.param("ir_to_laserscan/sensor_variance",  sensor_variance,  0.025);
+  nh.param("ir_to_laserscan/readings_buffer",  readings_buffer,  5);
   nh.param("ir_to_laserscan/farthest_contact", farthest_contact, 0.8);
   nh.param("ir_to_laserscan/closest_rejected", closest_rejected, 0.4);
-  nh.param("ir_to_laserscan/noisy_readings", noisy_readings, 10);
+  nh.param("ir_to_laserscan/noisy_readings",   noisy_readings,  10);
+  nh.param("ir_to_laserscan/ir_ring_radius",   ir_ring_radius,   0.155);
+  nh.param("ir_to_laserscan/read_frequency",   read_frequency,  20.0);
 
-//  if (loadSonarsCfg(sonars_cfg_file) == false)
-  //  return ERROR;
-
-  sonar_buffer_size = readings_buffer;
-  sonars.resize(11, Sonar());
+  rangers.resize(11, Ranger());
   const ros::Time       t0(0);
   const ros::Duration   d4(4);
   tf::StampedTransform  stf;
   tf::TransformListener tfl;
 
-  for (unsigned int i = 0; i < sonars.size(); i++)
+  for (unsigned int i = 0; i < rangers.size(); i++)
   {
-    // Allocate sonar readings and timestamps internal buffers
-    sonars[i].idx_buffer = 0;
-    sonars[i].noisy_read = 0;
-    sonars[i].last_range = farthest_contact;
-    sonars[i].voltage.resize(sonar_buffer_size, 0);
-    sonars[i].distance.resize(sonar_buffer_size, 0);
-    sonars[i].filt_err.resize(sonar_buffer_size, 0);
-    sonars[i].t_stamps.resize(sonar_buffer_size, t0);
+    // Allocate ranger readings and other internal buffers
+    rangers[i].idx_buffer = 0;
+    rangers[i].noisy_read = 0;
+    rangers[i].last_range = farthest_contact;
+    rangers[i].voltage.resize(readings_buffer, 0);
+    rangers[i].distance.resize(readings_buffer, 0);
+    rangers[i].filt_err.resize(readings_buffer, 0);
 
 
-    sonars[i].Q = 0.001;
-    sonars[i].R = 0.025; //0.0288;
-    sonars[i].P = sonars[i].R;
-
-//    ROS_DEBUG("%s sonar configured with frame id %s",
-  //            sonars[i].name.c_str(), sonars[i].frame_id.c_str());
+    rangers[i].Q = 0.001;
+    rangers[i].R = sensor_variance; //0.0288;
+    rangers[i].P = rangers[i].R;
   }
 
-//  if (sonars.size() == 0)
-//  {
-//    ROS_ERROR("No sonars configured; check sonars configuration yaml file content");
-//    return ERROR;
-//  }
-
-//  ROS_DEBUG("Sonars configuration file  %s successfully parsed", sonars_cfg_file.c_str());
-
-//  const ros::Time       t0(0);
-//  const ros::Duration   d4(4);
-//  tf::StampedTransform  stf;
-//  tf::TransformListener tfl;
-//
-//  for (unsigned int i = 0; i < sonars.size(); i++)
-//  {
-//    // For each sonar, get the static tf: sonars origin ->  current sonar
-//    // To use ros::Time(0) means that we'll take the latest available tf, what's fine for static
-//    // transforms. Transform should be available immediately, but anyway we wait up to 4 seconds
-//    tf::StampedTransform sonar_tf;
-//    try {
-//      tfl.waitForTransform(pcloud_frame, sonars[i].frame_id, t0, d4);
-//      tfl.lookupTransform(pcloud_frame, sonars[i].frame_id, t0, stf);
-//    }
-//    catch (tf::TransformException e) {
-//      ROS_FATAL("Get %s -> %s tf failed: %s", sonars[i].frame_id.c_str(), pcloud_frame.c_str(),
-//                e.what());
-//      return ERROR;
-//    }
-//    sonars[i].transform = (tf::Transform)stf;
-//
-//    // Allocate sonar readings and timestamps internal buffers
-//    sonars[i].idx_buffer = 0;
-//    sonars[i].readings.resize(sonar_buffer_size, sonar_max_reading);
-//    sonars[i].t_stamps.resize(sonar_buffer_size, t0);
-//
-//    ROS_DEBUG("%s sonar configured with frame id %s",
-//              sonars[i].name.c_str(), sonars[i].frame_id.c_str());
-//  }
-
   // Publishers and subscriptors
-  sonars_sub = nh.subscribe("rangers_data", 1, &IrScanNode::sonarsMsgCB, this);
-  pcloud_pub = nh.advertise< sensor_msgs::LaserScan>("ir_scan", 1);
+  rangers_sub = nh.subscribe("rangers_data", 1, &IrScanNode::rangersMsgCB, this);
+  ir_scan_pub = nh.advertise< sensor_msgs::LaserScan>("ir_scan", 1);
 
-  ROS_INFO("Sonars to pointcloud node successfully initialized with %lu sonars", sonars.size());
+  ROS_INFO("IR scan node successfully initialized with %lu rangers", rangers.size());
 
   return 0;
 }
-/*
-int IrScanNode::spin() {
-  long long int iter = 0;
 
-  pcl::PointCloud<pcl::PointXYZ> pcloud;
-  pcloud.header.frame_id = pcloud_frame;
-
-  pcloud.points.resize(sonars.size(), pcl::PointXYZ());
-
-  ros::Rate r(frequency); // sonar messages come at 40 hz, so the three sets get ready at 13.3 hz
-  while (ros::ok())
-  {
-    double stamp = 0.0;
-
-    // The 2nd loop exit condition allows callbacks to fill the buffers before publish any data
-
-    for (unsigned int i = 0; (i < sonars.size()) && (iter > 3*sonar_buffer_size); i++) {
-      // For each sonar: prepare a beam with the measured distance as x-axis and 0 on the others,
-      // and transform according to the current sonar frame. Note that we store readings for each
-      // sonar in an internal buffer to apply a median filter, instead of returning raw readings.
-      // We cannot send the 255 maximum distance provided by the sonars because it will probably
-      // be below the obstacle_range costmap_2d parameter, and so included in the costmap as an
-      // obstacle. See http://ros.org/wiki/costmap_2d#Global_costmap_parameters for details
-      uint8_t dist = median(sonars[i].readings);
-      tf::Vector3 beam_sonar((dist == sonar_max_reading)?no_contact_range:dist/100.0, 0.0, 0.0);
-      tf::Vector3 beam_pcloud = sonars[i].transform * beam_sonar;
-
-      pcloud.points[i].x = beam_pcloud.x();
-      pcloud.points[i].y = beam_pcloud.y();
-      pcloud.points[i].z = beam_pcloud.z();
-
-      // For the timestamp, we calculate the average of all sonars, assuming that the median value
-      // is the middle element in the historical list of readings.
-      int expected_median = (sonar_buffer_size + (sonars[i].idx_buffer - 1 - sonar_buffer_size/2));
-      stamp += sonars[i].t_stamps[expected_median%sonar_buffer_size].toSec();
-    }
-
-    pcloud.header.stamp = ros::Time(stamp/sonars.size());
-    pcloud_pub.publish(pcloud);
-
-    iter++;
-
-    ros::spinOnce();
-    r.sleep();
-  }
-
-  return OK;
-}
-*/
 } // namespace waiterbot
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "sonars_to_pc");
+  ros::init(argc, argv, "ir_scan");
 
   ros::NodeHandle nh;
 

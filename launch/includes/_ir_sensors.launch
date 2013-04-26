@@ -13,11 +13,12 @@
   <node name="arduino_gateway" pkg="rosserial_python" type="serial_node.py" args="/dev/arduino"/>
 
   <node name="ir_to_laserscan" pkg="waiterbot" type="ir_scan_node">
-    <param name="closest_rejected" value="0.45"/>
+    <param name="closest_rejected" value="0.35"/>
     <param name="farthest_contact" value="0.6"/>
     <param name="readings_buffer" value="15"/>
     <param name="max_mean_error" value="10.0"/>
     <param name="max_covariance" value="0.005"/>
     <param name="noisy_readings" value="2"/>
+    <param name="sensor_variance" value="0.025"/>
   </node>
 </launch>
