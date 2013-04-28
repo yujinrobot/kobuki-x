@@ -29,7 +29,7 @@
   <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
 
   <!--  ********** Kobuki mobile base extras **********  -->
-  <include file="$(find turtlebot_bringup)/launch/includes/kobuki/_safety_controller.launch"/>
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
   <param name="cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
@@ -40,30 +40,8 @@
     <arg name="max_frequency" value="4.0"/>  <!-- This is a CPU-hungry bastard; reduce its rate --> 
   </include>
 
-  <!--  ************* Navigation manager **************  -->  
-  <node name="waiterbot" pkg="waiterbot" type="waiterbot_node">
-    <param name="base_beacon_distance" value="0.4"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
-    <param name="base_marker_distance" value="1.99999"/>   <!-- At which distance from the base we start relaying on ar markers -->  
-    <param name="check_localized" value="true"/>
-    <param name="amcl_max_error" value="1.0"/>
-    <param name="global_frame" value="map"/>
-    <param name="odom_frame" value="odom"/>
-    <param name="base_frame" value="base_footprint"/>
-    <param name="tf_broadcast_freq" value="5.0"/>
-
-    <!-- Incoming remaps -->
-    <remap from="new_goal"    to="move_base_simple/goal"/>
-    <remap from="amcl_init"   to="initialpose"/>
-    <remap from="amcl_pose"   to="amcl_pose"/>
-    <remap from="odometry"    to="odom"/>
-
-    <!-- Outgoing remaps -->
-    <remap from="issue_goal"  to="move_base_simple/goal"/>
-    <remap from="cancel_goal" to="move_base/cancel"/>
-    <remap from="reset_pose"  to="initialpose"/>
-
-    <remap from="mobile_base/commands/velocity" to="cmd_vel_mux/input/special_tasks"/>
-  </node>
+  <!--  ************* Navigation manager **************  -->
+  <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch"/>
 
   <!--  ************** Rosnav move base ***************  -->
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
@@ -75,18 +53,14 @@
   <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
 
   <!--  ******************** Amcl *********************  -->
-    <include file="$(find waiterbot)/launch/includes/_amcl.launch">
-<!--       <arg name="tf_broadcast" value="false"/>
--->
-      <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
-      <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
-      <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
-<!--
-    <arg name="initial_cov_xx" value="0.01"/>
-    <arg name="initial_cov_yy" value="0.01"/>
-    <arg name="initial_cov_aa" value="0.01"/>
--->    </include>
+  <include file="$(find waiterbot)/launch/includes/_amcl.launch">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  </include>
 
-  <!--  ***************** Visualisation *****************  --><!-- 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" /> -->
+  <!--  ***************** Visualisation *****************
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />   -->
+  <node name="cpu_temperature" pkg="waiterbot" type="cpu_temp.sh"/>
+
 </launch>
