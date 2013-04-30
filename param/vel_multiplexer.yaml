@@ -11,7 +11,7 @@
 
 subscribers:
   - name:        "Safe reactive controller"
-    topic:       "input/safety_controller"
+    topic:       "input/safety_ctrl"
     timeout:     0.2
     priority:    10
   - name:        "Teleoperation"
@@ -19,11 +19,11 @@ subscribers:
     timeout:     1.0
     priority:    7
   - name:        "Waiterbot control"
-    topic:       "input/special_tasks"
+    topic:       "input/special_task"
     timeout:     1.0
     priority:    5
   - name:        "Navigation"
     topic:       "input/navigation"
     timeout:     1.0
-    priority:    5
+    priority:    3
 publisher: "/mobile_base/commands/velocity"

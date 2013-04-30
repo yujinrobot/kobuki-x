@@ -83,8 +83,8 @@ public:
 
   bool spotDockMarker(uint32_t base_marker_id);
 
-  bool enableTracker();
-  bool disableTracker();
+  static bool enableTracker();
+  static bool disableTracker();
 
 private:
   std::string global_frame_;
@@ -108,8 +108,8 @@ private:
   boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)>    base_spotted_cb_;
 
   void broadcastMarkersTF();
-  void globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
-  void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg);
+  void globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
+  void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
 
   bool included(const uint32_t id, const ar_track_alvar::AlvarMarkers& v,
                 ar_track_alvar::AlvarMarker* e = NULL)

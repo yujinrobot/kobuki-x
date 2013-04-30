@@ -33,19 +33,19 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
   tf::Pose amcl_pose, armk_pose;
   tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
   tf::poseMsgToTF(msg->pose.pose,       armk_pose);
-
-  if (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 10.0)
-  {
-    geometry_msgs::PoseWithCovarianceStamped pose = *msg;
-    pose.header.stamp = ros::Time::now() + ros::Duration(0.1);
-    init_pose_pub_.publish(pose);
-    last_amcl_init_.header = msg->header;
-    last_amcl_init_.pose = msg->pose.pose;
-
-    ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
-              msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
-return;
-  }
+//
+//  if (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 10.0)
+//  {
+//    geometry_msgs::PoseWithCovarianceStamped pose = *msg;
+//    pose.header.stamp = ros::Time::now() + ros::Duration(0.1);
+//    init_pose_pub_.publish(pose);
+//    last_amcl_init_.header = msg->header;
+//    last_amcl_init_.pose = msg->pose.pose;
+//
+//    ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
+//              msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
+//return;
+//  }
 
 
 

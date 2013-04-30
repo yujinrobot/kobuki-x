@@ -86,7 +86,7 @@ void ARMarkers::broadcastMarkersTF()
 
     for (unsigned int i = 0; i <global_markers_.markers.size(); i++)
     {
-      sprintf(child_frame, "global_marker_%d", global_markers_.markers[i].id);
+      sprintf(child_frame, "%s_%d", i == docking_marker_.id?"global_marker":"docking_base", global_markers_.markers[i].id);
       tk::pose2tf(global_markers_.markers[i].pose, tf);
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
@@ -107,9 +107,10 @@ void ARMarkers::broadcastMarkersTF()
   }
 }
 
-void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
+void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
 {
-  if ((global_markers_.markers.size() == 0) && (msg->markers.size() > 0))  // first message; ignore the rest
+  // Just take first message; ignore the rest, as global markers list is not dynamic
+  if ((global_markers_.markers.size() == 0) && (msg->markers.size() > 0))
   {
     global_markers_ = *msg;
     ROS_INFO("%lu global marker pose(s) received", global_markers_.markers.size());
@@ -131,7 +132,7 @@ void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
   }
 }
 
-void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
+void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
 {
   // TODO MAke pointer!!!!  to avoid copying    but take care of multi-threading
   // more TODO:  inc confidence is very shitty as quality measure ->  we need a filter!!!  >>>   and also incorporate on covariance!!!!
@@ -197,11 +198,11 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::Ptr& msg)
 //        marker_gb*=robot_mk;
 //        tf::Transform robot_gb = marker_gb;
 
-        tf::Quaternion q;
-        double roll, pitch, yaw;
-        tf::Matrix3x3(marker_bs.getRotation()).getRPY(roll, pitch, yaw);
-//        double yaw = tf::getYaw(marker_fp.getRotation());
-        ROS_DEBUG("RPY = (%lf, %lf, %lf)       (%lf, %lf, %lf)", roll, pitch, yaw, marker_bs.getOrigin().x(), marker_bs.getOrigin().y(), marker_bs.getOrigin().z());
+//        tf::Quaternion q;
+//        double roll, pitch, yaw;
+//        tf::Matrix3x3(marker_bs.getRotation()).getRPY(roll, pitch, yaw);
+////        double yaw = tf::getYaw(marker_fp.getRotation());
+//        ROS_DEBUG("RPY = (%lf, %lf, %lf)       (%lf, %lf, %lf)", roll, pitch, yaw, marker_bs.getOrigin().x(), marker_bs.getOrigin().y(), marker_bs.getOrigin().z());
 
         if (tk::roll(marker_bs) < -1.0)
         {

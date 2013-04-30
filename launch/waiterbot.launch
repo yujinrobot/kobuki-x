@@ -28,8 +28,8 @@
   <!--  ************* Kobuki IR half ring *************  -->
   <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
 
-  <!--  ********** Kobuki mobile base extras **********  -->
-  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
+  <!--  ********** Kobuki mobile base extras **********  
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>/////////////////////////////////////////////////////-->
   <param name="cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->

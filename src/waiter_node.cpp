@@ -24,13 +24,12 @@ bool WaiterNode::init()
 
 //  deliver_as_  = nh_., name, boost::bind(&WaiterNode::deliverOrderCB, this, _1), false),
 
-  cmd_vel_pub_  = nh_.advertise <geometry_msgs::Twist> ("mobile_base/commands/velocity", 1);
   led_1_pub_    = nh_.advertise <kobuki_msgs::Led>     ("mobile_base/commands/led1", 1);
   led_2_pub_    = nh_.advertise <kobuki_msgs::Led>     ("mobile_base/commands/led2", 1);
   sound_pub_    = nh_.advertise <kobuki_msgs::Sound>   ("mobile_base/commands/sound", 1);
 
-  sensors_sub_  = nh_.subscribe("core_sensors",   5, &WaiterNode::coreSensorsCB, this);
-  odometry_sub_ = nh_.subscribe("odometry",       5, &WaiterNode::odometryCB,    this);
+  core_sensors_sub_ = nh_.subscribe("core_sensors",   5, &WaiterNode::coreSensorsCB, this);
+  table_poses_sub_  = nh_.subscribe("semantic_map/table_pose_list", 1, &WaiterNode::tablePosesCB, this);
 
   // Initialize sub-modules
   if (nav_watchd_.init() == false)
@@ -53,7 +52,35 @@ bool WaiterNode::init()
   ar_markers_.setRobotPoseCB(boost::bind(&NavWatchdog::arMarkerMsgCB, &nav_watchd_, _1));
   ar_markers_.baseSpottedCB(boost::bind(&Navigator::baseSpottedMsgCB, &navigator_, _1, _2));
 
+  // Enable safety controller by default
+  navigator_.enableSafety();
+
   return true;
+}
+
+void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::ConstPtr& msg)
+{
+  // Just take first message; ignore the rest, as global markers list is not dynamic
+  if ((table_poses_.tables.size() == 0) && (msg->tables.size() > 0))
+  {
+    table_poses_ = *msg;
+    ROS_INFO("%lu table pose(s) received", table_poses_.tables.size());
+    for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
+    {
+      // Look for the pickup point
+      if (table_poses_.tables[i].name.find("pickup") != std::string::npos)
+      {
+        ROS_DEBUG("Pickup point: %s", tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+        pick_up_pose_.header = table_poses_.tables[i].pose_cov_stamped.header;
+        pick_up_pose_.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+      }
+      else
+      {
+        ROS_DEBUG("%s. rad: %f, pose: %s", table_poses_.tables[i].name.c_str(), table_poses_.tables[i].radius,
+                  tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+      }
+    }
+  }
 }
 
 void WaiterNode::deliverOrderCB()
@@ -64,20 +91,23 @@ void WaiterNode::deliverOrderCB()
   order_ = as_.acceptNewGoal()->order;
   ROS_INFO("Deliver order action requested [order: %d, table: %d]", order_.order_id, order_.table_id);
 
-  if (order_.table_id == 0)
+  if (order_.order_id == 0)
 //  if (status_ == robot IDLE)
 //  {
     boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
 //  }
   //order_status_ = cafe_msgs::Status::IDLE;//TODO ojo; mato la thread????
 
-  if (order_.table_id == 1)
+  if (order_.order_id == 1)
+    boost::thread wakeUpThread(&WaiterNode::leaveNest, this);
+
+  if (order_.order_id == 2)
   {
-    if (ar_markers_.enableTracker() == false)
-    {
-      ROS_ERROR("Unable to start AR markers tracker; aborting wake up!");
-      return;
-    }
+//    if (ar_markers_.enableTracker() == false)
+//    {
+//      ROS_ERROR("Unable to start AR markers tracker; aborting wake up!");
+//      return;
+//    }
     boost::thread dockingThread(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose());
 
   // TODO  ar_markers_.disableTracker()  >>> cuando decida la logica, decido donde y cuando enable disable AR track
@@ -85,7 +115,48 @@ void WaiterNode::deliverOrderCB()
 
   }
 
-  if (order_.table_id == 10)
+  if (order_.order_id == 3)
+    boost::thread pickUpThread(&Navigator::pickUpOrder, &navigator_, pick_up_pose_);
+
+  if (order_.order_id == 4)
+  {
+    bool found = false;
+    for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
+    {
+      // Look for the requested table's pose
+      if (table_poses_.tables[i].name.find(tk::nb2str(order_.table_id), strlen("table")) != std::string::npos)
+      {
+        ROS_DEBUG("Target table %d: rad = %f, pose = %s", order_.table_id, table_poses_.tables[i].radius,
+                  tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+        boost::thread pickUpThread(&Navigator::deliverOrder, &navigator_, table_poses_.tables[i]);
+        found = true;
+        break;
+      }
+    }
+
+    if (found == false)
+    {
+      ROS_DEBUG("Table %d not found! bloody jihoon...  ignoring order", order_.table_id);
+    }
+  }
+
+
+  if (order_.order_id == 5)
+  {
+    boost::thread kk(&Navigator::moveBaseReset, &navigator_);
+  }
+
+
+  if (order_.order_id == 6)
+    boost::thread kk(&Navigator::turn, &navigator_, -M_PI*(3.0/4.0));
+  if (order_.order_id == 7)
+    boost::thread kk(&Navigator::turn, &navigator_, -M_PI*2);
+  if (order_.order_id == 8)
+    boost::thread kk(&Navigator::turn, &navigator_, M_PI*1.5);
+  if (order_.order_id == 9)
+    boost::thread kk(&Navigator::turn, &navigator_, -M_PI*0.5);
+
+  if (order_.order_id == 10)
   {
     if (ar_markers_.enableTracker() == false)
     {
@@ -93,7 +164,7 @@ void WaiterNode::deliverOrderCB()
     }
   }
 
-  if (order_.table_id == 11)
+  if (order_.order_id == 11)
   {
     if (ar_markers_.disableTracker() == false)
     {
@@ -102,9 +173,13 @@ void WaiterNode::deliverOrderCB()
   }
 
 
+// TODO todo esto al control loop... (cuando lo tenga)
   // publish the feedback
   feedback_.status = cafe_msgs::Status::IDLE;//order_status_;
   as_.publishFeedback(feedback_);
+
+  result_.result = "YA VEREMOS...";
+  as_.setSucceeded(result_);
 
 //  if(success)
 //  {
@@ -126,19 +201,14 @@ void WaiterNode::coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg)
   core_sensors_ = *msg;
 }
 
-void WaiterNode::odometryCB(const nav_msgs::Odometry::ConstPtr& msg)
-{
-  odometry_ = *msg;
-}
-
-void WaiterNode::wakeUp()
+bool WaiterNode::wakeUp()
 {
   ROS_DEBUG("Waking up! first try to recognize our own nest; slowly moving back...");
 
   if (ar_markers_.enableTracker() == false)
   {
     ROS_ERROR("Unable to start AR markers tracker; aborting wake up!");
-    return;
+    return cleanupAndError();
   }
 
   // Move back until we detect the AR marker identifying this robot's docking station
@@ -149,12 +219,12 @@ void WaiterNode::wakeUp()
   {
     if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT)
     {
-      slowBackward();
+      navigator_.slowBackward();
     }
     else if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT + 2.0)
     {
       // Wait stopped an extra couple of seconds before giving up
-      stop();
+      navigator_.stop();
     }
     else
     {
@@ -162,12 +232,12 @@ void WaiterNode::wakeUp()
     }
   }
 
-  stop();
+  navigator_.stop();
 
   if (timeout == true)
   {
     ROS_WARN("Unable to detect docking station AR marker; aborting wake up!");
-    return;
+    return cleanupAndError();
 
     // TODO do nothing more by now, but we will want to make an error sound, red leds, etc.
   }
@@ -180,28 +250,14 @@ void WaiterNode::wakeUp()
   //base_marker_.header.frame_id = "map";
 
   // Now look for a global marker to initialize our localization; full spin clockwise
-  turnClockwise();
-  turnClockwise();
-
-  while (tf::getYaw(odometry_.pose.pose.orientation) <= 0.0)
-  {
-//if(nav_watchd_.localized()){cmd_vel_pub_.publish(geometry_msgs::Twist());return;}
-    turnClockwise();
-  //  ROS_ERROR("%f   %d", tf::getYaw(odometry_.pose.pose.orientation), nav_watchd_.localized());
-  }
-
-  while (tf::getYaw(odometry_.pose.pose.orientation) >  0.0)
-  {
-    turnClockwise();
-//    ROS_ERROR("%f", tf::getYaw(odometry_.pose.pose.orientation));
-  }
+  navigator_.spinClockwise();
 
   // After a full spin, we should be localized and in front of our docking base marker
   if (nav_watchd_.localized() == false)
   {
     // Something went wrong... we should have a fall-back mechanism, but this is TODO
     ROS_WARN("Still not localized! Probably we cannot see a globally localized marker");
-    return;
+    return cleanupAndError();
   }
 
   ROS_DEBUG("We are now localized; look again for our docking station marker...");
@@ -211,20 +267,20 @@ void WaiterNode::wakeUp()
   t0 = ros::Time::now();
   while ((ar_markers_.spotDockMarker(base_marker_id) == false) && (timeout == false))
   {
-    turnClockwise();
+    navigator_.turnClockwise();
     if ((ros::Time::now() - t0).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
     {
       timeout = true;
     }
   }
 
-  stop();
+  navigator_.stop();
 
   if (timeout == true)
   {
     // Nope! again something went wrong... and again the fall-back mechanism is TODO
     ROS_WARN("Unable to detect docking station AR marker; aborting wake up!");
-    return;
+    return cleanupAndError();
 
     // TODO do nothing more by now, but we will want to make an error sound, red leds, etc.
   }
@@ -238,9 +294,9 @@ void WaiterNode::wakeUp()
   }
 
   // Now... we are ready to go!   -> go to kitchen
+  ROS_INFO("Waking up successfully completed in %.2f seconds; ready to go!", (ros::Time::now() - t0).toSec());
 
-  // (Re)enable safety controller for normal operation
-  navigator_.enableSafety();
+  return cleanupAndSuccess();
 
   //chijon  ->  plot MARKERS global
 
@@ -289,6 +345,33 @@ void WaiterNode::wakeUp()
   vel.angular.z = 0.0;
   cmd_vel_pub_.publish(vel);
 */
+}
+
+bool WaiterNode::leaveNest()
+{
+  ROS_DEBUG("Leaving the nest when already localized; slowly moving back for half meter");
+  navigator_.backward(0.5);
+}
+
+bool WaiterNode::cleanupAndSuccess()
+{
+  // Revert to standard configuration after completing a task
+  //  - (re)enable safety controller for normal operation
+  //  - (re)enable motors (auto-docking disables them after finishing)
+  //  - disable AR markers tracker as it's a CPU spendthrift
+  navigator_.enableMotors();
+  navigator_.enableSafety();
+  ar_markers_.disableTracker();
+  return true;
+}
+
+bool WaiterNode::cleanupAndError()
+{
+  // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
+  navigator_.enableMotors();
+  navigator_.enableSafety();
+  ar_markers_.disableTracker();
+  return false;
 }
 
 void WaiterNode::spin()

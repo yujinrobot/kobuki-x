@@ -9,13 +9,13 @@
 #define WAITER_NODE_HPP_
 
 #include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
 #include <actionlib/server/simple_action_server.h>
 
 #include <kobuki_msgs/SensorState.h>
 
 #include <cafe_msgs/Status.h>
 #include <cafe_msgs/DeliverOrderAction.h>
+#include <semantic_region_handler/TablePoseList.h>
 
 #include "waiterbot/ar_markers.hpp"
 #include "waiterbot/nav_watchdog.hpp"
@@ -42,9 +42,12 @@ public:
 
   bool init();
   void spin();
+  bool wakeUp();
+  bool leaveNest();
 
   void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
   void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
+  void tablePosesCB(const semantic_region_handler::TablePoseList::ConstPtr& msg);
 
   void deliverOrderCB();
   void preemptOrderCB();
@@ -61,12 +64,11 @@ protected:
 
   // create messages that are used to published feedback/result
   cafe_msgs::DeliverOrderFeedback feedback_;
-  cafe_msgs::DeliverOrderResult result_;
+  cafe_msgs::DeliverOrderResult   result_;
 
   /*********************
   ** Publishers
   **********************/
-  ros::Publisher cmd_vel_pub_;
   ros::Publisher led_1_pub_;
   ros::Publisher led_2_pub_;
   ros::Publisher sound_pub_;
@@ -74,60 +76,23 @@ protected:
   /*********************
   ** Subscribers
   **********************/
-  ros::Subscriber sensors_sub_;
-  ros::Subscriber odometry_sub_;
+  ros::Subscriber core_sensors_sub_;
+  ros::Subscriber table_poses_sub_;
 
   ARMarkers   ar_markers_;
   NavWatchdog nav_watchd_;
   Navigator   navigator_;
 
-  ar_track_alvar::AlvarMarker base_marker_;
-  uint16_t  dock_marker_;   /**< AR marker identifying this robot's docking station */
+  geometry_msgs::PoseStamped             pick_up_pose_;
+  semantic_region_handler::TablePoseList table_poses_;
+//  ar_track_alvar::AlvarMarker base_marker_;
+//  uint16_t  dock_marker_;   /**< AR marker identifying this robot's docking station */
   kobuki_msgs::SensorState core_sensors_;
-  nav_msgs::Odometry   odometry_;
   cafe_msgs::Order  order_;
   cafe_msgs::Status status_;
 
-  void wakeUp();
-
-  /*********************
-  ** Simple commands
-  **********************/
-
-  void slowForward()
-  {
-    moveAt( 0.1,  0.0,  0.1);
-  }
-
-  void slowBackward()
-  {
-    moveAt(-0.1,  0.0,  0.1);
-  }
-
-  void turnClockwise()
-  {
-    moveAt( 0.0, -0.5,  0.1);
-  }
-
-  void turnCounterClockwise()
-  {
-    moveAt( 0.0,  0.5,  0.1);
-  }
-
-  void stop()
-  {
-    moveAt( 0.0,  0.0,  0.0);
-  }
-
-  void moveAt(double v, double w, double t = 0.0)
-  {
-    geometry_msgs::Twist vel;
-    vel.linear.x  = v;
-    vel.angular.z = w;
-    cmd_vel_pub_.publish(vel);
-    ros::Duration(t).sleep();
-  }
-
+  bool cleanupAndSuccess();
+  bool cleanupAndError();
 };
 
 } /* namespace waiterbot */

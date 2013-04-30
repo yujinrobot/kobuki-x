@@ -25,6 +25,12 @@ namespace tk // toolkit
 {
 
 // Template functions
+
+template <typename T> std::string nb2str(T x)
+{
+  return static_cast<std::ostringstream*>( &(std::ostringstream() << x) )->str();
+}
+
 template <typename T> T mean(std::vector<T> v)
 {
   T acc = 0;
@@ -49,6 +55,9 @@ template <typename T> T std_dev(std::vector<T> v)
 
 // Other functions
 
+double sign(double x);
+
+double wrap_360(double a);
 double wrapAngle(double a);
 
 double roll(const tf::Transform& tf);
@@ -61,8 +70,17 @@ double pitch(geometry_msgs::PoseStamped pose);
 
 double distance(geometry_msgs::Point a, geometry_msgs::Point b = geometry_msgs::Point());
 double distance(geometry_msgs::Pose a, geometry_msgs::Pose b = geometry_msgs::Pose());
+double distance(const tf::Vector3& a, const tf::Vector3& b);
 double distance(const tf::Transform& a, const tf::Transform& b);
 
+double heading(geometry_msgs::Point a, geometry_msgs::Point b = geometry_msgs::Point());
+double heading(geometry_msgs::Pose a, geometry_msgs::Pose b = geometry_msgs::Pose());
+double heading(const tf::Vector3& a, const tf::Vector3& b);
+double heading(const tf::Transform& a, const tf::Transform& b);
+
+double minAngle(geometry_msgs::Quaternion a, geometry_msgs::Quaternion b);
+double minAngle(geometry_msgs::Pose a, geometry_msgs::Pose b);
+double minAngle(const tf::Quaternion& a, const tf::Quaternion& b);
 double minAngle(const tf::Transform& a, const tf::Transform& b);
 
 void tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose);

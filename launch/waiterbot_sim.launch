@@ -52,33 +52,21 @@
     <arg name="stacks" value="$(arg stacks)" />
     <arg name="3d_sensor" value="$(arg 3d_sensor)" />
   </include>
-   <include file="$(find waiterbot)/launch/includes/_ir_frames.launch"/>
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
     <param name="use_gui" value="true"/>
   </node>
-  
-  <!--  ************* Navigation manager **************  -->  
-  <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" >
-    <param name="base_beacon_distance" value="0.4"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
-    <param name="base_marker_distance" value="1.4"/>   <!-- At which distance from the base we start relaying on ar markers -->  
-    <param name="check_localized" value="true"/>
-    <param name="amcl_max_error" value="1.0"/>
-    <param name="global_frame" value="map"/>
-    <param name="odom_frame" value="odom"/>
-    <param name="base_frame" value="base_footprint"/>
-    <param name="tf_broadcast_freq" value="5.0"/>
 
-    <!-- Incoming remaps -->
-    <remap from="new_goal"    to="move_base_simple/goal"/>
-    <remap from="amcl_init"   to="initialpose"/>
-    <remap from="amcl_pose"   to="amcl_pose"/>
-    <remap from="odometry"    to="odom"/>
-
-    <!-- Outgoing remaps -->
-    <remap from="issue_goal"  to="move_base_simple/goal"/>
-    <remap from="cancel_goal" to="move_base/cancel"/>
-    <remap from="reset_pose"  to="initialpose"/>
+  <!--  ********** Kobuki mobile base extras **********  
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>/////////////////////////////////////////////////////-->
+    <!-- velocity commands multiplexer -->
+  <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
+    <param name="yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml" />
+    <!-- <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/> -->
   </node>
+
+  <!--  ************* Navigation manager **************  -->
+  <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch"/>
 
   <!--  ************** Rosnav move base ***************  -->
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
@@ -87,20 +75,14 @@
   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
-  <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/> 
+  <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
 
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
-<!--       <arg name="tf_broadcast" value="false"/>
--->
     <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
-<!--
-    <arg name="initial_cov_xx" value="0.01"/>
-    <arg name="initial_cov_yy" value="0.01"/>
-    <arg name="initial_cov_aa" value="0.01"/>
--->    </include>
+  </include>
 
   <!--  ********** Mixing with the real world **********  -->
   <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>

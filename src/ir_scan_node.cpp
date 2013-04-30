@@ -138,8 +138,9 @@ void IrScanNode::rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
     else
       rangers[i].noisy_read = std::max(rangers[i].noisy_read - 1, - noisy_readings);
 
-    scan.ranges[msg->ranges.size() - (i + 1)] = ((distanceKF <= farthest_contact) && (rangers[i].noisy_read <= 0.0)) || (distanceKF < closest_rejected)?(distanceKF + ir_ring_radius):6.0;
-    scan.intensities[msg->ranges.size() - (i + 1)] = r;//avg_abs_diff;//tk::variance(rangers[i].distance);//r + ir_ring_radius;//(r <= 110.6)?(r + ir_ring_radius):6.0;
+   // scan.ranges[msg->ranges.size() - (i + 1)] = ((distanceKF <= farthest_contact) && (rangers[i].noisy_read <= 0.0)) || (distanceKF < closest_rejected)?(distanceKF + ir_ring_radius):6.0;
+    scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF <= farthest_contact ? distanceKF + ir_ring_radius : 6.0;
+    scan.intensities[msg->ranges.size() - (i + 1)] = distanceKF <= farthest_contact ? r + ir_ring_radius : 6.0;;//avg_abs_diff;//tk::variance(rangers[i].distance);//r + ir_ring_radius;//(r <= 110.6)?(r + ir_ring_radius):6.0;
 
 
     if (i == 55555)

@@ -9,17 +9,25 @@
 #include <actionlib_msgs/GoalID.h>
 #include <move_base_msgs/MoveBaseAction.h>
 
+#include <kobuki_msgs/MotorPower.h>
+
 #include "waiterbot/common.hpp"
+#include "waiterbot/ar_markers.hpp"
+
 #include "waiterbot/navigator.hpp"
 
 namespace waiterbot
 {
 
 Navigator::Navigator() :
-    GO_TO_POSE_TIMEOUT(30.0), state_(IDLE),
+    GO_TO_POSE_TIMEOUT(30.0),
+    AUTO_DOCKING_TIMEOUT(50.0),
+    WAIT_FOR_PICKUP_POINT(8.0),
+    state_(IDLE),
     move_base_ac_("move_base", true),                // tell the action clients that we
     auto_dock_ac_("dock_drive_action", true),        // want to spin a thread by default  TODO sure???
-    base_marker_id_(std::numeric_limits<uint32_t>::max())
+    base_marker_id_(std::numeric_limits<uint32_t>::max()),
+    recovery_behavior_(true)  // enable by default; check base_local_planner_params.yaml if not
 {
 }
 
@@ -32,12 +40,27 @@ bool Navigator::init()
   ros::NodeHandle nh, pnh("~");
 
   // Parameters
-  pnh.param("global_frame", global_frame_, std::string("map"));
-  pnh.param("odom_frame",   odom_frame_,   std::string("odom"));
-  pnh.param("base_frame",   base_frame_,   std::string("base_footprint"));
+  pnh.param("global_frame",   global_frame_,   std::string("map"));
+  pnh.param("odom_frame",     odom_frame_,     std::string("odom"));
+  pnh.param("base_frame",     base_frame_,     std::string("base_footprint"));
+  pnh.param("play_sounds",    play_sounds_,    false);
+  pnh.param("resources_path", resources_path_, std::string(""));
 
-  pnh.param("base_beacon_distance", base_beacon_distance_, 0.5);
-  pnh.param("base_marker_distance", base_marker_distance_, 0.5);
+  pnh.param("relay_on_beacon_distance", relay_on_beacon_distance_, 0.4);
+  pnh.param("relay_on_marker_distance", relay_on_marker_distance_, 1.0);
+
+//TODO  pnh.param("close_to_pickup_distance", close_to_pickup_distance_, 2.0);
+
+  // We must disable recovery behavior well before entering the local costmap
+  double tmp;
+  nh.getParam("move_base/local_costmap/width", tmp);
+  close_to_pickup_distance_ = tmp/2.0 + 0.5;
+
+  odometry_sub_    = nh.subscribe("odometry", 5, &Navigator::odometryCB, this);
+
+  cmd_vel_pub_     = nh.advertise <geometry_msgs::Twist>    ("mobile_base/commands/velocity", 1);
+  motor_pwr_pub_   = nh.advertise <kobuki_msgs::MotorPower> ("mobile_base/commands/motor_power", 1);
+
 
   goal_poses_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("goal_pose", 1, true);
   issue_goal_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("issue_goal", 1);
@@ -49,9 +72,14 @@ bool Navigator::init()
   // Disable navigation safety controller until we start moving
   // NOTE: it must be disable after completing any mission. Note also that we use latched
   // topics, as this first message can arrive before the controller gets up and running
-  safety_off_pub_.publish(std_msgs::Empty());
+  disableSafety();
 
   return true;
+}
+
+void Navigator::odometryCB(const nav_msgs::Odometry::ConstPtr& msg)
+{
+  odometry_ = *msg;
 }
 
 void Navigator::baseSpottedMsgCB(const geometry_msgs::PoseStamped::ConstPtr& msg, uint32_t id)
@@ -63,13 +91,13 @@ void Navigator::baseSpottedMsgCB(const geometry_msgs::PoseStamped::ConstPtr& msg
 bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 {
   // Enable safety controller on normal navigation
-  safety_on_pub_.publish(std_msgs::Empty());
+  enableSafety();
 
   if (base_abs_pose.header.frame_id != global_frame_)
   {
     ROS_ERROR("Docking base pose not in global frame (%s != %s)",
               base_abs_pose.header.frame_id.c_str(), global_frame_.c_str());
-    return false;
+    return cleanupAndError();
   }
 
   // Get latest robot global pose
@@ -83,18 +111,19 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   {
     // If frames are well configured, this implies that some part of the localization chain is missing
     ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
-    return false;
+    return cleanupAndError();
   }
 
   // Project a pose relative to map frame in front of the docking base and heading to it
   ROS_INFO("Global navigation to docking base...");
 
   // Compensate the vertical alignment of markers and put at ground level to adopt navistack goals format
-  tf::Transform marker_gb(tf::createQuaternionFromYaw(tf::getYaw(base_abs_pose.pose.orientation) - M_PI/2.0),
-                          tf::Vector3(base_abs_pose.pose.position.x, base_abs_pose.pose.position.y, 0.0));
+  tf::Transform tf(tf::createQuaternionFromYaw(tf::getYaw(base_abs_pose.pose.orientation) - M_PI/2.0),
+                   tf::Vector3(base_abs_pose.pose.position.x, base_abs_pose.pose.position.y, 0.0));
+  tf::StampedTransform marker_gb(tf, ros::Time::now(), global_frame_, "docking_base");
 
   // Check that we are not already close to the docking base
-  if (tk::distance(robot_gb, marker_gb) < base_marker_distance_)
+  if (tk::distance(robot_gb, marker_gb) < relay_on_marker_distance_)
   {
     ROS_DEBUG("Already close to the docking base (%f m) , but we are not smart enough to make use of this... pabo io...",
               tk::distance(robot_gb, marker_gb));
@@ -102,12 +131,12 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
   // Half turn and translate to put goal at some distance in front of the marker
   tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
-                         tf::Vector3(base_marker_distance_/1.5, 0.0, 0.0));
+                         tf::Vector3(relay_on_marker_distance_/1.5, 0.0, 0.0));
 
   move_base_msgs::MoveBaseGoal mb_goal;
   tk::tf2pose(marker_gb*in_front, mb_goal.target_pose.pose);
   mb_goal.target_pose.header.stamp = ros::Time::now();
-  mb_goal.target_pose.header.frame_id = base_abs_pose.header.frame_id;
+  mb_goal.target_pose.header.frame_id = global_frame_;
 
   // Wait for move base action servers to come up; the huge timeout is not a whim; move_base
   // action server can take up to 20 seconds to initialize in the official turtlebot laptop,
@@ -116,7 +145,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   if (waitForServer(move_base_ac_, 10.0) == false)
   {
     ROS_ERROR("Move base action server not available; we cannot navigate!");
-    return false;
+    return cleanupAndError();
   }
 
   ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
@@ -126,43 +155,90 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   move_base_ac_.sendGoal(mb_goal);
   state_ = GLOBAL_DOCKING;
 
+  // Keep an eye open to detect the marker as we approach it
+  if (ARMarkers::enableTracker() == false)
+  {
+    ROS_ERROR("Marker tracker not available; we cannot auto-dock!");
+    return cleanupAndError();
+  }
+
   ros::Time t0 = ros::Time::now();
 
   // Going to goal in front of the docking base marker
   while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
   {
-    ROS_DEBUG("%d %.2f %f", state_, (ros::Time::now() - base_rel_pose_.header.stamp).toSec(),
-             base_rel_pose_.pose.position.z);
-    // Keep an eye open to detect the marker as we approach it
+//    ROS_DEBUG("%d %.2f %f", state_, (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
+
     if ((state_ == GLOBAL_DOCKING) &&
         ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 1.0) &&
-        (base_rel_pose_.pose.position.z <= base_marker_distance_))  // NOTE: frontal approach assumed!
+        (base_rel_pose_.pose.position.z <= relay_on_marker_distance_))  // NOTE: frontal approach assumed!
     {
       // Here is!
       ROS_INFO("Docking base spotted at %.2f m; switching to marker-based local navigation...",
                base_rel_pose_.pose.position.z);
 
-      // Docking base marker spotted at base_marker_distance; switch to relative goal
+      // Docking base marker spotted at relay_on_marker_distance; switch to relative goal
       move_base_ac_.cancelAllGoals();
 //      move_base_ac_.waitForResult(ros::Duration(1.0));
-      ROS_DEBUG("1 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
-      while (move_base_ac_.waitForResult(ros::Duration(0.05)) == false)
+//      ROS_DEBUG("1 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
+      while (move_base_ac_.waitForResult(ros::Duration(0.05)) == false) ;
         ROS_DEBUG("2 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
 
-      // Send a goal at base_beacon_distance_ in front the marker
+      // Get base marker tf on global reference system
       char marker_frame[32];
       sprintf(marker_frame, "ar_marker_%d", base_marker_id_);
 
-      mb_goal.target_pose.header.frame_id = marker_frame;
+      try
+      {
+        tf_listener_.waitForTransform(global_frame_, marker_frame, base_rel_pose_.header.stamp, ros::Duration(10.5));
+        tf_listener_.lookupTransform(global_frame_, marker_frame, base_rel_pose_.header.stamp, marker_gb);
+      }
+      catch (tf::TransformException& e)
+      {
+        // If this happens, I suppose it must be a bug in alvar tracker, as we use the msg timestamp
+        ROS_ERROR("Cannot get tf %s -> %s: %s", base_frame_.c_str(), marker_frame, e.what());
+        return cleanupAndError();
+      }
+
+//        marker_gb*=robot_mk;
+//        tf::Transform robot_gb = marker_gb;
+
+//      tf::Quaternion q;
+//      double roll, pitch, yaw;
+//      tf::Matrix3x3(marker_gb.getRotation()).getRPY(roll, pitch, yaw);
+//        double yaw = tf::getYaw(marker_fp.getRotation());
+//      ROS_DEBUG("RPY = (%lf, %lf, %lf)       (%lf, %lf, %lf)    %s", roll, pitch, yaw, marker_gb.getOrigin().x(), marker_gb.getOrigin().y(), marker_gb.getOrigin().z(), marker_gb.child_frame_id_.c_str());
+
+      if (tk::roll(marker_gb) < -1.0)
+      {
+        // Sometimes markers are spotted "inverted" (pointing to -y); as we assume that all the markers are
+        // aligned with y pointing up, x pointing right and z pointing to the observer, that's a recognition
+        // error. We fix this flipping the tf.
+        tf::Transform flip(tf::createQuaternionFromRPY(0.0, 0.0, M_PI));
+        marker_gb *= flip;
+      }
+
+      // Compensate the vertical alignment of markers and put at ground level to adopt navistack goals format
+      tf::Transform goal_gb(tf::createQuaternionFromYaw(tf::getYaw(marker_gb.getRotation()) - M_PI/2.0),
+                            tf::Vector3(marker_gb.getOrigin().x(), marker_gb.getOrigin().y(), 0.0));
+
+      // Project a pose relative to map frame in front of the docking base and heading to it
+      // As before, half turn and translate to put goal at some distance in front of the marker
+      in_front.setRotation(tf::createQuaternionFromYaw(M_PI));
+      in_front.setOrigin(tf::Vector3(relay_on_beacon_distance_, 0.0, 0.0));
+
+      goal_gb *= in_front;
+
+      tf::StampedTransform tf1(goal_gb, ros::Time::now(),  "map", "GOAL");
+      tf::StampedTransform tf2(marker_gb, ros::Time::now(),  "map", "MARKER");
+      tf_brcaster_.sendTransform(tf1);
+      tf_brcaster_.sendTransform(tf2);
+
+      // Send a goal at relay_on_beacon_distance_ in front the marker
+      tk::tf2pose(goal_gb, mb_goal.target_pose.pose);
+
+      mb_goal.target_pose.header.frame_id = global_frame_;
       mb_goal.target_pose.header.stamp = ros::Time::now();
-
-      mb_goal.target_pose.pose.position.x = 0.0;
-      mb_goal.target_pose.pose.position.y = 0.0; // - mb_goal.target_pose.pose.position.y;
-      mb_goal.target_pose.pose.position.z = base_beacon_distance_;
-      mb_goal.target_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, 0.0);
-      mb_goal.target_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(-M_PI/2.0, M_PI/2.0, 0.0);
-
-      for (int var = 0; var < 20; ++var) {
 
       ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
                 mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
@@ -170,29 +246,26 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
       goal_poses_pub_.publish(mb_goal.target_pose);
       move_base_ac_.sendGoal(mb_goal);
 
-      ros::Duration(2.0).sleep();
-      }
-
-      state_ = MARKER_DOCKING;
+     state_ = MARKER_DOCKING;
     }
     else if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
     {
-      ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s; %s  %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str(),
-                         state_ == GLOBAL_DOCKING?"GLOBAL_DOCKING":"MARKER_DOCKING");
+      ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)  %s",
+                         move_base_ac_.getState().toString().c_str(),
+                         (ros::Time::now() - t0).toSec(), state_ == GLOBAL_DOCKING?"GLOBAL_DOCKING":"MARKER_DOCKING");
     }
     else
     {
-      ROS_WARN("Cannot she the docking base after %.2f s; current state is %s. Aborting...",
-               GO_TO_POSE_TIMEOUT, move_base_ac_.getState().getText().c_str());
-      move_base_ac_.cancelAllGoals();
-      return false;
+      ROS_WARN("Cannot she the docking base after %.2f seconds; current state is %s. Aborting...",
+               GO_TO_POSE_TIMEOUT, move_base_ac_.getState().toString().c_str());
+      return cleanupAndError();
     }
   }
 
-//TODO Deberia apagarlo!!!!  if (ar_markers_.disableTracker() == false)
-//  {
-//    ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
-//  }
+  if (ARMarkers::disableTracker() == false)
+  {
+    ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
+  }
 
   if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
@@ -200,13 +273,8 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   }
   else
   {
-//salta aqui porque el segundo goal cancela al primero!!!!
-
-//por cierto, donde desactivamos AR markers tracker?  creo que no lo estoy haciendo...
-
-
-    ROS_WARN("Go to docking base failed: %s", move_base_ac_.getState().getText().c_str());
-    return false;
+    ROS_WARN("Go to docking base failed: %s", move_base_ac_.getState().toString().c_str());
+    return cleanupAndError();
   }
 
   if (state_ == GLOBAL_DOCKING)
@@ -226,7 +294,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   if (waitForServer(auto_dock_ac_, 2.0) == false)
   {
     ROS_ERROR("Auto-docking action server not available; we cannot dock!");
-    return false;
+    return cleanupAndError();
   }
 
   ROS_INFO("Switching on beacon-based auto-docking...");
@@ -234,23 +302,364 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   auto_dock_ac_.sendGoal(ad_goal);
 
   // Disable navigation safety controller on auto-docking to avoid bouncing against the base
-  safety_off_pub_.publish(std_msgs::Empty());
+  disableSafety();
+
+  t0 = ros::Time::now();
 
   while (auto_dock_ac_.waitForResult(ros::Duration(2.0)) == false)
   {
-    ROS_DEBUG_THROTTLE(4.0, "Auto-dock action state: %s", auto_dock_ac_.getState().toString().c_str());
+    if ((ros::Time::now() - t0).toSec() < AUTO_DOCKING_TIMEOUT)
+    {
+      ROS_DEBUG_THROTTLE(4.0, "Auto-dock action state: %s (%.2f seconds elapsed)",
+                         auto_dock_ac_.getState().toString().c_str(), (ros::Time::now() - t0).toSec());
+    }
+    else
+    {
+      ROS_WARN("Cannot auto-dock after %.2f seconds; current state is %s. Aborting...",
+               AUTO_DOCKING_TIMEOUT, auto_dock_ac_.getState().toString().c_str());
+      // TODO go back and retry or change auto-docking algorithm
+      return cleanupAndError();
+    }
+
   }
 
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
     ROS_INFO("Successfully docked...  zzz...   zzz...");
-    return true;
+    return cleanupAndSuccess();
   }
   else
   {
-    ROS_WARN("Go to docking base failed: %s", auto_dock_ac_.getState().getText().c_str());
+    ROS_WARN("Go to docking base failed: %s", auto_dock_ac_.getState().toString().c_str());
+    return cleanupAndError();
+  }
+}
+
+bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose)
+{
+  // Enable safety controller on normal navigation
+  enableSafety();
+
+  if (pick_up_pose.header.frame_id != global_frame_)
+  {
+    ROS_ERROR("Pickup pose not in global frame (%s != %s)",
+              pick_up_pose.header.frame_id.c_str(), global_frame_.c_str());
+    return cleanupAndError();
+  }
+
+  ROS_INFO("Global navigation to pickup point...");
+
+  // Wait for move base action servers to come up; the huge timeout is not a whim; move_base
+  // action server can take up to 20 seconds to initialize in the official turtlebot laptop,
+  // so is this request is issued short after startup...
+  // WARN: move base server is not started unless global costmap has a positive update frequency
+  if (waitForServer(move_base_ac_, 10.0) == false)
+  {
+    ROS_ERROR("Move base action server not available; we cannot navigate!");
+    return cleanupAndError();
+  }
+
+  int times_waiting = 0;
+  double distance_to_goal = std::numeric_limits<double>::infinity();
+  double heading_to_goal  = std::numeric_limits<double>::infinity();
+
+  tf::StampedTransform robot_gb, marker_gb;
+  tk::pose2tf(pick_up_pose, marker_gb);
+
+  move_base_msgs::MoveBaseGoal mb_goal;
+  mb_goal.target_pose = pick_up_pose;
+
+  do
+  {
+    ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
+              mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
+              tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
+    goal_poses_pub_.publish(mb_goal.target_pose);
+    move_base_ac_.sendGoal(mb_goal);
+    state_ = GOING_TO_PICKUP;
+
+    ros::Time t0 = ros::Time::now();
+
+    // Going to pickup point
+    while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
+    {
+      if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
+      {
+        ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
+                           (ros::Time::now() - t0).toSec());
+
+        if (recovery_behavior_ == true)
+        {
+          // When close enough to the pickup pose, switch off recovery behavior so planner immediately fails if the
+          // pickup point is busy; if not, robot will stupidly spin for a while before deciding that he must wait
+          try
+          {
+            // Get latest robot global pose
+            tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+
+            distance_to_goal = tk::distance(robot_gb, marker_gb);
+            if (distance_to_goal < close_to_pickup_distance_)
+            {
+              ROS_DEBUG("Close enough to the pickup point (%f < %f m); switch off recovery behavior",
+                        distance_to_goal, close_to_pickup_distance_);
+
+              if (disableRecovery() == false)
+              {
+                ROS_WARN("Robot will stupidly spin for a while before deciding that pickup point is busy");
+              }
+            }
+          }
+          catch (tf::TransformException& e)
+          {
+            // If frames are well configured, this implies that some part of the localization chain is missing
+            ROS_WARN("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
+          }
+        }
+      }
+      else
+      {
+        ROS_WARN("Cannot reach pickup point after %.2f seconds; current state is %s. Aborting...",
+                 GO_TO_POSE_TIMEOUT, move_base_ac_.getState().toString().c_str());
+        return cleanupAndError();
+      }
+    }
+
+    if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    {
+      ROS_INFO("At pickup point! Waiting for 맛있는 커피...");
+      if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/pab.wav").c_str());
+      return cleanupAndSuccess();
+    }
+    else
+    {
+      if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::ABORTED)
+      {
+        times_waiting++;
+
+        if ((recovery_behavior_ == true) && (distance_to_goal > close_to_pickup_distance_*1.1))
+        {
+          // If this happen, probably something is wrong; but maybe we should retry! (TODO)
+          ROS_WARN("Move base aborted still at %f m from pickup point (we expect this to happen closer than %f m)",
+                   distance_to_goal, close_to_pickup_distance_);
+          if (times_waiting > 3)
+            return cleanupAndError();
+        }
+        else if (times_waiting > 15)
+        {
+          // So much waiting for pickup point... maybe something is wrong
+          ROS_WARN("Pickup point don't get free after %.2f seconds... what the hell is happening?",
+                   15*WAIT_FOR_PICKUP_POINT);
+          return cleanupAndError();
+        }
+        else
+        {
+          try
+          {
+            // Get latest robot global pose to calculate heading to goal
+            tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+            heading_to_goal = tk::heading(robot_gb, marker_gb);
+
+            // We assume that the pickup point is busy; mooo, and wait for it to get free
+            ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %f m, %f rad)", WAIT_FOR_PICKUP_POINT,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
+            if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+
+            // Point toward the pickup point so we can see whether it gets free
+            if (std::abs(heading_to_goal) > 0.3)
+              turn(heading_to_goal);
+          }
+          catch (tf::TransformException& e)
+          {
+            // If frames are well configured, this implies that some part of the localization chain is missing
+            ROS_WARN("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
+          }
+        }
+
+        ros::Duration(WAIT_FOR_PICKUP_POINT).sleep();
+        continue;
+
+        // TODO: I should try goals slightly displaced; or get the costmap and verify that the pickup AREA is really busy
+      }
+      else
+      {
+        // Something else (surely nasty) happen; just give up
+        ROS_WARN("Go to pickup point failed: %s", move_base_ac_.getState().toString().c_str());
+        return cleanupAndError();
+      }
+    }
+  } while (true);
+}
+
+bool Navigator::deliverOrder(const semantic_region_handler::TablePose& table_pose)
+{
+
+}
+
+bool Navigator::cleanupAndSuccess()
+{
+  // Revert to standard configuration after completing a task
+  //  - (re)enable safety controller for normal operation
+  //  - (re)enable motors (auto-docking disables them after finishing)
+  //  - disable AR markers tracker as it's a CPU spendthrift
+  disableSafety();
+  enableMotors();
+  enableRecovery();
+
+//  cancelAllGoals(move_base_ac_);//, recovery_behavior_ == true ? 10.0 : 2.0);
+//  cancelAllGoals(auto_dock_ac_);
+//  ARMarkers::disableTracker();
+  state_ = IDLE;
+
+  return true;
+}
+
+bool Navigator::cleanupAndError()
+{
+  // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
+  // WARN1 cancel move base goals fails if it's executing recovery behavior  TODO: how to deal with this?
+  // WARN2 we are very radical on this method, restoring things that probably have not being used... be careful!
+//  move_base_ac_.cancelGoal();
+//  while (move_base_ac_.waitForResult(ros::Duration(0.1)) == false)
+//  {
+//    ROS_WARN("Cancel goal didn't finish after %.2f seconds: %s", 0.1, move_base_ac_.getState().toString().c_str());
+//    move_base_ac_.cancelGoal();
+//    ros::Duration(1.0).sleep();
+////    return false;
+//  }
+
+  disableSafety();
+  enableMotors();
+  enableRecovery();
+  cancelAllGoals(move_base_ac_);//, recovery_behavior_ == true ? 10.0 : 2.0);
+  cancelAllGoals(auto_dock_ac_);
+  ARMarkers::disableTracker();
+  state_ = IDLE;
+
+  return false;
+}
+
+
+bool Navigator::moveBaseReset()
+{
+  // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
+  // WARN1 cancel move base goals fails if it's executing recovery behavior  TODO: how to deal with this?
+  // WARN2 we are very radical on this method, restoring things that probably have not being used... be careful!
+  int i = 0;
+
+  ROS_WARN("Canceling goal with %s state...", move_base_ac_.getState().toString().c_str());
+//  PENDING,
+//  ACTIVE,
+//  RECALLED,
+//  REJECTED,
+//  PREEMPTED,
+//  ABORTED,
+//  SUCCEEDED,
+//  LOST
+
+  move_base_ac_.cancelGoal();
+  while (move_base_ac_.waitForResult(ros::Duration(0.1)) == false)
+  {
+
+    if (i == 10)
+    {
+      ROS_WARN("Cancel goal didn't finish after %.2f seconds: %s  Try disabling recovery", 0.1, move_base_ac_.getState().toString().c_str());
+      ROS_DEBUG("%d", disableRecovery());
+    }
+    else{
+      ROS_WARN("Cancel goal didn't finish after %.2f seconds: %s", 0.1, move_base_ac_.getState().toString().c_str());
+      move_base_ac_.cancelGoal();
+
+    }
+    ros::Duration(1.0).sleep();
+
+    i++;
+  }
+  ROS_DEBUG("%d", enableRecovery());
+
+  return true;
+}
+
+
+bool Navigator::enableRecovery()
+{
+  if (recovery_behavior_ == true)
+    return true;
+
+  int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
+                       "\"{ recovery_behavior_enabled: true }\"");  // clearing_rotation_allowed
+  if (status != 0)
+  {
+    ROS_ERROR("Enable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
+
+  recovery_behavior_ = true;
+  return true;
+}
+
+bool Navigator::disableRecovery()
+{
+  if (recovery_behavior_ == false)
+    return true;
+
+  int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
+                       "\"{ recovery_behavior_enabled: false }\"");  // clearing_rotation_allowed
+  if (status != 0)
+  {
+    ROS_ERROR("Disable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
+    return false;
+  }
+
+  recovery_behavior_ = false;
+  return true;
+}
+
+bool Navigator::shoftRecovery()
+{
+  if (recovery_behavior_ == true)
+    return true;
+
+  int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
+                       "\"{ recovery_behaviors: [{name: conservative_reset, type: clear_costmap_recovery/ClearCostmapRecovery}] }\"");  // recovery_behavior_enabled
+  if (status != 0)
+  {
+    ROS_ERROR("Enable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
+    return false;
+  }
+
+  recovery_behavior_ = true;
+  return true;
+}
+
+bool Navigator::hardRecovery()
+{
+  if (recovery_behavior_ == false)
+    return true;
+
+  int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
+                       "\"{ recovery_behaviors: [{name: conservative_reset, type: clear_costmap_recovery/ClearCostmapRecovery}, {name: rotate_recovery, type: rotate_recovery/RotateRecovery}, {name: aggressive_reset, type: clear_costmap_recovery/ClearCostmapRecovery}] }\"");  // recovery_behavior_enabled
+  if (status != 0)
+  {
+    ROS_ERROR("Disable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
+    return false;
+  }
+
+  recovery_behavior_ = false;
+  return true;
+}
+
+void Navigator::enableMotors()
+{
+  kobuki_msgs::MotorPower msg;
+  msg.state = kobuki_msgs::MotorPower::ON;
+  motor_pwr_pub_.publish(msg);
+}
+
+void Navigator::disableMotors()
+{
+  kobuki_msgs::MotorPower msg;
+  msg.state = kobuki_msgs::MotorPower::OFF;
+  motor_pwr_pub_.publish(msg);
+}
 
 
 //  while not client.wait_for_server(rospy.Duration(5.0)):
@@ -266,7 +675,6 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 //  #print '    - status:', client.get_goal_status_text()
 //  return client.get_result()
 
-}
 
 //void Navigator::dockInBase(geometry_msgs::PoseStamped base_abs_pose)
 //{

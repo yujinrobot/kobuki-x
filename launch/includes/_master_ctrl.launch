@@ -13,14 +13,17 @@
 
   <!-- Waiterbot main node -->
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" >
-    <param name="base_beacon_distance" value="0.14"/>   <!-- At which distance from the base we start relaying on ir beacons -->  
-    <param name="base_marker_distance" value="1.99999"/>   <!-- At which distance from the base we start relaying on ar markers -->  
+    <param name="relay_on_beacon_distance_" value="0.8"/>    <!-- At which distance from the base we start relaying on ir beacons -->
+    <param name="relay_on_marker_distance_" value="1.2"/>    <!-- At which distance from the base we start relaying on ar markers -->
+    <param name="close_to_pickup_distance_" value="1.5"/>    <!-- At which distance from pickup point switch off recovery behavior -->  
     <param name="check_localized" value="true"/>
     <param name="amcl_max_error" value="1.0"/>
     <param name="global_frame" value="map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
     <param name="tf_broadcast_freq" value="5.0"/>
+    <param name="resources_path" value="$(find waiterbot)/resources"/>
+    <param name="play_sounds" value="false"/>
 
     <!-- Incoming remaps -->
     <remap from="new_goal"    to="move_base_simple/goal"/>

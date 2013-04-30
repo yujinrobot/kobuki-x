@@ -18,12 +18,24 @@ namespace tk
 char ___buffer___[256];
 // TODO ... parameterized string composer     sprintf(marker_frame, "ar_marker_%d", msg->markers[i].id);
 
+double sign(double x)
+{
+  return x > 0.0 ? +1.0 : x < 0.0 ? -1.0 : 0.0;
+}
+
+double wrap_360(double a)
+{
+  a = fmod(a, 2*M_PI);
+  if (a < 0.0)
+      a += 2.0*M_PI;
+  return a;
+}
 
 double wrapAngle(double a)
 {
   a = fmod(a + M_PI, 2*M_PI);
-  if (a < 0)
-      a += 2*M_PI;
+  if (a < 0.0)
+      a += 2.0*M_PI;
   return a - M_PI;
 }
 
@@ -65,9 +77,14 @@ double pitch(geometry_msgs::PoseStamped pose)
   return tk::pitch(pose.pose);
 }
 
+double distance(const tf::Vector3& a, const tf::Vector3& b)
+{
+  return tf::tfDistance(a, b);
+}
+
 double distance(geometry_msgs::Point a, geometry_msgs::Point b)
 {
-  return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+  return tk::distance(tf::Vector3(a.x, a.y, a.z), tf::Vector3(b.x, b.y, b.z));
 }
 
 double distance(geometry_msgs::Pose a, geometry_msgs::Pose b)
@@ -77,12 +94,47 @@ double distance(geometry_msgs::Pose a, geometry_msgs::Pose b)
 
 double distance(const tf::Transform& a, const tf::Transform& b)
 {
-  return tf::tfDistance(a.getOrigin(), b.getOrigin());
+  return tk::distance(a.getOrigin(), b.getOrigin());
+}
+
+double heading(const tf::Vector3& a, const tf::Vector3& b)
+{
+  return std::atan2(b.y() - a.y(), b.x() - a.x());
+}
+
+double heading(geometry_msgs::Point a, geometry_msgs::Point b)
+{
+  return tk::heading(tf::Vector3(a.x, a.y, a.z), tf::Vector3(b.x, b.y, b.z));
+}
+
+double heading(geometry_msgs::Pose a, geometry_msgs::Pose b)
+{
+  return tk::heading(a.position, b.position);
+}
+
+double heading(const tf::Transform& a, const tf::Transform& b)
+{
+  return tk::heading(a.getOrigin(), b.getOrigin());
+}
+
+double minAngle(const tf::Quaternion& a, const tf::Quaternion& b)
+{
+  return tf::angleShortestPath(a, b);
+}
+
+double minAngle(geometry_msgs::Quaternion a, geometry_msgs::Quaternion b)
+{
+  return tk::minAngle(tf::Quaternion(a.x, a.y, a.z, a.w), tf::Quaternion(b.x, b.y, b.z, b.w));
+}
+
+double minAngle(geometry_msgs::Pose a, geometry_msgs::Pose b)
+{
+  return tk::minAngle(a.orientation, b.orientation);
 }
 
 double minAngle(const tf::Transform& a, const tf::Transform& b)
 {
-  return tf::angleShortestPath(a.getRotation(), b.getRotation());
+  return tk::minAngle(a.getRotation(), b.getRotation());
 }
 
 void tf2pose(const tf::Transform& tf, geometry_msgs::Pose& pose)
