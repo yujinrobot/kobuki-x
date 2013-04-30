@@ -4,7 +4,7 @@
   <version>0.0.0</version>
   <description>The waiterbot package</description>
 
-  <maintainer email="jihoonlee.in@gmail.com">Jihoon Lee</maintainer>
+  <maintainer email="jorge@yujinrobot.com">Jorge Santos</maintainer>
   <license>BSD</license>
   <!-- <url type="website">http://ros.org/wiki/waiterbot</url> -->
   <author email="jorge@yujinrobot.com">Jorge Santos</author> 
@@ -13,7 +13,7 @@
 
   <build_depend>actionlib</build_depend>
   <build_depend>actionlib_msgs</build_depend>
-<!--   <build_depend>move_base_msgs</build_depend>   catkenized only on hydro-devel -->
+  <build_depend>move_base_msgs</build_depend>
   <build_depend>kobuki_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>cafe_msgs</build_depend>
@@ -21,7 +21,7 @@
 
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
-<!--   <run_depend>move_base_msgs</run_depend> -->
+  <run_depend>move_base_msgs</run_depend>
   <run_depend>kobuki_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>cafe_msgs</run_depend>
