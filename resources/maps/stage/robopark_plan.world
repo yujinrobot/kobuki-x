@@ -39,7 +39,7 @@ window
 floorplan
 ( 
   name "Robo Park floor"
-  bitmap "../maps/robopark2.bmp"
+  bitmap "../robopark2.bmp"
   size [16.8 11.87 0.5]
 
   pose [ 0.0 0.0 0.0 0.0 ]
