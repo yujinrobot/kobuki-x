@@ -4,7 +4,7 @@ project(waiterbot)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED actionlib actionlib_msgs  kobuki_msgs cafe_msgs ar_track_alvar) #move_base_msgs
+find_package(catkin REQUIRED actionlib actionlib_msgs  kobuki_msgs sensor_msgs cafe_msgs ar_track_alvar move_base_msgs)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -50,7 +50,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot
-  CATKIN_DEPENDS actionlib actionlib_msgs kobuki_msgs cafe_msgs ar_track_alvar
+  CATKIN_DEPENDS actionlib actionlib_msgs kobuki_msgs cafe_msgs ar_track_alvar move_base_msgs
   DEPENDS system_lib
 )
 
@@ -67,7 +67,8 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 #   src/${PROJECT_NAME}/waiterbot.cpp
 # )
 
-## Declare a cpp executable
+## Declare the executables
+add_executable(ir_scan_node src/ir_scan_node.cpp)
 add_executable(waiterbot_node src/waiter_node.cpp src/ar_markers.cpp src/nav_watchdog.cpp src/navigator.cpp src/common.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -76,6 +77,10 @@ add_executable(waiterbot_node src/waiter_node.cpp src/ar_markers.cpp src/nav_wat
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(waiterbot_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(ir_scan_node
   ${catkin_LIBRARIES}
 )
 
