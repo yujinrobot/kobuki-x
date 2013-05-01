@@ -13,9 +13,10 @@
 
   <!-- Waiterbot main node -->
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" >
-    <param name="relay_on_beacon_distance_" value="0.8"/>    <!-- At which distance from the base we start relaying on ir beacons -->
-    <param name="relay_on_marker_distance_" value="1.2"/>    <!-- At which distance from the base we start relaying on ar markers -->
-    <param name="close_to_pickup_distance_" value="1.5"/>    <!-- At which distance from pickup point switch off recovery behavior -->  
+    <param name="relay_on_beacon_distance" value="0.5"/>    <!-- At which distance from the base we start relaying on ir beacons -->
+    <param name="relay_on_marker_distance" value="1.2"/>    <!-- At which distance from the base we start relaying on ar markers -->
+    <param name="close_to_pickup_distance" value="1.5"/>    <!-- At which distance from pickup point switch off recovery behavior -->  
+    <param name="tables_serving_distance"  value="0.4"/>    <!-- At which distance from the table we try to serve our orders -->  
     <param name="check_localized" value="true"/>
     <param name="amcl_max_error" value="1.0"/>
     <param name="global_frame" value="map"/>
