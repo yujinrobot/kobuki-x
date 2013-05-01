@@ -29,7 +29,7 @@ class WaiterNode
 public:
 
   WaiterNode(std::string name) :
-    as_(nh_, "deliver_order", false),
+    as_(nh_, "delivery_order", false),
     node_name_(name),
     SPOT_BASE_MARKER_TIMEOUT(10.0),
     SPOT_POSE_MARKER_TIMEOUT(15.0)
