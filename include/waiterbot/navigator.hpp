@@ -40,7 +40,10 @@ public:
     MARKER_DOCKING,
     BEACON_DOCKING,
     GOING_TO_PICKUP,
-    WAIT_FOR_PICKUP
+    WAIT_FOR_PICKUP,
+    GOING_TO_TABLE
+//    WAIT_FOR_DELIVER
+
 
   } state_;
 
@@ -58,13 +61,13 @@ public:
 
   bool dockInBase(const geometry_msgs::PoseStamped& base_abs_pose);
   bool pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose);
-  bool deliverOrder(const semantic_region_handler::TablePose& table_pose);
+  bool deliverOrder(const geometry_msgs::PoseStamped& table_pose, double table_radius);
 
   void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
   void baseSpottedMsgCB(const geometry_msgs::PoseStamped::ConstPtr& msg, uint32_t id);
 
 
-  /*********************
+  /*********************    TODO  crear otra clase para esta caquilla
   ** Basic move orders
   **********************/
 
@@ -183,6 +186,7 @@ ignore by now turns bigger than 2pi
                                                                                                    bool moveBaseReset();
 private:
   bool       play_sounds_;
+  double     robot_radius_;
   std::string global_frame_;
   std::string odom_frame_;
   std::string base_frame_;
@@ -191,9 +195,11 @@ private:
   actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> move_base_ac_;
   actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> auto_dock_ac_;
 
-  double relay_on_beacon_distance_;  /**< At which distance from the base we start relaying on ir beacons */
-  double relay_on_marker_distance_;  /**< At which distance from the base we start relaying on ar markers */
-  double close_to_pickup_distance_;  /**< At which distance from pickup point switch off recovery behavior */
+  double relay_on_beacon_distance_;    /**< At which distance from the base we start relaying on ir beacons */
+  double relay_on_marker_distance_;    /**< At which distance from the base we start relaying on ar markers */
+  double close_to_pickup_distance_;    /**< At which distance from pickup point switch off recovery behavior */
+  double close_to_delivery_distance_;  /**< At which distance from delivery point switch off recovery behavior */
+  double tables_serving_distance_;     /**< At which distance from the table we try to serve our orders */
 
   uint32_t                   base_marker_id_;
   geometry_msgs::PoseStamped base_rel_pose_;  /**< Docking base ar marker pose relative to the robot */
@@ -218,6 +224,13 @@ private:
   bool disableRecovery();
   bool shoftRecovery();
   bool hardRecovery();
+
+  tf::StampedTransform getRobotTf();
+
+
+  /********************************************************
+  ** Template methods valid for all action clients
+  *********************************************************/
 
   template <typename T>
   bool cancelAllGoals(actionlib::SimpleActionClient<T> & action_client, double timeout = 2.0)

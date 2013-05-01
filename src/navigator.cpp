@@ -48,13 +48,16 @@ bool Navigator::init()
 
   pnh.param("relay_on_beacon_distance", relay_on_beacon_distance_, 0.4);
   pnh.param("relay_on_marker_distance", relay_on_marker_distance_, 1.0);
+  pnh.param("tables_serving_distance",  tables_serving_distance_,  0.4);
 
 //TODO  pnh.param("close_to_pickup_distance", close_to_pickup_distance_, 2.0);
 
+  nh.getParam("move_base/local_costmap/robot_radius", robot_radius_);
+  nh.getParam("move_base/local_costmap/width", close_to_pickup_distance_);
+
   // We must disable recovery behavior well before entering the local costmap
-  double tmp;
-  nh.getParam("move_base/local_costmap/width", tmp);
-  close_to_pickup_distance_ = tmp/2.0 + 0.5;
+  close_to_pickup_distance_ = close_to_pickup_distance_/2.0 + 0.8;
+  close_to_delivery_distance_ = close_to_pickup_distance_;
 
   odometry_sub_    = nh.subscribe("odometry", 5, &Navigator::odometryCB, this);
 
@@ -335,15 +338,15 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   }
 }
 
-bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose)
+bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 {
   // Enable safety controller on normal navigation
   enableSafety();
 
-  if (pick_up_pose.header.frame_id != global_frame_)
+  if (pickup_pose.header.frame_id != global_frame_)
   {
     ROS_ERROR("Pickup pose not in global frame (%s != %s)",
-              pick_up_pose.header.frame_id.c_str(), global_frame_.c_str());
+              pickup_pose.header.frame_id.c_str(), global_frame_.c_str());
     return cleanupAndError();
   }
 
@@ -364,10 +367,10 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose)
   double heading_to_goal  = std::numeric_limits<double>::infinity();
 
   tf::StampedTransform robot_gb, marker_gb;
-  tk::pose2tf(pick_up_pose, marker_gb);
+  tk::pose2tf(pickup_pose, marker_gb);
 
   move_base_msgs::MoveBaseGoal mb_goal;
-  mb_goal.target_pose = pick_up_pose;
+  mb_goal.target_pose = pickup_pose;
 
   do
   {
@@ -438,7 +441,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose)
 
         if ((recovery_behavior_ == true) && (distance_to_goal > close_to_pickup_distance_*1.1))
         {
-          // If this happen, probably something is wrong; but maybe we should retry! (TODO)
+          // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
           ROS_WARN("Move base aborted still at %f m from pickup point (we expect this to happen closer than %f m)",
                    distance_to_goal, close_to_pickup_distance_);
           if (times_waiting > 3)
@@ -453,7 +456,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose)
         }
         else
         {
-          try
+          try  //TODO refactor whithout try
           {
             // Get latest robot global pose to calculate heading to goal
             tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
@@ -489,8 +492,216 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose)
   } while (true);
 }
 
-bool Navigator::deliverOrder(const semantic_region_handler::TablePose& table_pose)
+bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, double table_radius)
 {
+  // Enable safety controller on normal navigation
+  enableSafety();
+
+  if (table_pose.header.frame_id != global_frame_)
+  {
+    ROS_ERROR("Table pose not in global frame (%s != %s)",
+              table_pose.header.frame_id.c_str(), global_frame_.c_str());
+    return cleanupAndError();
+  }
+
+  ROS_INFO("Global navigation to table...");
+
+  // Wait for move base action servers to come up; at this point the should be up already
+  if (waitForServer(move_base_ac_, 2.0) == false)
+  {
+    ROS_ERROR("Move base action server not available; we cannot navigate!");
+    return cleanupAndError();
+  }
+
+  int attempts = 0;
+  double min_tried_heading = std::numeric_limits<double>::max();
+  double max_tried_heading = std::numeric_limits<double>::min();
+  double heading_increment = std::atan2(2.0*robot_radius_, table_radius + tables_serving_distance_);
+
+  tf::StampedTransform table_gb;
+  tk::pose2tf(table_pose, table_gb);
+
+  do
+  {
+    // Get latest robot global pose to calculate heading and distance from robot to table
+    tf::StampedTransform robot_gb = getRobotTf();
+
+    double distance_to_table, last_plan_distance_to_table;
+    double heading_to_table,  last_plan_heading_to_table;
+    distance_to_table = last_plan_distance_to_table = tk::distance(robot_gb, table_gb);
+    heading_to_table  = last_plan_heading_to_table  = tk::heading(robot_gb, table_gb);
+
+    // Heading to goal is the same that to table for the first try, but it drifts when we fail to reach a goal
+    double heading_to_goal = heading_to_table;
+
+    if ((heading_to_table >= min_tried_heading) && (heading_to_table <= max_tried_heading))
+    {
+      if (std::abs(heading_to_table - min_tried_heading) < std::abs(heading_to_table - max_tried_heading))
+      {
+        heading_to_goal = min_tried_heading - heading_increment;
+      }
+      else
+      {
+        heading_to_goal = max_tried_heading + heading_increment;
+      }
+    }
+
+    // TODO I'm ignoring ignoring +PI / -PI singularity
+
+    // Robot tf in table reference system; tables have no orientation, so we assume 0-0-0 rotation
+    // Note that we inverse heading because we need table to robot heading
+//    tf::Transform robot_tb(tf::createQuaternionFromYaw(tk::wrapAngle(heading_to_goal + M_PI)),
+//                           robot_gb.getOrigin() - table_gb.getOrigin());
+
+    table_gb.setRotation(tf::createQuaternionFromYaw(tk::wrapAngle(heading_to_goal)));
+
+//    ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f    %.2f, %.2f, %.2f        %f", heading_to_goal, tk::wrapAngle(heading_to_goal + M_PI) ,tk::heading(robot_gb, table_gb),
+//              table_gb.getOrigin().x(), table_gb.getOrigin().y(), table_gb.getOrigin().z(),    heading_increment);
+
+    // Like that, x-axis points to the robot; we move table radius + robot radius + safety margin
+    // in that direction to obtain the delivery point tf. As nobody is publishing table tf, we cannot
+    // send our goal with table as reference system, so we make it referent to robot.
+
+    tf::Transform towards_robot(tf::Quaternion::getIdentity(), tf::Vector3(- table_radius - tables_serving_distance_, 0.0, 0.0));
+    tf::Transform goal_gb = table_gb*towards_robot;
+
+    double distance_to_goal = tk::distance(robot_gb, goal_gb);
+tf::StampedTransform tf1(table_gb, ros::Time::now(),  global_frame_, "TABLE1");
+tf_brcaster_.sendTransform(tf1);
+tf::StampedTransform tf2(goal_gb, ros::Time::now(),  global_frame_, "TABLE2");
+tf_brcaster_.sendTransform(tf2);
+
+
+//min_tried_heading = std::min(min_tried_heading, tk::wrap_360(heading_to_goal - heading_increment));
+//max_tried_heading = std::max(max_tried_heading, tk::wrap_360(heading_to_goal + heading_increment));
+//
+//ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %f                %d", heading_to_goal, min_tried_heading ,max_tried_heading,
+//             heading_increment ,  (min_tried_heading <- max_tried_heading));
+//
+//
+//ros::Duration(3).sleep();
+//  } while (min_tried_heading <= max_tried_heading);
+//
+    move_base_msgs::MoveBaseGoal mb_goal;
+    tk::tf2pose(tf2, mb_goal.target_pose);
+
+    ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
+              mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
+              tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
+    goal_poses_pub_.publish(mb_goal.target_pose);
+    move_base_ac_.sendGoal(mb_goal);
+    state_ = GOING_TO_TABLE;
+
+    ros::Time t0 = ros::Time::now();
+
+    // Going to delivery point
+    while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
+    {
+      if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
+      {
+        ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
+                           (ros::Time::now() - t0).toSec());
+
+        // Get latest robot global pose to calculate heading and distance from robot to table and goal (delivery point)
+        robot_gb = getRobotTf();
+        distance_to_table = tk::distance(robot_gb, table_gb);
+        heading_to_table  = tk::heading(robot_gb, table_gb);
+
+        distance_to_goal  = tk::distance(robot_gb, goal_gb);
+
+        if (distance_to_goal < close_to_delivery_distance_)
+        {
+          // When close enough to the table, switch off recovery behavior so planner immediately fails if the
+          // desired delivery point is busy; if not, robot will spin instead of looking for a different point
+          if (recovery_behavior_ == true)
+          {
+            ROS_DEBUG("Close enough to the delivery point (%f < %f m); switch off recovery behavior",
+                      distance_to_goal, close_to_delivery_distance_);
+
+            if (disableRecovery() == false)
+            {
+              ROS_WARN("Robot will stupidly spin for a while before deciding that a delivery point is busy");
+            }
+          }
+
+          // We also start checking our heading to the table, so if it changes a lot,
+          // and we are not very close, we replan our approaching point to the table
+          if ((std::abs(last_plan_heading_to_table - heading_to_table) > 0.5) && (distance_to_table > 3*table_radius))
+          {
+            ROS_DEBUG("Heading to the table has notably changed (%f -> %f m); replan approach point",
+                      heading_to_table, tk::heading(robot_gb, table_gb));
+            // TODO   cancel goal???   creo q si
+            break;
+          }
+        }
+      }
+      else
+      {
+        ROS_WARN("Cannot reach delivery point after %.2f seconds; current state is %s. Aborting...",
+                 GO_TO_POSE_TIMEOUT, move_base_ac_.getState().toString().c_str());
+        return cleanupAndError();
+      }
+    }
+
+    //  TODO   here comes replan  que hago??
+
+//    TENGO QUE CANCELAR GOAL PREVIA, CREO   o manejarlo del alguna forma
+
+//    que jihoon me publique las mesas    xq esto no va bien
+
+    if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+    {
+      ROS_INFO("At delivery point! Waiting for user confirmation...");
+      //if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/pab.wav").c_str());
+      return cleanupAndSuccess();
+    }
+    else
+    {
+      if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::ABORTED)
+      {
+        attempts++;
+
+        if ((recovery_behavior_ == true) && (distance_to_goal > close_to_delivery_distance_*1.1))
+        {
+          // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
+          ROS_WARN("Move base aborted still at %f m from delivery point (we expect this to happen closer than %f m)",
+                   distance_to_goal, close_to_delivery_distance_);
+          if (attempts > 3)
+            return cleanupAndError();
+        }
+        else if (min_tried_heading >= max_tried_heading)
+        {
+          // Busy sector surrounds the table! use our crappy delivery fallback
+          ROS_WARN("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
+          return cleanupAndError();  // maybe cleanupAndSuccess  xq esto es un final correcto de la task
+        }
+        else
+        {
+          // Delivery point looks busy; increase the already tried sector so the planner can choose a new delivery point
+          // Note that we wrap busy sector thresholds from -2*pi to +2*pi to deal with the -pi/+pi singularity
+          min_tried_heading = std::min(min_tried_heading, tk::wrap_360(heading_to_goal - heading_increment));
+          max_tried_heading = std::max(max_tried_heading, tk::wrap_360(heading_to_goal + heading_increment));
+
+          ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %f                %d", heading_to_goal, min_tried_heading ,max_tried_heading,
+                       heading_increment ,  (min_tried_heading <- max_tried_heading));
+
+          // So much waiting for delivery point... maybe something is wrong
+          ROS_WARN("Delivery point looks busy; try another one (%d attempt)", attempts);
+        }
+
+
+        ros::Duration(1.0).sleep();
+        //continue;
+
+      }
+      else
+      {
+        // Something else (surely nasty) happen; just give up
+        ROS_WARN("Go to delivery point failed: %s", move_base_ac_.getState().toString().c_str());
+        return cleanupAndError();
+      }
+    }
+  } while (true);
 
 }
 
@@ -661,6 +872,22 @@ void Navigator::disableMotors()
   motor_pwr_pub_.publish(msg);
 }
 
+tf::StampedTransform Navigator::getRobotTf()
+{
+  tf::StampedTransform robot_gb;
+  try
+  {
+    // Get latest robot global pose
+    tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+  }
+  catch (tf::TransformException& e)
+  {
+    // If frames are well configured, this implies that some part of the localization chain is missing
+    // Otherwise said; if this exception happens we are really pissed-off, so I don't try to recover
+    ROS_WARN("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
+  }
+  return robot_gb;
+}
 
 //  while not client.wait_for_server(rospy.Duration(5.0)):
 //    if rospy.is_shutdown(): return

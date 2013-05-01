@@ -71,8 +71,8 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
       if (table_poses_.tables[i].name.find("pickup") != std::string::npos)
       {
         ROS_DEBUG("Pickup point: %s", tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
-        pick_up_pose_.header = table_poses_.tables[i].pose_cov_stamped.header;
-        pick_up_pose_.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+        pickup_pose_.header = table_poses_.tables[i].pose_cov_stamped.header;
+        pickup_pose_.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
       }
       else
       {
@@ -116,27 +116,32 @@ void WaiterNode::deliverOrderCB()
   }
 
   if (order_.order_id == 3)
-    boost::thread pickUpThread(&Navigator::pickUpOrder, &navigator_, pick_up_pose_);
+    boost::thread pickUpThread(&Navigator::pickUpOrder, &navigator_, pickup_pose_);
 
   if (order_.order_id == 4)
   {
-    bool found = false;
+    bool table_found = false;
     for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
     {
-      // Look for the requested table's pose
+      // Look for the requested table's pose (and get rid of the useless covariance)
       if (table_poses_.tables[i].name.find(tk::nb2str(order_.table_id), strlen("table")) != std::string::npos)
       {
         ROS_DEBUG("Target table %d: rad = %f, pose = %s", order_.table_id, table_poses_.tables[i].radius,
                   tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
-        boost::thread pickUpThread(&Navigator::deliverOrder, &navigator_, table_poses_.tables[i]);
-        found = true;
+        geometry_msgs::PoseStamped table_pose;
+        table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
+        table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+
+        boost::thread pickUpThread(&Navigator::deliverOrder, &navigator_,
+                                   table_pose, table_poses_.tables[i].radius);
+        table_found = true;
         break;
       }
     }
 
-    if (found == false)
+    if (table_found == false)
     {
-      ROS_DEBUG("Table %d not found! bloody jihoon...  ignoring order", order_.table_id);
+      ROS_WARN("Table %d not found! bloody jihoon...  ignoring order", order_.table_id);
     }
   }
 
