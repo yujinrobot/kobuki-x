@@ -1,0 +1,54 @@
+<!--
+  Waiterbot global navigation:
+  - turtlebot
+  - 3d sensor
+  - map_server
+  - move_base
+  - static map
+  - amcl
+  - ar_track
+  - rviz view
+ -->
+
+<launch>
+  <!-- Name of the map to use (without path nor extension) and initial position -->
+  <arg name="map_name"       default="map"/>
+  <arg name="initial_pose_x" value="2.0"/>
+  <arg name="initial_pose_y" value="2.0"/>
+  <arg name="initial_pose_a" value="0.0"/>
+
+  <!--  *********** 3d sensor ***********  -->
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <arg name="rgb_processing" value="true" />
+    <arg name="depth_registration" value="true" />
+    <arg name="depth_processing" value="true" />
+  </include>
+
+  <!--  ************* Kobuki IR half ring *************  -->
+  <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
+
+  <!--  ********** Kobuki mobile base extras **********  
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>/////////////////////////////////////////////////////-->
+  <param name="cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
+
+  <!--  ******** Kobuki auto-docking controller *******  -->
+  <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
+
+  <!--  ********** Alvar AR markers tracker ***********  -->
+  <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch">
+    <arg name="max_frequency" value="4.0"/>  <!-- This is a CPU-hungry bastard; reduce its rate --> 
+  </include>
+
+  <!--  ************* Navigation manager **************  -->
+  <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch"/>
+
+  <!--  ************** Rosnav move base ***************  -->
+  <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
+
+  <!--  ******************** Amcl *********************  -->
+  <include file="$(find waiterbot)/launch/includes/_amcl.launch">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  </include>
+</launch>
