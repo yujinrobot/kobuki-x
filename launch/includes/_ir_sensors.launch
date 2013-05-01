@@ -6,6 +6,7 @@
 -->
 <launch>
   <arg name="base_link" default="base_link" />
+  <arg name="irscan_topic" default="ir_scan"/>
 
   <node pkg="tf" type="static_transform_publisher" name="ir_link_publisher"
         args="0.0 0.0 0.09 0.0 0.0 0.0 $(arg base_link) ir_link 100"/>
@@ -20,5 +21,6 @@
     <param name="max_covariance" value="0.005"/>
     <param name="noisy_readings" value="2"/>
     <param name="sensor_variance" value="0.025"/>
+    <remap from="ir_scan" to="$(arg irscan_topic)"/>
   </node>
 </launch>
