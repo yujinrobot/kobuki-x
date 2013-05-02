@@ -54,42 +54,15 @@ namespace waiterbot
     return true;
   }
 
-  bool WaiterNode::gotoTable(int table_id)
-  {
-    // find table pose
-    bool table_found = false;
-    float radius;
-    geometry_msgs::PoseStamped table_pose;
-    for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
-    {
-      // Look for the requested table's pose (and get rid of the useless covariance)
-      if (table_poses_.tables[i].name.find(tk::nb2str(table_id), strlen("table")) != std::string::npos)
-      {
-        ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
-                  tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
-        table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
-        table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
-        radius =  table_poses_.tables[i].radius;
-        break;
-      }
-    }
-  
-    if (table_found == false)
-    {
-      ROS_WARN("Table %d not found! bloody jihoon...  ignoring order", table_id);
-      return false;
-    }
-    else {
-      return navigator_.deliverOrder(table_pose,radius);
-    }
-  }
-
   bool WaiterNode::setFailure(std::string reason)
   {
     cafe_msgs::DeliverOrderResult   result;
     ROS_ERROR_STREAM(reason);
     result.result = reason;
     as_.setSucceeded(result);
+
+    navigator_.dockInBase(ar_markers_.getDockingBasePose());
+
     return true;
   }
 

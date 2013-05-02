@@ -1,4 +1,4 @@
 #!/bin/bash
 
-sleep 50
+sleep 90
 rosrun rosserial_python serial_node.py /dev/arduino
