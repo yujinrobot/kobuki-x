@@ -43,7 +43,7 @@ namespace waiterbot
     sendFeedback(cafe_msgs::Status::RETURNING_TO_DOCK);
     ros::Duration(1).sleep();
     // 5. return to dock Navigator::dockInBase
-    if(navigator_.dockInBase(ar_markers_.getDockingBasePose())) { return setFailure("Waiter failed to go back to nest"); }
+    if(navigator_.dockInBase(ar_markers_.getDockingBasePose())==false ) { return setFailure("Waiter failed to go back to nest"); }
 
     sendFeedback(cafe_msgs::Status::END_DELIVERY_ORDER);
     ros::Duration(1).sleep();
