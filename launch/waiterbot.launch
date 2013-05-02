@@ -30,7 +30,7 @@
 
   <!--  ********** Kobuki mobile base extras **********  -->
   <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
-  <param name="cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
+  <param name="/cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
   <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
