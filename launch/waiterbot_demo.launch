@@ -33,7 +33,7 @@
   <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
-  <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
+  <include file="$(find waiterbot)/launch/includes/_autodock.launch"/>
 
   <!--  ********** Alvar AR markers tracker ***********  -->
   <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch">
