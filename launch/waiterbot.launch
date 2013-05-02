@@ -12,7 +12,7 @@
 
 <launch>
   <!-- Name of the map to use (without path nor extension) and initial position -->
-  <arg name="map_name"       default="dorothy_cafe"/>
+  <arg name="map_name"       default="robopark_plan"/>
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
@@ -28,8 +28,8 @@
   <!--  ************* Kobuki IR half ring *************  -->
   <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
 
-  <!--  ********** Kobuki mobile base extras **********  
-  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>/////////////////////////////////////////////////////-->
+  <!--  ********** Kobuki mobile base extras **********  -->
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
   <param name="cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
@@ -47,10 +47,12 @@
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
 
   <!--  ****** Geometric and semantic map servers *****  -->
-  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
+<!--   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
   <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
+ -->
+  <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>
 
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
@@ -58,6 +60,12 @@
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
+  <!--  ************** Fake Localization *************  
+  <node name="fake_localization" pkg="fake_localization" type="fake_localization">
+    <param name="odom_frame_id" value="/odom"/>
+    <param name="global_frame_id" value="/map"/>
+    <param name="base_frame_id" value="/base_footprint"/>
+  </node>-->
 
   <!--  ***************** Visualisation *****************
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />   -->

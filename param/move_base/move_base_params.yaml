@@ -11,4 +11,4 @@ planner_frequency: 1.5
 planner_patience: 5.0
 
 oscillation_timeout: 10.0
-oscillation_distance: 0.5
+oscillation_distance: 0.2

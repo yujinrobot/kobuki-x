@@ -28,8 +28,8 @@ bool WaiterNode::init()
   led_2_pub_    = nh_.advertise <kobuki_msgs::Led>     ("mobile_base/commands/led2", 1);
   sound_pub_    = nh_.advertise <kobuki_msgs::Sound>   ("mobile_base/commands/sound", 1);
 
-  core_sensors_sub_ = nh_.subscribe("core_sensors",   5, &WaiterNode::coreSensorsCB, this);
-  table_poses_sub_  = nh_.subscribe("semantic_map/table_pose_list", 1, &WaiterNode::tablePosesCB, this);
+  core_sensors_sub_ = nh_.subscribe("core_sensors",    5, &WaiterNode::coreSensorsCB, this);
+  table_poses_sub_  = nh_.subscribe("table_pose_list", 1, &WaiterNode::tablePosesCB, this);
 
   // Initialize sub-modules
   if (nav_watchd_.init() == false)

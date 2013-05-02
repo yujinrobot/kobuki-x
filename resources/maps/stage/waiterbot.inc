@@ -8,7 +8,7 @@ define kinect ranger
   )
   # generic model properties
   color "black"
-  size [ 0.06 0.15 0.0.3 ]
+  size [ 0.06 0.15 0.3 ]
 )
 
 define waiterbot position
@@ -17,11 +17,11 @@ define waiterbot position
 
   odom_error [0.03 0.03 999999 999999 999999 0.02]
 
-  size [ 0.33 0.33 0.20 ]
+  size [ 0.33 0.33 0.40 ]
   origin [ 0.0 0.0 0.0 0.0 ]
   gui_nose 1
   drive "diff"
   color "gray"
   
-  kinect(pose [ -0.16 0.0 0.42 0.0 ])
+  kinect(pose [ -0.1 0.0 0.3 0.0 ])
 )

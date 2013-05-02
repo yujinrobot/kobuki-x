@@ -57,7 +57,6 @@ template <typename T> T std_dev(std::vector<T> v)
 
 double sign(double x);
 
-double wrap_360(double a);
 double wrapAngle(double a);
 
 double roll(const tf::Transform& tf);

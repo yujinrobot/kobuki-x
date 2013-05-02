@@ -624,13 +624,16 @@ tf_brcaster_.sendTransform(tf2);
             }
           }
 
-          // We also start checking our heading to the table, so if it changes a lot,
-          // and we are not very close, we replan our approaching point to the table
-          if ((std::abs(last_plan_heading_to_table - heading_to_table) > 0.5) && (distance_to_table > 3*table_radius))
+          // We also start checking our heading to the table, so if it changes a lot, and we are not very close,
+          // we replan our approaching point to the table
+          // Note: we can cancel goal only when recovery behavior is disabled; if not it takes ages to work!
+          if ((std::abs(last_plan_heading_to_table - heading_to_table) > 0.5) &&
+              (distance_to_table > 3*table_radius) && (recovery_behavior_ == false))
           {
             ROS_DEBUG("Heading to the table has notably changed (%f -> %f m); replan approach point",
                       heading_to_table, tk::heading(robot_gb, table_gb));
-            // TODO   cancel goal???   creo q si
+            if (cancelAllGoals(move_base_ac_) == false)
+              ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
             break;
           }
         }
@@ -643,11 +646,7 @@ tf_brcaster_.sendTransform(tf2);
       }
     }
 
-    //  TODO   here comes replan  que hago??
-
-//    TENGO QUE CANCELAR GOAL PREVIA, CREO   o manejarlo del alguna forma
-
-//    que jihoon me publique las mesas    xq esto no va bien
+    // Ok, we left the wait for goal loop; let's see what happened
 
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
@@ -655,54 +654,56 @@ tf_brcaster_.sendTransform(tf2);
       //if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/pab.wav").c_str());
       return cleanupAndSuccess();
     }
-    else
+    else if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::PREEMPTED)
     {
-      if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::ABORTED)
+      // Previous goal has been cancelled around 30 lines before
+      ROS_DEBUG("Move base action preempted so we are replaning our approaching point to the table");
+    }
+    else if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::ABORTED)
+    {
+      attempts++;
+
+      if ((recovery_behavior_ == true) && (distance_to_goal > close_to_delivery_distance_*1.1))
       {
-        attempts++;
-
-        if ((recovery_behavior_ == true) && (distance_to_goal > close_to_delivery_distance_*1.1))
-        {
-          // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
-          ROS_WARN("Move base aborted still at %f m from delivery point (we expect this to happen closer than %f m)",
-                   distance_to_goal, close_to_delivery_distance_);
-          if (attempts > 3)
-            return cleanupAndError();
-        }
-        else if (min_tried_heading >= max_tried_heading)
-        {
-          // Busy sector surrounds the table! use our crappy delivery fallback
-          ROS_WARN("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-          return cleanupAndError();  // maybe cleanupAndSuccess  xq esto es un final correcto de la task
-        }
-        else
-        {
-          // Delivery point looks busy; increase the already tried sector so the planner can choose a new delivery point
-          // Note that we wrap busy sector thresholds from -2*pi to +2*pi to deal with the -pi/+pi singularity
-          min_tried_heading = std::min(min_tried_heading, tk::wrap_360(heading_to_goal - heading_increment));
-          max_tried_heading = std::max(max_tried_heading, tk::wrap_360(heading_to_goal + heading_increment));
-
-          ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %f                %d", heading_to_goal, min_tried_heading ,max_tried_heading,
-                       heading_increment ,  (min_tried_heading <- max_tried_heading));
-
-          // So much waiting for delivery point... maybe something is wrong
-          ROS_WARN("Delivery point looks busy; try another one (%d attempt)", attempts);
-        }
-
-
-        ros::Duration(1.0).sleep();
-        //continue;
-
+        // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
+        ROS_WARN("Move base aborted still at %f m from delivery point (we expect this to happen closer than %f m)",
+                 distance_to_goal, close_to_delivery_distance_);
+        if (attempts > 3)
+          return cleanupAndError();
       }
       else
       {
-        // Something else (surely nasty) happen; just give up
-        ROS_WARN("Go to delivery point failed: %s", move_base_ac_.getState().toString().c_str());
-        return cleanupAndError();
+        // Delivery point looks busy; increase the already tried sector so the planner can choose a new delivery point
+        // Note that we wrap busy sector thresholds from -2*pi to +2*pi to deal with the -pi/+pi singularity
+        min_tried_heading = std::min(min_tried_heading, heading_to_goal - heading_increment);
+        max_tried_heading = std::max(max_tried_heading, heading_to_goal + heading_increment);
+
+        ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %f           %f     %d", heading_to_goal, min_tried_heading ,max_tried_heading,
+                     heading_increment ,  ( max_tried_heading - min_tried_heading),  (( max_tried_heading - min_tried_heading) >= 2.0*M_PI));
+
+        if (( max_tried_heading - min_tried_heading) > (2.0*M_PI - heading_increment))
+        {
+          // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???
+          ROS_WARN("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
+          return cleanupAndError();  // maybe cleanupAndSuccess  xq esto es un final correcto de la task
+        }
+
+        // So much waiting for delivery point... maybe something is wrong
+        ROS_WARN("Delivery point looks busy; try another one (%d attempts)", attempts);
       }
+
+
+ //     ros::Duration(1.0).sleep();
+      //continue;
+
+    }
+    else
+    {
+      // Something else (surely nasty) happen; just give up
+      ROS_WARN("Unexpected goal state: %s. Go to delivery point failed", move_base_ac_.getState().toString().c_str());
+      return cleanupAndError();
     }
   } while (true);
-
 }
 
 bool Navigator::cleanupAndSuccess()

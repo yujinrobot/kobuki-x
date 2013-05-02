@@ -17,30 +17,15 @@ ARMarkers::ARMarkers()
   docking_marker_.id = std::numeric_limits<uint32_t>::max();
 
 /*
-//TODO kk  quitar cuando lea globals/docking OK
-  global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
-  global_markers_.markers[0].id = 0;
-  global_markers_.markers[0].pose.header.frame_id = "map";
-  global_markers_.markers[0].pose.pose.position.x = -0.2;
-  global_markers_.markers[0].pose.pose.position.y = 1.6;
-  global_markers_.markers[0].pose.pose.position.z = 0.3;
-  global_markers_.markers[0].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, M_PI/2.0);
+//TODO TEMPORAL FOR DEBUG
 
-  global_markers_.markers.push_back(ar_track_alvar::AlvarMarker());  // TODO do from semantic map!!!!!!!!!!!!!!
-  global_markers_.markers[1].id = 1;
-  global_markers_.markers[1].pose.header.frame_id = "map";
-  global_markers_.markers[1].pose.pose.position.x = +0.2;
-  global_markers_.markers[1].pose.pose.position.y = -1.6;
-  global_markers_.markers[1].pose.pose.position.z = 0.3;
-  global_markers_.markers[1].pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, -M_PI/2.0);
-*/
   docking_marker_.id = 6;
   docking_marker_.pose.header.frame_id = "map";
   docking_marker_.pose.pose.position.x = -0.1;
   docking_marker_.pose.pose.position.y = -1.9;
   docking_marker_.pose.pose.position.z = 0.1;
   docking_marker_.pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(M_PI/2.0, 0.0, M_PI);
-
+*/
 }
 
 ARMarkers::~ARMarkers()
@@ -58,7 +43,7 @@ bool ARMarkers::init()
   pnh.param("base_frame",   base_frame_,   std::string("base_footprint"));
 
   tracked_markers_sub_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkers::arPoseMarkersCB, this);
-  global_markers_sub_  = nh.subscribe("semantic_map/marker_pose_list", 1, &ARMarkers::globalMarkersCB, this);
+  global_markers_sub_  = nh.subscribe(             "marker_pose_list", 1, &ARMarkers::globalMarkersCB, this);
 
   // There are 18 different markers
   times_spotted_.resize(AR_MARKERS_COUNT, 0);
@@ -78,6 +63,7 @@ void ARMarkers::broadcastMarkersTF()
 {
   ros::Rate rate(tf_brc_freq_);
 
+  // TODO semantic map is not broadcasting this already?  only docking base no
   while (ros::ok())
   {
     char child_frame[32];
@@ -86,14 +72,13 @@ void ARMarkers::broadcastMarkersTF()
 
     for (unsigned int i = 0; i <global_markers_.markers.size(); i++)
     {
-      sprintf(child_frame, "%s_%d", i == docking_marker_.id?"global_marker":"docking_base", global_markers_.markers[i].id);
+      sprintf(child_frame, "%s_%d", i != docking_marker_.id?"global_marker":"docking_base", global_markers_.markers[i].id);
       tk::pose2tf(global_markers_.markers[i].pose, tf);
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
       tf_brcaster_.sendTransform(tf);
     }
 
-//TODO esto sobra
     if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
     {
       sprintf(child_frame, "docking_base_%d", docking_marker_.id);
@@ -258,9 +243,9 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
 }
 
 bool ARMarkers::spotted(double younger_than,
-                        const ar_track_alvar::AlvarMarkers& including,
-                        const ar_track_alvar::AlvarMarkers& excluding,
-                              ar_track_alvar::AlvarMarkers& spotted)
+                           const ar_track_alvar::AlvarMarkers& including,
+                           const ar_track_alvar::AlvarMarkers& excluding,
+                                  ar_track_alvar::AlvarMarkers& spotted)
 {
   if (spotted_markers_.markers.size() == 0)
     return false;
@@ -285,8 +270,8 @@ bool ARMarkers::spotted(double younger_than,
 }
 
 bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
-                        const ar_track_alvar::AlvarMarkers& excluding,
-                              ar_track_alvar::AlvarMarker& closest)
+                           const ar_track_alvar::AlvarMarkers& excluding,
+                                  ar_track_alvar::AlvarMarker& closest)
 {
   double closest_dist = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < spotted_markers_.markers.size(); i++)
@@ -307,7 +292,7 @@ bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
 }
 
 bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_globals,
-                        ar_track_alvar::AlvarMarkers& spotted)
+                           ar_track_alvar::AlvarMarkers& spotted)
 {
   if (spotted_markers_.markers.size() == 0)
     return false;
@@ -338,7 +323,7 @@ bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_gl
 }
 
 bool ARMarkers::closest(double younger_than, int min_confidence, bool exclude_globals,
-                        ar_track_alvar::AlvarMarker& closest)
+                           ar_track_alvar::AlvarMarker& closest)
 {
   ar_track_alvar::AlvarMarkers spotted_markers;
   if (spotted(younger_than, min_confidence, exclude_globals, spotted_markers) == false)

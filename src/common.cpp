@@ -23,14 +23,6 @@ double sign(double x)
   return x > 0.0 ? +1.0 : x < 0.0 ? -1.0 : 0.0;
 }
 
-double wrap_360(double a)
-{
-  a = fmod(a, 2*M_PI);
-  if (a < 0.0)
-      a += 2.0*M_PI;
-  return a;
-}
-
 double wrapAngle(double a)
 {
   a = fmod(a + M_PI, 2*M_PI);
