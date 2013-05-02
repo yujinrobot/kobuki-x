@@ -3,11 +3,14 @@
 -->
 <launch>
   <!-- Velocity smoother -->
-  <node pkg="nodelet" type="nodelet" name="navigation_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet mobile_base_nodelet_manager">
+  <node pkg="nodelet" type="nodelet" name="smoother_nodelet_manager" args="manager"/>
+
+  <!--<node pkg="nodelet" type="nodelet" name="navigation_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet mobile_base_nodelet_manager">-->
+  <node pkg="nodelet" type="nodelet" name="navigation_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet smoother_nodelet_manager">
     <rosparam file="$(find waiterbot)/param/vel_smoother.yaml" command="load"/>
     <remap from="navigation_velocity_smoother/odometry" to="odom__STUPIDNAMESOWEDONOTUSE"/> <!-- Todo : remove on velocity_smoother -->
-    <remap from="navigation_velocity_smoother/smooth_cmd_vel" to="cmd_vel_mux/input/navigation"/>
-    <remap from="navigation_velocity_smoother/robot_cmd_vel" to="mobile_base/commands/velocity"/>
+    <remap from="navigation_velocity_smoother/smooth_cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+    <remap from="navigation_velocity_smoother/robot_cmd_vel" to="/mobile_base/commands/velocity"/>
   </node>
 
   <!-- Move base -->

@@ -18,10 +18,10 @@ namespace waiterbot
     // 0. wakeup or leave nest WaiterNode::wakeUp,leaveNest
     sendFeedback(cafe_msgs::Status::GO_TO_KITCHEN);
     ros::Duration(1).sleep();
-   // if(getReadyToWork() == false) { return setFailure("Waiter failed to go to pickup place"); }
+    if(getReadyToWork() == false) { return setFailure("Waiter failed to go to pickup place"); }
     
     // 1. goto pickup place Navigator::pickUpOrder
-  //  if(navigator_.pickUpOrder(pickup_pose_) == false) { return setFailure("Waiter failed to go to pickup place");}
+    if(navigator_.pickUpOrder(pickup_pose_) == false) { return setFailure("Waiter failed to go to pickup place");}
     sendFeedback(cafe_msgs::Status::ARRIVE_KITCHEN);
     ros::Duration(1).sleep();
     sendFeedback(cafe_msgs::Status::WAITING_FOR_KITCHEN);
@@ -31,7 +31,7 @@ namespace waiterbot
     sendFeedback(cafe_msgs::Status::IN_DELIVERY);
     
     // 3. goto table     Navigator::deliverOrder
-  //  if(gotoTable(order.table_id) == false) { return setFailure("Waiter failed to go to table"); }
+    if(gotoTable(order.table_id) == false) { return setFailure("Waiter failed to go to table"); }
     sendFeedback(cafe_msgs::Status::ARRIVE_TABLE);
     ros::Duration(1).sleep();
     sendFeedback(cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION);
@@ -42,10 +42,9 @@ namespace waiterbot
     ros::Duration(1).sleep();
     sendFeedback(cafe_msgs::Status::RETURNING_TO_DOCK);
     ros::Duration(1).sleep();
- /* 
     // 5. return to dock Navigator::dockInBase
-  //  if(navigator_.dockInBase(ar_markers_.getDockingBasePose())) { return setFailure("Waiter failed to go back to nest"); }
-  */
+    if(navigator_.dockInBase(ar_markers_.getDockingBasePose())) { return setFailure("Waiter failed to go back to nest"); }
+
     sendFeedback(cafe_msgs::Status::END_DELIVERY_ORDER);
     ros::Duration(1).sleep();
     // Return the result to Task Coordinator
