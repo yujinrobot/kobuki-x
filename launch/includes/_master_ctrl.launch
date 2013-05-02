@@ -35,7 +35,7 @@
     <remap from="amcl_pose"     to="amcl_pose"/>
     <remap from="odometry"      to="/odom"/>
     <remap from="digital_input" to="/mobile_base/events/digital_input"/>
-    <remap from="core_sensors" to="/mobile_base/sensors/core"/>
+    <remap from="core_sensors"  to="/mobile_base/sensors/core"/>
 
     <!-- Outgoing remaps -->
     <remap from="issue_goal"    to="move_base_simple/goal"/>
@@ -43,5 +43,6 @@
     <remap from="reset_pose"    to="initialpose"/>
 
     <remap from="mobile_base/commands/velocity" to="special_tasks_velocity_smoother/raw_cmd_vel"/>
+    <remap from="mobile_base/commands/motor_power" to="/mobile_base/commands/motor_power"/>
   </node>
 </launch>
