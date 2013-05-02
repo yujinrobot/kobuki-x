@@ -24,18 +24,19 @@
     <param name="base_frame" value="base_footprint"/>
     <param name="tf_broadcast_freq" value="5.0"/>
     <param name="resources_path" value="$(find waiterbot)/resources"/>
-    <param name="play_sounds" value="false"/>
+    <param name="play_sounds" value="true"/>
 
     <!-- Incoming remaps -->
-    <remap from="new_goal"    to="move_base_simple/goal"/>
-    <remap from="amcl_init"   to="initialpose"/>
-    <remap from="amcl_pose"   to="amcl_pose"/>
-    <remap from="odometry"    to="odom"/>
+    <remap from="new_goal"      to="move_base_simple/goal"/>
+    <remap from="amcl_init"     to="initialpose"/>
+    <remap from="amcl_pose"     to="amcl_pose"/>
+    <remap from="odometry"      to="odom"/>
+    <remap from="digital_input" to="mobile_base/events/digital_input"/>
 
     <!-- Outgoing remaps -->
-    <remap from="issue_goal"  to="move_base_simple/goal"/>
-    <remap from="cancel_goal" to="move_base/cancel"/>
-    <remap from="reset_pose"  to="initialpose"/>
+    <remap from="issue_goal"    to="move_base_simple/goal"/>
+    <remap from="cancel_goal"   to="move_base/cancel"/>
+    <remap from="reset_pose"    to="initialpose"/>
 
     <remap from="mobile_base/commands/velocity" to="special_tasks_velocity_smoother/raw_cmd_vel"/>
   </node>

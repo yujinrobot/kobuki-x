@@ -12,7 +12,7 @@
 
 <launch>
   <!-- Name of the map to use (without path nor extension) and initial position -->
-  <arg name="map_name"       default="robopark_plan"/>
+  <arg name="map_name"       default="control_room"/>
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
@@ -47,12 +47,12 @@
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
 
   <!--  ****** Geometric and semantic map servers *****  -->
-<!--   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
   <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
- -->
-  <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>
+<!-- 
+  <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
 
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
