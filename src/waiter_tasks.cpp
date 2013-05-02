@@ -32,6 +32,13 @@ namespace waiterbot
   
   bool WaiterNode::waitForButton()
   {
+    ROS_INFO("Wait for Button");
+    
+    wait_for_button_ = true;
+    while(ros::ok() && wait_for_button_)
+    {
+      ros::Duration(0.5).sleep();
+    }
     return true;
   }
   

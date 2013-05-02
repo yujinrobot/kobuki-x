@@ -33,8 +33,9 @@
     <remap from="new_goal"      to="move_base_simple/goal"/>
     <remap from="amcl_init"     to="initialpose"/>
     <remap from="amcl_pose"     to="amcl_pose"/>
-    <remap from="odometry"      to="odom"/>
-    <remap from="digital_input" to="mobile_base/events/digital_input"/>
+    <remap from="odometry"      to="/odom"/>
+    <remap from="digital_input" to="/mobile_base/events/digital_input"/>
+    <remap from="core_sensors" to="/mobile_base/sensors/core"/>
 
     <!-- Outgoing remaps -->
     <remap from="issue_goal"    to="move_base_simple/goal"/>

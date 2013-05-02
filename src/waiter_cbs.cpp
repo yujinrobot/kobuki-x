@@ -37,6 +37,8 @@ namespace waiterbot
 
   void WaiterNode::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
   {
+    if(msg->values[0] == false)
+      wait_for_button_ = false;
   }
 
   void WaiterNode::coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg)
