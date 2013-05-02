@@ -13,7 +13,7 @@ import cafe_msgs.msg
 def delivery_order_client():
     # Creates the SimpleActionClient, passing the type of the action
     # (DeliverOrderAction) to the constructor.
-    client = actionlib.SimpleActionClient('delivery_order', cafe_msgs.msg.DeliverOrderAction)
+    client = actionlib.SimpleActionClient('/waiterbot/delivery_order', cafe_msgs.msg.DeliverOrderAction)
 
     # Waits until the action server has started up and started
     # listening for goals.
@@ -42,6 +42,6 @@ if __name__ == '__main__':
         # publish and subscribe over ROS.
         rospy.init_node('delivery_order_client')
         result = delivery_order_client()
-        print "Result:", result.result
+        print "Result:", str(result)
     except rospy.ROSInterruptException:
         print "program interrupted before completion"
