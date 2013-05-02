@@ -20,6 +20,7 @@
 #include <ar_track_alvar/AlvarMarkers.h>
 
 #include "waiterbot/common.hpp"
+
 namespace waiterbot
 {
 
@@ -41,26 +42,7 @@ public:
     base_spotted_cb_ = cb;
   };
 
-  const geometry_msgs::PoseStamped& getDockingBasePose() {
-
-//    tf::Transform marker_gb(tf::createQuaternionFromYaw(tf::getYaw(docking_marker_.pose.pose.orientation) - M_PI/2.0),// tk::pitch(docking_marker_.pose)),
-//                            tf::Vector3(docking_marker_.pose.pose.position.x, docking_marker_.pose.pose.position.y, 0.0));
-//
-//    // Half turn and translate to put goal at some distance in front of the marker
-//    tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
-//                           tf::Vector3(1.1/1.5, 0.0, 0.0));
-//    tf::StampedTransform st1(marker_gb, ros::Time::now(), "map", "GOAL 1");
-//    tf::StampedTransform st2(marker_gb*in_front, ros::Time::now(), "map", "GOAL 2");
-//
-//    for (int i = 0; i < 20; i++)
-//    {
-//    tf_brcaster_.sendTransform(st1);
-//    tf_brcaster_.sendTransform(st2);
-//    ros::Duration(0.5).sleep();
-//    }
-//
-
-    return docking_marker_.pose; };
+  const geometry_msgs::PoseStamped& getDockingBasePose() { return docking_marker_.pose; };
 
   bool spotted(double younger_than,
                const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding,

@@ -11,7 +11,8 @@
   <node pkg="tf" type="static_transform_publisher" name="ir_link_publisher"
         args="0.0 0.0 0.09 0.0 0.0 0.0 $(arg base_link) /ir_link 100"/>
 
-  <node name="arduino_gateway" pkg="rosserial_python" type="serial_node.py" args="/dev/arduino"/>
+  <!-- <node name="arduino_gateway" pkg="rosserial_python" type="serial_node.py" args="/dev/arduino"/> -->
+  <node name="arduino_gateway" pkg="waiterbot" type="ir_sensors.bash"/>
 
   <node name="ir_to_laserscan" pkg="waiterbot" type="ir_scan_node">
     <param name="closest_rejected" value="0.40"/>
