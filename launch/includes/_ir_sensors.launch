@@ -15,13 +15,8 @@
   <node name="arduino_gateway" pkg="waiterbot" type="ir_sensors.bash"/>
 
   <node name="ir_to_laserscan" pkg="waiterbot" type="ir_scan_node">
-    <param name="closest_rejected" value="0.40"/>
-    <param name="farthest_contact" value="0.40"/>
-    <param name="readings_buffer" value="15"/>
-    <param name="max_mean_error" value="10.0"/>
-    <param name="max_covariance" value="0.005"/>
-    <param name="noisy_readings" value="2"/>
-    <param name="sensor_variance" value="0.025"/>
+    <param name="maximum_range" value="0.40"/>
+    <param name="range_variance" value="0.025"/>
     <remap from="ir_scan" to="$(arg irscan_topic)"/>
   </node>
 </launch>
