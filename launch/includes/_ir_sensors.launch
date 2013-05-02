@@ -16,6 +16,7 @@
 
   <node name="ir_to_laserscan" pkg="waiterbot" type="ir_scan_node">
     <param name="maximum_range" value="0.40"/>
+    <param name="infinity_range" value="6.0"/>
     <param name="range_variance" value="0.025"/>
     <remap from="ir_scan" to="$(arg irscan_topic)"/>
   </node>

@@ -45,6 +45,7 @@ private:
   int      rangers_count;
   double   range_variance;
   double   maximum_range;
+  double   infinity_range;
   double   read_frequency;
   double   ir_ring_radius;
   std::string  ir_frame_id;   /**< Frame id for the output laser scan */
