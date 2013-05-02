@@ -12,6 +12,7 @@
 #include <actionlib/server/simple_action_server.h>
 
 #include <kobuki_msgs/SensorState.h>
+#include <kobuki_msgs/DigitalInputEvent.h>
 
 #include <cafe_msgs/Status.h>
 #include <cafe_msgs/Order.h>
@@ -47,6 +48,7 @@ public:
   bool leaveNest();
 
   void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
+  void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
   void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
   void tablePosesCB(const semantic_region_handler::TablePoseList::ConstPtr& msg);
 
@@ -77,6 +79,7 @@ protected:
   /*********************
   ** Subscribers
   **********************/
+  ros::Subscriber digital_input_sub_;
   ros::Subscriber core_sensors_sub_;
   ros::Subscriber table_poses_sub_;
 

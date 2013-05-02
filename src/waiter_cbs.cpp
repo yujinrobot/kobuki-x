@@ -35,6 +35,10 @@ namespace waiterbot
     initialized_table_ = true;
   }
 
+  void WaiterNode::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
+  {
+  }
+
   void WaiterNode::coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg)
   {
     core_sensors_ = *msg;
