@@ -631,7 +631,7 @@ tf_brcaster_.sendTransform(tf2);
               (distance_to_table > 3*table_radius) && (recovery_behavior_ == false))
           {
             ROS_DEBUG("Heading to the table has notably changed (%f -> %f m); replan approach point",
-                      heading_to_table, tk::heading(robot_gb, table_gb));
+                      last_plan_heading_to_table, heading_to_table);
             if (cancelAllGoals(move_base_ac_) == false)
               ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
             break;
@@ -684,8 +684,9 @@ tf_brcaster_.sendTransform(tf2);
         if (( max_tried_heading - min_tried_heading) > (2.0*M_PI - heading_increment))
         {
           // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???
-          ROS_WARN("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-          return cleanupAndError();  // maybe cleanupAndSuccess  xq esto es un final correcto de la task
+          ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
+          ROS_INFO("HEY!!!!  fat buttons!  let me go in!!!!");
+          return cleanupAndSuccess();
         }
 
         // So much waiting for delivery point... maybe something is wrong
