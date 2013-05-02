@@ -14,6 +14,7 @@
 #include <kobuki_msgs/SensorState.h>
 
 #include <cafe_msgs/Status.h>
+#include <cafe_msgs/Order.h>
 #include <cafe_msgs/DeliverOrderAction.h>
 #include <semantic_region_handler/TablePoseList.h>
 
@@ -90,6 +91,20 @@ protected:
   kobuki_msgs::SensorState core_sensors_;
   cafe_msgs::Order  order_;
   cafe_msgs::Status status_;
+
+
+  boost::thread order_process_thread_;
+
+  bool initialized_;
+  bool initialized_table_;
+
+  bool processOrder(cafe_msgs::Order& order);
+  bool getReadyToWork();
+  bool waitForPoses();
+  bool waitForButton();
+  bool gotoTable(int table_id);
+  void sendFeedback(int feedback_status);
+  bool setFailure(std::string reason);
 
   bool cleanupAndSuccess();
   bool cleanupAndError();

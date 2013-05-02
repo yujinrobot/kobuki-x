@@ -21,8 +21,8 @@ def delivery_order_client():
 
     # Creates a goal to send to the action server.
     goal = cafe_msgs.msg.DeliverOrderGoal()
-    table_id = rospy.get_param("~table_id", 0)
-    order_id = rospy.get_param("~order_id", 0)
+    table_id = rospy.get_param("~table_id", 1)
+    order_id = rospy.get_param("~order_id", 1)
     goal.order.table_id = table_id
     goal.order.order_id = order_id
     print "Deliver order ", order_id, " to table ", table_id
