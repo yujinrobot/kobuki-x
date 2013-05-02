@@ -13,6 +13,7 @@ namespace waiterbot
   bool WaiterNode::processOrder(cafe_msgs::Order& order)
   {
     // wait for semantic pose initialization
+    /*
     waitForPoses();
   
     // 0. wakeup or leave nest WaiterNode::wakeUp,leaveNest
@@ -41,7 +42,7 @@ namespace waiterbot
     // 5. return to dock Navigator::dockInBase
   //  if(navigator_.dockInBase(ar_markers_.getDockingBasePose())) { return setFailure("Waiter failed to go back to nest"); }
     sendFeedback(cafe_msgs::Status::END_DELIVERY_ORDER);
-  
+  */
     // Return the result to Task Coordinator
     cafe_msgs::DeliverOrderResult   result;
     result.result = "YA VEREMOS...";
