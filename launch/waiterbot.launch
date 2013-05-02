@@ -50,7 +50,7 @@
   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
-  <include ns="semantic_map" file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
+  <include file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
 <!-- 
   <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
 
