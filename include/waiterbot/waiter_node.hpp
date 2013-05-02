@@ -101,6 +101,8 @@ protected:
   bool initialized_;
   bool initialized_table_;
 
+  bool wait_for_button_;
+
   bool processOrder(cafe_msgs::Order& order);
   bool getReadyToWork();
   bool waitForPoses();

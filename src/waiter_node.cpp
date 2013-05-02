@@ -22,9 +22,9 @@ bool WaiterNode::init()
   as_.registerPreemptCallback(boost::bind(&WaiterNode::preemptOrderCB, this));
   as_.start();
 
-  led_1_pub_ = nh_.advertise <kobuki_msgs::Led>     ("mobile_base/commands/led1", 1);
-  led_2_pub_ = nh_.advertise <kobuki_msgs::Led>     ("mobile_base/commands/led2", 1);
-  sound_pub_ = nh_.advertise <kobuki_msgs::Sound>   ("mobile_base/commands/sound", 1);
+  led_1_pub_ = nh_.advertise <kobuki_msgs::Led>     ("/mobile_base/commands/led1", 1);
+  led_2_pub_ = nh_.advertise <kobuki_msgs::Led>     ("/mobile_base/commands/led2", 1);
+  sound_pub_ = nh_.advertise <kobuki_msgs::Sound>   ("/mobile_base/commands/sound", 1);
 
   digital_input_sub_ = nh_.subscribe("digital_input",   5, &WaiterNode::digitalInputCB, this);
   core_sensors_sub_  = nh_.subscribe("core_sensors",    5, &WaiterNode::coreSensorsCB, this);

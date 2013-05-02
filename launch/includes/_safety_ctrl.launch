@@ -9,8 +9,8 @@
     <param name="decel_factor" value="3.0"/>  <!-- Make breaking almost unsmoothed so bumper and cliff sensors do their job -->
 
     <remap from="safety_ctrl_velocity_smoother/odometry" to="odom__STUPIDNAMESOWEDONOTUSE"/> <!-- Todo : remove on velocity_smoother -->
-    <remap from="safety_ctrl_velocity_smoother/smooth_cmd_vel" to="cmd_vel_mux/input/safety_ctrl"/>
-    <remap from="safety_ctrl_velocity_smoother/robot_cmd_vel" to="mobile_base/commands/velocity"/>
+    <remap from="safety_ctrl_velocity_smoother/smooth_cmd_vel" to="/cmd_vel_mux/input/safety_ctrl"/>
+    <remap from="safety_ctrl_velocity_smoother/robot_cmd_vel" to="/mobile_base/commands/velocity"/>
   </node>
 
   <!-- Safety controller -->

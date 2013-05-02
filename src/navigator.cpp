@@ -61,8 +61,8 @@ bool Navigator::init()
 
   odometry_sub_    = nh.subscribe("odometry", 5, &Navigator::odometryCB, this);
 
-  cmd_vel_pub_     = nh.advertise <geometry_msgs::Twist>    ("mobile_base/commands/velocity", 1);
-  motor_pwr_pub_   = nh.advertise <kobuki_msgs::MotorPower> ("mobile_base/commands/motor_power", 1);
+  cmd_vel_pub_     = nh.advertise <geometry_msgs::Twist>    ("/mobile_base/commands/velocity", 1);
+  motor_pwr_pub_   = nh.advertise <kobuki_msgs::MotorPower> ("/mobile_base/commands/motor_power", 1);
 
 
   goal_poses_pub_  = nh.advertise <geometry_msgs::PoseStamped> ("goal_pose", 1, true);
