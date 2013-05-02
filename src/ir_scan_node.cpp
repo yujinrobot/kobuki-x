@@ -58,11 +58,12 @@ void IrScanNode::rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
 int IrScanNode::init(ros::NodeHandle& nh)
 {
   // Parameters
-  std::string default_frame("ir_link");
+  std::string default_frame("/ir_link");
   nh.param("ir_to_laserscan/ir_frame_id",      ir_frame_id, default_frame);
   nh.param("ir_to_laserscan/rangers_count",    rangers_count,  11);
   nh.param("ir_to_laserscan/range_variance",   range_variance,  0.025);
   nh.param("ir_to_laserscan/maximum_range",    maximum_range,   0.8);
+  nh.param("ir_to_laserscan/infinity_range",   infinity_range,  6.0);
   nh.param("ir_to_laserscan/ir_ring_radius",   ir_ring_radius,  0.155);
   nh.param("ir_to_laserscan/read_frequency",   read_frequency, 20.0);
 

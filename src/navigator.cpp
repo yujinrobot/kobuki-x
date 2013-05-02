@@ -468,7 +468,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 
             // Point toward the pickup point so we can see whether it gets free
             if (std::abs(heading_to_goal) > 0.3)
-              turn(heading_to_goal);
+              turn(tk::wrapAngle(heading_to_goal - tf::getYaw(robot_gb.getRotation())));
           }
           catch (tf::TransformException& e)
           {
@@ -546,8 +546,6 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
       }
     }
 
-    // TODO I'm ignoring ignoring +PI / -PI singularity
-
     // Robot tf in table reference system; tables have no orientation, so we assume 0-0-0 rotation
     // Note that we inverse heading because we need table to robot heading
 //    tf::Transform robot_tb(tf::createQuaternionFromYaw(tk::wrapAngle(heading_to_goal + M_PI)),
@@ -609,7 +607,21 @@ tf_brcaster_.sendTransform(tf2);
 
         distance_to_goal  = tk::distance(robot_gb, goal_gb);
 
-        if (distance_to_goal < close_to_delivery_distance_)
+        if (distance_to_table < (table_radius + tables_serving_distance_ + 0.1))
+        {
+          // Somehow we manage to approach the table, so... why to bother more? Just cancel goal and head to the table center
+          double to_turn = tk::wrapAngle(heading_to_table - tf::getYaw(robot_gb.getRotation()));
+          ROS_DEBUG("Already close to the table while going to next goal (%f m); just turn %f rad to face the table",
+                    distance_to_table, to_turn);
+          if (std::abs(to_turn) > 0.3)
+            turn(to_turn);
+
+          if (cancelAllGoals(move_base_ac_) == false)
+            ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
+
+          return cleanupAndSuccess();
+        }
+        else if (distance_to_goal < close_to_delivery_distance_)
         {
           // When close enough to the table, switch off recovery behavior so planner immediately fails if the
           // desired delivery point is busy; if not, robot will spin instead of looking for a different point
