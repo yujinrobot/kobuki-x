@@ -20,9 +20,6 @@ namespace waiterbot
 {
 
 Navigator::Navigator() :
-    GO_TO_POSE_TIMEOUT(30.0),
-    AUTO_DOCKING_TIMEOUT(50.0),
-    WAIT_FOR_PICKUP_POINT(8.0),
     state_(IDLE),
     move_base_ac_("move_base", true),                // tell the action clients that we
     auto_dock_ac_("dock_drive_action", true),        // want to spin a thread by default  TODO sure???
@@ -49,6 +46,9 @@ bool Navigator::init()
   pnh.param("relay_on_beacon_distance", relay_on_beacon_distance_, 0.4);
   pnh.param("relay_on_marker_distance", relay_on_marker_distance_, 1.0);
   pnh.param("tables_serving_distance",  tables_serving_distance_,  0.4);
+  pnh.param("go_to_pose_timeout",       go_to_pose_timeout_,     300.0);
+  pnh.param("auto_docking_timeout",     auto_docking_timeout_,    90.0);
+  pnh.param("wait_for_pickup_point",    wait_for_pickup_point_,    8.8);
 
 //TODO  pnh.param("close_to_pickup_distance", close_to_pickup_distance_, 2.0);
 
@@ -251,7 +251,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
      state_ = MARKER_DOCKING;
     }
-    else if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
+    else if ((ros::Time::now() - t0).toSec() < go_to_pose_timeout_)
     {
       ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)  %s",
                          move_base_ac_.getState().toString().c_str(),
@@ -260,7 +260,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
     else
     {
       ROS_WARN("Cannot she the docking base after %.2f seconds; current state is %s. Aborting...",
-               GO_TO_POSE_TIMEOUT, move_base_ac_.getState().toString().c_str());
+               go_to_pose_timeout_, move_base_ac_.getState().toString().c_str());
       return cleanupAndError();
     }
   }
@@ -311,7 +311,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
   while (auto_dock_ac_.waitForResult(ros::Duration(2.0)) == false)
   {
-    if ((ros::Time::now() - t0).toSec() < AUTO_DOCKING_TIMEOUT)
+    if ((ros::Time::now() - t0).toSec() < auto_docking_timeout_)
     {
       ROS_DEBUG_THROTTLE(4.0, "Auto-dock action state: %s (%.2f seconds elapsed)",
                          auto_dock_ac_.getState().toString().c_str(), (ros::Time::now() - t0).toSec());
@@ -319,7 +319,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
     else
     {
       ROS_WARN("Cannot auto-dock after %.2f seconds; current state is %s. Aborting...",
-               AUTO_DOCKING_TIMEOUT, auto_dock_ac_.getState().toString().c_str());
+               auto_docking_timeout_, auto_dock_ac_.getState().toString().c_str());
       // TODO go back and retry or change auto-docking algorithm
       return cleanupAndError();
     }
@@ -386,7 +386,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
     // Going to pickup point
     while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
     {
-      if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
+      if ((ros::Time::now() - t0).toSec() < go_to_pose_timeout_)
       {
         ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
                            (ros::Time::now() - t0).toSec());
@@ -422,7 +422,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
       else
       {
         ROS_WARN("Cannot reach pickup point after %.2f seconds; current state is %s. Aborting...",
-                 GO_TO_POSE_TIMEOUT, move_base_ac_.getState().toString().c_str());
+                 go_to_pose_timeout_, move_base_ac_.getState().toString().c_str());
         return cleanupAndError();
       }
     }
@@ -451,7 +451,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
         {
           // So much waiting for pickup point... maybe something is wrong
           ROS_WARN("Pickup point don't get free after %.2f seconds... what the hell is happening?",
-                   15*WAIT_FOR_PICKUP_POINT);
+                   15*wait_for_pickup_point_);
           return cleanupAndError();
         }
         else
@@ -463,7 +463,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
             heading_to_goal = tk::heading(robot_gb, marker_gb);
 
             // We assume that the pickup point is busy; mooo, and wait for it to get free
-            ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %f m, %f rad)", WAIT_FOR_PICKUP_POINT,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
+            ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %f m, %f rad)", wait_for_pickup_point_,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
             if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
 
             // Point toward the pickup point so we can see whether it gets free
@@ -477,7 +477,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
           }
         }
 
-        ros::Duration(WAIT_FOR_PICKUP_POINT).sleep();
+        ros::Duration(wait_for_pickup_point_).sleep();
         continue;
 
         // TODO: I should try goals slightly displaced; or get the costmap and verify that the pickup AREA is really busy
@@ -597,7 +597,7 @@ tf_brcaster_.sendTransform(tf2);
     // Going to delivery point
     while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
     {
-      if ((ros::Time::now() - t0).toSec() < GO_TO_POSE_TIMEOUT)
+      if ((ros::Time::now() - t0).toSec() < go_to_pose_timeout_)
       {
         ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
                            (ros::Time::now() - t0).toSec());
@@ -641,7 +641,7 @@ tf_brcaster_.sendTransform(tf2);
       else
       {
         ROS_WARN("Cannot reach delivery point after %.2f seconds; current state is %s. Aborting...",
-                 GO_TO_POSE_TIMEOUT, move_base_ac_.getState().toString().c_str());
+                 go_to_pose_timeout_, move_base_ac_.getState().toString().c_str());
         return cleanupAndError();
       }
     }
