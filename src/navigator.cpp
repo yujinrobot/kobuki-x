@@ -91,38 +91,45 @@ void Navigator::baseSpottedMsgCB(const geometry_msgs::PoseStamped::ConstPtr& msg
   base_marker_id_ = id;
 }
 
-bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
+bool Navigator::dockInBase()
+{
+  // This is the fallback solution in case of not having recognized base's AR marker
+  ROS_WARN("Trying to go to docking base without recognizing its AR marker; not an easy business...");
+
+  // Get latest map -> odom tf and displace slightly away from the base
+  tf::StampedTransform odom_gb = getOdomTf();
+  tf::Transform pull_back(tf::Quaternion::getIdentity(),
+                          tf::Vector3(- relay_on_beacon_distance_, 0.0, 0.0));
+
+  move_base_msgs::MoveBaseGoal mb_goal;
+  tk::tf2pose(odom_gb*pull_back, mb_goal.target_pose.pose);
+  mb_goal.target_pose.header.stamp = ros::Time::now();
+  mb_goal.target_pose.header.frame_id = global_frame_;
+
+  return dockInBase___(mb_goal);
+}
+
+bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
 {
   // Enable safety controller on normal navigation
   enableSafety();
 
-  if (base_abs_pose.header.frame_id != global_frame_)
+  if (base_marker_pose.header.frame_id != global_frame_)
   {
     ROS_ERROR("Docking base pose not in global frame (%s != %s)",
-              base_abs_pose.header.frame_id.c_str(), global_frame_.c_str());
-    return cleanupAndError();
+              base_marker_pose.header.frame_id.c_str(), global_frame_.c_str());
+    return false;
   }
 
   // Get latest robot global pose
-  tf::StampedTransform robot_gb;
-
-  try
-  {
-    tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
-  }
-  catch (tf::TransformException& e)
-  {
-    // If frames are well configured, this implies that some part of the localization chain is missing
-    ROS_ERROR("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
-    return cleanupAndError();
-  }
+  tf::StampedTransform robot_gb = getRobotTf();
 
   // Project a pose relative to map frame in front of the docking base and heading to it
   ROS_INFO("Global navigation to docking base...");
 
   // Compensate the vertical alignment of markers and put at ground level to adopt navistack goals format
-  tf::Transform tf(tf::createQuaternionFromYaw(tf::getYaw(base_abs_pose.pose.orientation) - M_PI/2.0),
-                   tf::Vector3(base_abs_pose.pose.position.x, base_abs_pose.pose.position.y, 0.0));
+  tf::Transform tf(tf::createQuaternionFromYaw(tf::getYaw(base_marker_pose.pose.orientation) - M_PI/2.0),
+                   tf::Vector3(base_marker_pose.pose.position.x, base_marker_pose.pose.position.y, 0.0));
   tf::StampedTransform marker_gb(tf, ros::Time::now(), global_frame_, "docking_base");
 
   // Check that we are not already close to the docking base
@@ -141,6 +148,11 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
   mb_goal.target_pose.header.stamp = ros::Time::now();
   mb_goal.target_pose.header.frame_id = global_frame_;
 
+  return dockInBase___(mb_goal);
+}
+
+bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
+{
   // Wait for move base action servers to come up; the huge timeout is not a whim; move_base
   // action server can take up to 20 seconds to initialize in the official turtlebot laptop,
   // so is this request is issued short after startup...
@@ -181,15 +193,13 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
                base_rel_pose_.pose.position.z);
 
       // Docking base marker spotted at relay_on_marker_distance; switch to relative goal
-      move_base_ac_.cancelAllGoals();
-//      move_base_ac_.waitForResult(ros::Duration(1.0));
-//      ROS_DEBUG("1 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
-      while (move_base_ac_.waitForResult(ros::Duration(0.05)) == false) ;
-        ROS_DEBUG("2 waitForResult: %s; %s", move_base_ac_.getState().toString().c_str(), move_base_ac_.getState().getText().c_str());
+      if (cancelAllGoals(move_base_ac_) == false)
+        ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
 
       // Get base marker tf on global reference system
       char marker_frame[32];
       sprintf(marker_frame, "ar_marker_%d", base_marker_id_);
+      tf::StampedTransform marker_gb;
 
       try
       {
@@ -202,15 +212,6 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
         ROS_ERROR("Cannot get tf %s -> %s: %s", base_frame_.c_str(), marker_frame, e.what());
         return cleanupAndError();
       }
-
-//        marker_gb*=robot_mk;
-//        tf::Transform robot_gb = marker_gb;
-
-//      tf::Quaternion q;
-//      double roll, pitch, yaw;
-//      tf::Matrix3x3(marker_gb.getRotation()).getRPY(roll, pitch, yaw);
-//        double yaw = tf::getYaw(marker_fp.getRotation());
-//      ROS_DEBUG("RPY = (%lf, %lf, %lf)       (%lf, %lf, %lf)    %s", roll, pitch, yaw, marker_gb.getOrigin().x(), marker_gb.getOrigin().y(), marker_gb.getOrigin().z(), marker_gb.child_frame_id_.c_str());
 
       if (tk::roll(marker_gb) < -1.0)
       {
@@ -227,27 +228,29 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
 
       // Project a pose relative to map frame in front of the docking base and heading to it
       // As before, half turn and translate to put goal at some distance in front of the marker
-      in_front.setRotation(tf::createQuaternionFromYaw(M_PI));
-      in_front.setOrigin(tf::Vector3(relay_on_beacon_distance_, 0.0, 0.0));
-
+      tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
+                             tf::Vector3(relay_on_beacon_distance_, 0.0, 0.0));
       goal_gb *= in_front;
 
+      //< DEBUG
       tf::StampedTransform tf1(goal_gb, ros::Time::now(),  "map", "GOAL");
       tf::StampedTransform tf2(marker_gb, ros::Time::now(),  "map", "MARKER");
       tf_brcaster_.sendTransform(tf1);
       tf_brcaster_.sendTransform(tf2);
+      //>
 
-      // Send a goal at relay_on_beacon_distance_ in front the marker
-      tk::tf2pose(goal_gb, mb_goal.target_pose.pose);
+      // Send a second goal at relay_on_beacon_distance_ in front the marker
+      move_base_msgs::MoveBaseGoal mb_goal_2;
+      tk::tf2pose(goal_gb, mb_goal_2.target_pose.pose);
 
-      mb_goal.target_pose.header.frame_id = global_frame_;
-      mb_goal.target_pose.header.stamp = ros::Time::now();
+      mb_goal_2.target_pose.header.frame_id = global_frame_;
+      mb_goal_2.target_pose.header.stamp = ros::Time::now();
 
       ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
-                mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
-                tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
-      goal_poses_pub_.publish(mb_goal.target_pose);
-      move_base_ac_.sendGoal(mb_goal);
+                mb_goal_2.target_pose.pose.position.x, mb_goal_2.target_pose.pose.position.y,
+                tf::getYaw(mb_goal_2.target_pose.pose.orientation), mb_goal_2.target_pose.header.frame_id.c_str());
+      goal_poses_pub_.publish(mb_goal_2.target_pose);
+      move_base_ac_.sendGoal(mb_goal_2);
 
      state_ = MARKER_DOCKING;
     }
@@ -288,7 +291,8 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_abs_pose)
       ROS_WARN("Last spot was %f seconds ago at %f meters",
                (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
     }
-    // TODO; why we cannot see the marker??? that's bad... probably auto-docking will fail but we try anyway
+    // We cannot see the marker; that's normal if we are trying the odometry origin fallback solution (see
+    // no-parameters dockInBase method). If not, probably we have a problem; switch on auto-docking anyway
   }
 
   // We should be in front of the docking base at base_beacon_distance_; switch on auto-docking
@@ -393,29 +397,21 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 
         if (recovery_behavior_ == true)
         {
+          // Get latest robot global pose
+          robot_gb = getRobotTf();
+
           // When close enough to the pickup pose, switch off recovery behavior so planner immediately fails if the
           // pickup point is busy; if not, robot will stupidly spin for a while before deciding that he must wait
-          try
+          distance_to_goal = tk::distance(robot_gb, marker_gb);
+          if (distance_to_goal < close_to_pickup_distance_)
           {
-            // Get latest robot global pose
-            tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+            ROS_DEBUG("Close enough to the pickup point (%f < %f m); switch off recovery behavior",
+                      distance_to_goal, close_to_pickup_distance_);
 
-            distance_to_goal = tk::distance(robot_gb, marker_gb);
-            if (distance_to_goal < close_to_pickup_distance_)
+            if (disableRecovery() == false)
             {
-              ROS_DEBUG("Close enough to the pickup point (%f < %f m); switch off recovery behavior",
-                        distance_to_goal, close_to_pickup_distance_);
-
-              if (disableRecovery() == false)
-              {
-                ROS_WARN("Robot will stupidly spin for a while before deciding that pickup point is busy");
-              }
+              ROS_WARN("Robot will stupidly spin for a while before deciding that pickup point is busy");
             }
-          }
-          catch (tf::TransformException& e)
-          {
-            // If frames are well configured, this implies that some part of the localization chain is missing
-            ROS_WARN("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
           }
         }
       }
@@ -456,25 +452,18 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
         }
         else
         {
-          try  //TODO refactor whithout try
-          {
-            // Get latest robot global pose to calculate heading to goal
-            tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
-            heading_to_goal = tk::heading(robot_gb, marker_gb);
+          // Get latest robot global pose to calculate heading to goal
+          robot_gb = getRobotTf();
+          tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+          heading_to_goal = tk::heading(robot_gb, marker_gb);
 
-            // We assume that the pickup point is busy; mooo, and wait for it to get free
-            ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %f m, %f rad)", wait_for_pickup_point_,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
-            if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+          // We assume that the pickup point is busy; mooo, and wait for it to get free
+          ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %f m, %f rad)", wait_for_pickup_point_,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
+          if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
 
-            // Point toward the pickup point so we can see whether it gets free
-            if (std::abs(heading_to_goal) > 0.3)
-              turn(tk::wrapAngle(heading_to_goal - tf::getYaw(robot_gb.getRotation())));
-          }
-          catch (tf::TransformException& e)
-          {
-            // If frames are well configured, this implies that some part of the localization chain is missing
-            ROS_WARN("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
-          }
+          // Point toward the pickup point so we can see whether it gets free
+          if (std::abs(heading_to_goal) > 0.3)
+            turn(tk::wrapAngle(heading_to_goal - tf::getYaw(robot_gb.getRotation())));
         }
 
         ros::Duration(wait_for_pickup_point_).sleep();
@@ -546,42 +535,23 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
       }
     }
 
-    // Robot tf in table reference system; tables have no orientation, so we assume 0-0-0 rotation
-    // Note that we inverse heading because we need table to robot heading
-//    tf::Transform robot_tb(tf::createQuaternionFromYaw(tk::wrapAngle(heading_to_goal + M_PI)),
-//                           robot_gb.getOrigin() - table_gb.getOrigin());
-
+    // Table tf in global reference system; we set robot-to-table heading as orientation...
     table_gb.setRotation(tf::createQuaternionFromYaw(tk::wrapAngle(heading_to_goal)));
 
-//    ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f    %.2f, %.2f, %.2f        %f", heading_to_goal, tk::wrapAngle(heading_to_goal + M_PI) ,tk::heading(robot_gb, table_gb),
-//              table_gb.getOrigin().x(), table_gb.getOrigin().y(), table_gb.getOrigin().z(),    heading_increment);
-
-    // Like that, x-axis points to the robot; we move table radius + robot radius + safety margin
-    // in that direction to obtain the delivery point tf. As nobody is publishing table tf, we cannot
-    // send our goal with table as reference system, so we make it referent to robot.
-
-    tf::Transform towards_robot(tf::Quaternion::getIdentity(), tf::Vector3(- table_radius - tables_serving_distance_, 0.0, 0.0));
-    tf::Transform goal_gb = table_gb*towards_robot;
-
+    // ...and displace table radius + robot radius + safety margin in that direction
+    tf::Transform towards_robot(tf::Quaternion::getIdentity(),
+                                tf::Vector3(- table_radius - tables_serving_distance_, 0.0, 0.0));
+    tf::StampedTransform goal_gb(table_gb*towards_robot, ros::Time::now(), global_frame_, "DELIVERY_POINT");
     double distance_to_goal = tk::distance(robot_gb, goal_gb);
-tf::StampedTransform tf1(table_gb, ros::Time::now(),  global_frame_, "TABLE1");
-tf_brcaster_.sendTransform(tf1);
-tf::StampedTransform tf2(goal_gb, ros::Time::now(),  global_frame_, "TABLE2");
-tf_brcaster_.sendTransform(tf2);
 
+    //< DEBUG
+    tf::StampedTransform table(table_gb, ros::Time::now(),  global_frame_, "TABLE");
+    tf_brcaster_.sendTransform(table);
+    tf_brcaster_.sendTransform(goal_gb);
+    //>
 
-//min_tried_heading = std::min(min_tried_heading, tk::wrap_360(heading_to_goal - heading_increment));
-//max_tried_heading = std::max(max_tried_heading, tk::wrap_360(heading_to_goal + heading_increment));
-//
-//ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %f                %d", heading_to_goal, min_tried_heading ,max_tried_heading,
-//             heading_increment ,  (min_tried_heading <- max_tried_heading));
-//
-//
-//ros::Duration(3).sleep();
-//  } while (min_tried_heading <= max_tried_heading);
-//
     move_base_msgs::MoveBaseGoal mb_goal;
-    tk::tf2pose(tf2, mb_goal.target_pose);
+    tk::tf2pose(goal_gb, mb_goal.target_pose);
 
     ROS_DEBUG("Sending goal to robot: %.2f, %.2f, %.2f (relative to %s)",
               mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
@@ -704,11 +674,6 @@ tf_brcaster_.sendTransform(tf2);
         // So much waiting for delivery point... maybe something is wrong
         ROS_WARN("Delivery point looks busy; try another one (%d attempts)", attempts);
       }
-
-
- //     ros::Duration(1.0).sleep();
-      //continue;
-
     }
     else
     {
@@ -886,59 +851,32 @@ void Navigator::disableMotors()
   motor_pwr_pub_.publish(msg);
 }
 
-tf::StampedTransform Navigator::getRobotTf()
+tf::StampedTransform Navigator::getTf(const std::string& frame_1, const std::string& frame_2)
 {
-  tf::StampedTransform robot_gb;
+  // Use this just to get tf that cannot fail unless some part of the localization chain is missing
+  // Otherwise said; if this exception happens we are really pissed-off, so we don't try to recover
+  tf::StampedTransform tf;
   try
   {
-    // Get latest robot global pose
-    tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
+    tf_listener_.lookupTransform(frame_1, frame_2, ros::Time(0.0), tf);
   }
   catch (tf::TransformException& e)
   {
-    // If frames are well configured, this implies that some part of the localization chain is missing
-    // Otherwise said; if this exception happens we are really pissed-off, so I don't try to recover
-    ROS_WARN("Cannot get tf %s -> %s: %s", global_frame_.c_str(), base_frame_.c_str(), e.what());
+    ROS_WARN("Cannot get tf %s -> %s: %s", frame_1.c_str(), frame_1.c_str(), e.what());
   }
-  return robot_gb;
+  return tf;
 }
 
-//  while not client.wait_for_server(rospy.Duration(5.0)):
-//    if rospy.is_shutdown(): return
-//    print 'Action server is not connected yet. still waiting...'
-//
-//  goal = AutoDockingGoal();
-//  client.send_goal(goal, doneCb, activeCb, feedbackCb)
-//  print 'Goal: Sent.'
-//  rospy.on_shutdown(client.cancel_goal)
-//  client.wait_for_result()
-//
-//  #print '    - status:', client.get_goal_status_text()
-//  return client.get_result()
+tf::StampedTransform Navigator::getOdomTf()
+{
+  // Get latest map -> odom tf
+  return getTf(global_frame_, odom_frame_);
+}
 
-
-//void Navigator::dockInBase(geometry_msgs::PoseStamped base_abs_pose)
-//{
-//  move_base_msgs::MoveBaseGoal goal;
-//
-//  //we'll send a goal to the robot to move 1 meter forward
-//  goal.target_pose.header.frame_id = "base_link";
-//  goal.target_pose.header.stamp = ros::Time::now();
-//
-//  goal.target_pose.pose.position.x = 1.0;
-//  goal.target_pose.pose.orientation.w = 1.0;
-//
-//  ROS_INFO("Sending goal");
-//  move_base_ac_.sendGoal(goal);
-//
-//  move_base_ac_.waitForResult();
-//
-//  if(move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-//    ROS_INFO("Hooray, the base moved 1 meter forward");
-//  else
-//    ROS_INFO("The base failed to move forward 1 meter for some reason");
-//
-//}
-
+tf::StampedTransform Navigator::getRobotTf()
+{
+  // Get latest robot global pose
+  return getTf(global_frame_, base_frame_);
+}
 
 } /* namespace waiterbot */
