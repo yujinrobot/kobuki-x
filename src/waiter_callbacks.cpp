@@ -1,5 +1,5 @@
 /*
- * waiter_cbs.cpp
+ * waiter_callbacks.cpp
  *
  *  Created on: Apr 6, 2013
  *      Author: jorge
