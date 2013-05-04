@@ -8,7 +8,7 @@ define kinect ranger
   )
   # generic model properties
   color "black"
-  size [ 0.06 0.15 0.3 ]
+  size [ 0.06 0.15 0.03 ]
 )
 
 define waiterbot position
