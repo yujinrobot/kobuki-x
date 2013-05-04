@@ -83,12 +83,12 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
 {
   ROS_INFO("FAKE delivery order action requested [order: %d, table: %d]", order_id, table_id);
 
-  if (order_id == 0)       boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
-  if (order_id == 1)       boost::thread wakeUpThread(&WaiterNode::leaveNest, this);
-  if (order_id == 2)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose()));
-  if (order_id == 3)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_));
-  if (order_id == 4)       boost::thread pickUpThread(&Navigator::pickUpOrder, &navigator_, pickup_pose_);
-  if (order_id == 5)
+  if (order_id == 1)       boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
+  if (order_id == 2)       boost::thread wakeUpThread(&WaiterNode::leaveNest, this);
+  if (order_id == 3)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose()));
+  if (order_id == 4)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_));
+  if (order_id == 5)       boost::thread pickUpThread(&Navigator::pickUpOrder, &navigator_, pickup_pose_);
+  if (order_id == 6)
   {
     bool table_found = false;
     for (unsigned int i = 0; i < table_poses_.tables.size(); i++)

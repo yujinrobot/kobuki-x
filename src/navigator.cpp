@@ -100,11 +100,15 @@ bool Navigator::dockInBase()
   tf::StampedTransform odom_gb = getOdomTf();
   tf::Transform pull_back(tf::Quaternion::getIdentity(),
                           tf::Vector3(- relay_on_beacon_distance_, 0.0, 0.0));
+  odom_gb *= pull_back;
 
   move_base_msgs::MoveBaseGoal mb_goal;
-  tk::tf2pose(odom_gb*pull_back, mb_goal.target_pose.pose);
+  tk::tf2pose(odom_gb, mb_goal.target_pose.pose);
   mb_goal.target_pose.header.stamp = ros::Time::now();
   mb_goal.target_pose.header.frame_id = global_frame_;
+
+  ROS_WARN("Trying to go to docking base without recognizing its AR marker; not an easy business... %f %f %f  %s",
+           getOdomTf().getOrigin().x(), odom_gb.getOrigin().x(), relay_on_beacon_distance_, odom_gb.frame_id_.c_str());
 
   return dockInBase___(mb_goal);
 }
@@ -135,16 +139,17 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
   // Check that we are not already close to the docking base
   if (tk::distance(robot_gb, marker_gb) < relay_on_marker_distance_)
   {
-    ROS_DEBUG("Already close to the docking base (%f m) , but we are not smart enough to make use of this... pabo io...",
+    ROS_DEBUG("Already close to the docking base (%.2f m) , but we are not smart enough to make use of this... pabo io...",
               tk::distance(robot_gb, marker_gb));
   }
 
   // Half turn and translate to put goal at some distance in front of the marker
   tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
                          tf::Vector3(relay_on_marker_distance_/1.5, 0.0, 0.0));
+  marker_gb *= in_front;
 
   move_base_msgs::MoveBaseGoal mb_goal;
-  tk::tf2pose(marker_gb*in_front, mb_goal.target_pose.pose);
+  tk::tf2pose(marker_gb, mb_goal.target_pose.pose);
   mb_goal.target_pose.header.stamp = ros::Time::now();
   mb_goal.target_pose.header.frame_id = global_frame_;
 
@@ -182,7 +187,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   // Going to goal in front of the docking base marker
   while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
   {
-//    ROS_DEBUG("%d %.2f %f", state_, (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
+//    ROS_DEBUG("%d %.2f %.2f", state_, (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
 
     if ((state_ == GLOBAL_DOCKING) &&
         ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 1.0) &&
@@ -288,7 +293,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
     ROS_WARN("Unable to spot docking base marker within the required distance");
     if (base_marker_id_ < AR_MARKERS_COUNT)
     {
-      ROS_WARN("Last spot was %f seconds ago at %f meters",
+      ROS_WARN("Last spot was %.2f seconds ago at %.2f meters",
                (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
     }
     // We cannot see the marker; that's normal if we are trying the odometry origin fallback solution (see
@@ -405,7 +410,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
           distance_to_goal = tk::distance(robot_gb, marker_gb);
           if (distance_to_goal < close_to_pickup_distance_)
           {
-            ROS_DEBUG("Close enough to the pickup point (%f < %f m); switch off recovery behavior",
+            ROS_DEBUG("Close enough to the pickup point (%.2f < %.2f m); switch off recovery behavior",
                       distance_to_goal, close_to_pickup_distance_);
 
             if (disableRecovery() == false)
@@ -438,7 +443,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
         if ((recovery_behavior_ == true) && (distance_to_goal > close_to_pickup_distance_*1.1))
         {
           // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
-          ROS_WARN("Move base aborted still at %f m from pickup point (we expect this to happen closer than %f m)",
+          ROS_WARN("Move base aborted still at %.2f m from pickup point (we expect this to happen closer than %.2f m)",
                    distance_to_goal, close_to_pickup_distance_);
           if (times_waiting > 3)
             return cleanupAndError();
@@ -458,7 +463,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
           heading_to_goal = tk::heading(robot_gb, marker_gb);
 
           // We assume that the pickup point is busy; mooo, and wait for it to get free
-          ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %f m, %f rad)", wait_for_pickup_point_,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
+          ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %.2f m, %.2f rad)", wait_for_pickup_point_,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
           if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
 
           // Point toward the pickup point so we can see whether it gets free
@@ -581,7 +586,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
         {
           // Somehow we manage to approach the table, so... why to bother more? Just cancel goal and head to the table center
           double to_turn = tk::wrapAngle(heading_to_table - tf::getYaw(robot_gb.getRotation()));
-          ROS_DEBUG("Already close to the table while going to next goal (%f m); just turn %f rad to face the table",
+          ROS_DEBUG("Already close to the table while going to next goal (%.2f m); just turn %.2f rad to face the table",
                     distance_to_table, to_turn);
           if (std::abs(to_turn) > 0.3)
             turn(to_turn);
@@ -597,7 +602,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
           // desired delivery point is busy; if not, robot will spin instead of looking for a different point
           if (recovery_behavior_ == true)
           {
-            ROS_DEBUG("Close enough to the delivery point (%f < %f m); switch off recovery behavior",
+            ROS_DEBUG("Close enough to the delivery point (%.2f < %.2f m); switch off recovery behavior",
                       distance_to_goal, close_to_delivery_distance_);
 
             if (disableRecovery() == false)
@@ -612,7 +617,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
           if ((std::abs(last_plan_heading_to_table - heading_to_table) > 0.5) &&
               (distance_to_table > 3*table_radius) && (recovery_behavior_ == false))
           {
-            ROS_DEBUG("Heading to the table has notably changed (%f -> %f m); replan approach point",
+            ROS_DEBUG("Heading to the table has notably changed (%.2f -> %.2f m); replan approach point",
                       last_plan_heading_to_table, heading_to_table);
             if (cancelAllGoals(move_base_ac_) == false)
               ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
@@ -648,7 +653,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
       if ((recovery_behavior_ == true) && (distance_to_goal > close_to_delivery_distance_*1.1))
       {
         // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
-        ROS_WARN("Move base aborted still at %f m from delivery point (we expect this to happen closer than %f m)",
+        ROS_WARN("Move base aborted still at %.2f m from delivery point (we expect this to happen closer than %.2f m)",
                  distance_to_goal, close_to_delivery_distance_);
         if (attempts > 3)
           return cleanupAndError();
@@ -660,7 +665,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
         min_tried_heading = std::min(min_tried_heading, heading_to_goal - heading_increment);
         max_tried_heading = std::max(max_tried_heading, heading_to_goal + heading_increment);
 
-        ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %f           %f     %d", heading_to_goal, min_tried_heading ,max_tried_heading,
+        ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %.2f           %.2f     %d", heading_to_goal, min_tried_heading ,max_tried_heading,
                      heading_increment ,  ( max_tried_heading - min_tried_heading),  (( max_tried_heading - min_tried_heading) >= 2.0*M_PI));
 
         if (( max_tried_heading - min_tried_heading) > (2.0*M_PI - heading_increment))
