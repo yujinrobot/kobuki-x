@@ -12,3 +12,4 @@ accel_lim_w: 1.0
 # Optional parameters
 frequency: 20.0
 decel_factor: 1.0
+robot_feedback: 2  # end robot commands
