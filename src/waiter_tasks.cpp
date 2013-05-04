@@ -83,6 +83,7 @@ bool WaiterNode::wakeUp()
     return cleanupAndError();
 
     // TODO do nothing more by now, but we will want to make an error sound, red leds, etc.
+    // Possible fallback: assume that odom + robot radius + docking base width is its pose
   }
 
   ar_track_alvar::AlvarMarker closest_marker;

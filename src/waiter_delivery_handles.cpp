@@ -71,7 +71,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
 
   // Return the result to Task Coordinator
   cafe_msgs::DeliverOrderResult result;
-  result.result = "YA VEREMOS...";
+  result.result = "Delivery successfully completed (hopefully...)";
   as_.setSucceeded(result);
   return true;
 }
@@ -83,7 +83,11 @@ bool WaiterNode::setFailure(std::string reason)
   result.result = reason;
   as_.setSucceeded(result);
 
-  navigator_.dockInBase(ar_markers_.getDockingBasePose());
+  // Try to go back to nest
+  if (ar_markers_.dockingBaseSpotted() == true)
+    navigator_.dockInBase(ar_markers_.getDockingBasePose());
+  else
+    navigator_.dockInBase();
 
   return true;
 }

@@ -113,6 +113,10 @@ protected:
 
   bool cleanupAndSuccess();
   bool cleanupAndError();
+
+  //< DEBUG
+  void fakeOrderForEasyDebugging(int order_id, int table_id);
+  //> DEBUG
 };
 
 } /* namespace waiterbot */

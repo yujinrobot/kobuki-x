@@ -42,6 +42,7 @@ public:
     base_spotted_cb_ = cb;
   };
 
+  bool dockingBaseSpotted() { return  (docking_marker_.id != std::numeric_limits<uint32_t>::max()); }
   const geometry_msgs::PoseStamped& getDockingBasePose() { return docking_marker_.pose; };
 
   bool spotted(double younger_than,

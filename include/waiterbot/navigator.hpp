@@ -56,7 +56,9 @@ public:
   void enableSafety() { safety_on_pub_.publish(std_msgs::Empty()); };
   void disableSafety() { safety_off_pub_.publish(std_msgs::Empty()); };
 
-  bool dockInBase(const geometry_msgs::PoseStamped& base_abs_pose);
+  bool dockInBase();
+  bool dockInBase(const geometry_msgs::PoseStamped& base_marker_pose);
+  bool dockInBase___(const move_base_msgs::MoveBaseGoal& move_base_goal);
   bool pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose);
   bool deliverOrder(const geometry_msgs::PoseStamped& table_pose, double table_radius);
 
@@ -225,7 +227,9 @@ private:
   bool shoftRecovery();
   bool hardRecovery();
 
+  tf::StampedTransform getOdomTf();
   tf::StampedTransform getRobotTf();
+  tf::StampedTransform getTf(const std::string& frame_1, const std::string& frame_2);
 
 
   /********************************************************
