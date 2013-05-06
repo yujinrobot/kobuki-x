@@ -89,8 +89,6 @@ protected:
 
   geometry_msgs::PoseStamped             pickup_pose_;
   semantic_region_handler::TablePoseList table_poses_;
-//  ar_track_alvar::AlvarMarker base_marker_;
-//  uint16_t  dock_marker_;   /**< AR marker identifying this robot's docking station */
   kobuki_msgs::SensorState core_sensors_;
   cafe_msgs::Order  order_;
   cafe_msgs::Status status_;
@@ -98,6 +96,7 @@ protected:
 
   boost::thread order_process_thread_;
 
+  bool debug_mode_;
   bool initialized_;
   bool initialized_table_;
 

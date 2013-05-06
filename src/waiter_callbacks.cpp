@@ -54,7 +54,7 @@ void WaiterNode::deliverOrderCB()
   ROS_INFO("Deliver order action requested [order: %d, table: %d]", order.order_id, order.table_id);
 
   //< DEBUG
-  if (order.order_id < 0)
+  if ((debug_mode_ == true) && (order.order_id < 0))
   {
     fakeOrderForEasyDebugging(order.order_id * -1, order.table_id);
     // Return the result to Task Coordinator

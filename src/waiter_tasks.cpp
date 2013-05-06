@@ -34,13 +34,22 @@ bool WaiterNode::getReadyToWork()
 
 bool WaiterNode::waitForButton()
 {
-  ROS_INFO("Wait for Button");
+  ROS_INFO("Waiting for button...");
+
+  if (debug_mode_ == true)
+  {
+    ros::Duration(3.0).sleep();
+    ROS_INFO("Button faked with a 3.0 seconds timeout");
+    return true;
+  }
 
   wait_for_button_ = true;
   while (ros::ok() && wait_for_button_)
   {
     ros::Duration(0.5).sleep();
   }
+
+  ROS_INFO("Button pressed");
   return true;
 }
 

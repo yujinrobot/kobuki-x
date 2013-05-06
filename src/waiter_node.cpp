@@ -17,6 +17,9 @@ namespace waiterbot
 
 bool WaiterNode::init()
 {
+  ros::NodeHandle pnh("~");
+  pnh.param("debug_mode", debug_mode_, false);
+
   // register the goal and preempt callbacks
   as_.registerGoalCallback(boost::bind(&WaiterNode::deliverOrderCB, this));
   as_.registerPreemptCallback(boost::bind(&WaiterNode::preemptOrderCB, this));
