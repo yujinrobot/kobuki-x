@@ -38,6 +38,7 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
 
 void WaiterNode::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
 {
+  // TODO msg->values[0] red button -> use to stop action in course
   if (msg->values[0] == false)
     wait_for_button_ = false;
 }

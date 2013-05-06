@@ -115,9 +115,6 @@ bool Navigator::dockInBase()
 
 bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
 {
-  // Enable safety controller on normal navigation
-  enableSafety();
-
   if (base_marker_pose.header.frame_id != global_frame_)
   {
     ROS_ERROR("Docking base pose not in global frame (%s != %s)",
@@ -139,7 +136,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
   // Check that we are not already close to the docking base
   if (tk::distance(robot_gb, marker_gb) < relay_on_marker_distance_)
   {
-    ROS_DEBUG("Already close to the docking base (%.2f m) , but we are not smart enough to make use of this... pabo io...",
+    ROS_DEBUG("Already close to the docking base (%.2f m), but we are not smart enough to make use of this... pabo io...",
               tk::distance(robot_gb, marker_gb));
   }
 
@@ -158,6 +155,9 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
 
 bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
 {
+  // Enable safety controller on normal navigation
+  enableSafety();
+
   // Wait for move base action servers to come up; the huge timeout is not a whim; move_base
   // action server can take up to 20 seconds to initialize in the official turtlebot laptop,
   // so is this request is issued short after startup...
@@ -372,11 +372,11 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
   }
 
   int times_waiting = 0;
-  double distance_to_goal = std::numeric_limits<double>::infinity();
-  double heading_to_goal  = std::numeric_limits<double>::infinity();
+  double distance_to_pickup = std::numeric_limits<double>::infinity();
+////  double heading_to_goal  = std::numeric_limits<double>::infinity();
 
-  tf::StampedTransform robot_gb, marker_gb;
-  tk::pose2tf(pickup_pose, marker_gb);
+  tf::StampedTransform robot_gb, pickup_gb;
+  tk::pose2tf(pickup_pose, pickup_gb);
 
   move_base_msgs::MoveBaseGoal mb_goal;
   mb_goal.target_pose = pickup_pose;
@@ -407,11 +407,11 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 
           // When close enough to the pickup pose, switch off recovery behavior so planner immediately fails if the
           // pickup point is busy; if not, robot will stupidly spin for a while before deciding that he must wait
-          distance_to_goal = tk::distance(robot_gb, marker_gb);
-          if (distance_to_goal < close_to_pickup_distance_)
+          distance_to_pickup = tk::distance(robot_gb, pickup_gb);
+          if (distance_to_pickup < close_to_pickup_distance_)
           {
             ROS_DEBUG("Close enough to the pickup point (%.2f < %.2f m); switch off recovery behavior",
-                      distance_to_goal, close_to_pickup_distance_);
+                      distance_to_pickup, close_to_pickup_distance_);
 
             if (disableRecovery() == false)
             {
@@ -440,11 +440,14 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
       {
         times_waiting++;
 
-        if ((recovery_behavior_ == true) && (distance_to_goal > close_to_pickup_distance_*1.1))
+        if ((recovery_behavior_ == true) && (distance_to_pickup > close_to_pickup_distance_*1.1))
         {
+          // TODO/WARN the time lapses that I mention below are much bigger of what I claim because I'm happily
+          //ignoring execution time, that is very big due to move_base planner; measure elapsed time instead
+
           // If this happen so early, something must be really wrong; anyway we will retry planning 3 times
           ROS_WARN("Move base aborted still at %.2f m from pickup point (we expect this to happen closer than %.2f m)",
-                   distance_to_goal, close_to_pickup_distance_);
+                   distance_to_pickup, close_to_pickup_distance_);
           if (times_waiting > 3)
             return cleanupAndError();
         }
@@ -457,18 +460,21 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
         }
         else
         {
-          // Get latest robot global pose to calculate heading to goal
+          // Get latest robot global pose to calculate heading to pickup point
           robot_gb = getRobotTf();
-          tf_listener_.lookupTransform(global_frame_, base_frame_, ros::Time(0.0), robot_gb);
-          heading_to_goal = tk::heading(robot_gb, marker_gb);
-
-          // We assume that the pickup point is busy; mooo, and wait for it to get free
-          ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying    %d   (at %.2f m, %.2f rad)", wait_for_pickup_point_,     recovery_behavior_,         distance_to_goal,  heading_to_goal);
-          if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+          double to_turn = tk::wrapAngle(tk::heading(robot_gb, pickup_gb) - tf::getYaw(robot_gb.getRotation()));
 
           // Point toward the pickup point so we can see whether it gets free
-          if (std::abs(heading_to_goal) > 0.3)
-            turn(tk::wrapAngle(heading_to_goal - tf::getYaw(robot_gb.getRotation())));
+          if (std::abs(to_turn) > 0.3)
+            turn(to_turn);
+
+          // We assume that the pickup point is busy; mooo, and wait for it to get free
+          if (times_waiting % (int)std::ceil(10.0/wait_for_pickup_point_))
+          {
+            // Do not moo at more than 0.1 Hz... we don't want to be bothersome...
+            ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying", wait_for_pickup_point_);
+            if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+          }
         }
 
         ros::Duration(wait_for_pickup_point_).sleep();
@@ -693,10 +699,8 @@ bool Navigator::cleanupAndSuccess()
 {
   // Revert to standard configuration after completing a task
   //  - (re)enable safety controller for normal operation
-  //  - (re)enable motors (auto-docking disables them after finishing)
   //  - disable AR markers tracker as it's a CPU spendthrift
   disableSafety();
-  enableMotors();
   enableRecovery();
 
 //  cancelAllGoals(move_base_ac_);//, recovery_behavior_ == true ? 10.0 : 2.0);
@@ -711,20 +715,11 @@ bool Navigator::cleanupAndError()
 {
   // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
   // WARN1 cancel move base goals fails if it's executing recovery behavior  TODO: how to deal with this?
+  //  >>> if I try disableSafety at that point takes ages to return
   // WARN2 we are very radical on this method, restoring things that probably have not being used... be careful!
-//  move_base_ac_.cancelGoal();
-//  while (move_base_ac_.waitForResult(ros::Duration(0.1)) == false)
-//  {
-//    ROS_WARN("Cancel goal didn't finish after %.2f seconds: %s", 0.1, move_base_ac_.getState().toString().c_str());
-//    move_base_ac_.cancelGoal();
-//    ros::Duration(1.0).sleep();
-////    return false;
-//  }
-
   disableSafety();
-  enableMotors();
   enableRecovery();
-  cancelAllGoals(move_base_ac_);//, recovery_behavior_ == true ? 10.0 : 2.0);
+  cancelAllGoals(move_base_ac_);
   cancelAllGoals(auto_dock_ac_);
   ARMarkers::disableTracker();
   state_ = IDLE;
@@ -778,7 +773,7 @@ bool Navigator::enableRecovery()
 {
   if (recovery_behavior_ == true)
     return true;
-
+ros::Time t0 = ros::Time::now();
   int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
                        "\"{ recovery_behavior_enabled: true }\"");  // clearing_rotation_allowed
   if (status != 0)
@@ -786,7 +781,7 @@ bool Navigator::enableRecovery()
     ROS_ERROR("Enable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
-
+ROS_DEBUG("enableRecovery   %f", (ros::Time::now() - t0).toSec());
   recovery_behavior_ = true;
   return true;
 }
@@ -795,7 +790,7 @@ bool Navigator::disableRecovery()
 {
   if (recovery_behavior_ == false)
     return true;
-
+ros::Time t0 = ros::Time::now();
   int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
                        "\"{ recovery_behavior_enabled: false }\"");  // clearing_rotation_allowed
   if (status != 0)
@@ -803,7 +798,7 @@ bool Navigator::disableRecovery()
     ROS_ERROR("Disable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
-
+ROS_DEBUG("disableRecovery  %f", (ros::Time::now() - t0).toSec());
   recovery_behavior_ = false;
   return true;
 }

@@ -117,11 +117,11 @@ bool WaiterNode::wakeUp()
 
   // Look (again) for our docking station marker; should be just in front of us!
   timeout = false;
-  t0 = ros::Time::now();
+  ros::Time t1 = ros::Time::now();
   while ((ar_markers_.spotDockMarker(base_marker_id) == false) && (timeout == false))
   {
     navigator_.turnClockwise();
-    if ((ros::Time::now() - t0).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
+    if ((ros::Time::now() - t1).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
     {
       timeout = true;
     }
@@ -145,8 +145,9 @@ bool WaiterNode::wakeUp()
     ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
   }
 
-  // Now... we are ready to go!   -> go to kitchen
+  // Now... we are ready to go!
   ROS_INFO("Waking up successfully completed in %.2f seconds; ready to go!", (ros::Time::now() - t0).toSec());
+  initialized_ = true;
 
   return cleanupAndSuccess();
 }
@@ -162,9 +163,7 @@ bool WaiterNode::cleanupAndSuccess()
 {
   // Revert to standard configuration after completing a task
   //  - (re)enable safety controller for normal operation
-  //  - (re)enable motors (auto-docking disables them after finishing)
   //  - disable AR markers tracker as it's a CPU spendthrift
-  navigator_.enableMotors();
   navigator_.enableSafety();
   ar_markers_.disableTracker();
 
@@ -174,7 +173,6 @@ bool WaiterNode::cleanupAndSuccess()
 bool WaiterNode::cleanupAndError()
 {
   // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
-  navigator_.enableMotors();
   navigator_.enableSafety();
   ar_markers_.disableTracker();
 
@@ -192,8 +190,8 @@ bool WaiterNode::gotoTable(int table_id)
     // Look for the requested table's pose (and get rid of the useless covariance)
     if (table_poses_.tables[i].name.find(tk::nb2str(table_id), strlen("table")) != std::string::npos)
     {
-      ROS_DEBUG(
-          "Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius, tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+      ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
+                tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
       table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
       table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
       radius = table_poses_.tables[i].radius;

@@ -29,6 +29,8 @@
   <run_depend>ar_track_alvar</run_depend>
   <run_depend>semantic_region_handler</run_depend>
 
+  <run_depend>rosserial_python</run_depend>
+
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->

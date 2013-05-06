@@ -419,7 +419,7 @@ ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
 bool ARMarkers::disableTracker()
 {
   return true;
-
+  /*
   ros::Time t0 = ros::Time::now();
   ros::NodeHandle nh;
   ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
@@ -444,7 +444,7 @@ bool ARMarkers::disableTracker()
     ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
     return false;
   }
-
+*/
 
   // TODO do not use by now because:
   //  - disable takes really long (if I use again, use instead max_frequency: 1.0 (the minimum))
@@ -456,14 +456,15 @@ bool ARMarkers::disableTracker()
 //  snprintf(system_cmd, 256,
 //           "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
   // TODO I think I can also call /ar_track_alvar/set_parameters... if the server is not up, system call blocks,
-  // what is very shity; another option is create a generic tk::waitForServer and reuse for action servers
+  // what is very shitty; another option is create a generic tk::waitForServer and reuse for action servers
+  ros::Time t0 = ros::Time::now();
   int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: false }\"");
   if (status != 0)
   {
     ROS_ERROR("Disable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
-
+ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
   return true;
 }
 
