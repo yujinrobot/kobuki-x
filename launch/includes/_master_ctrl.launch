@@ -2,6 +2,8 @@
          Waiterbot controller
 -->
 <launch>
+  <arg name="debug_mode" default="false" />
+
   <!-- Velocity smoother -->
   <!-- <node pkg="nodelet" type="nodelet" name="special_tasks_nodelet_manager" args="manager"/> -->
   <!-- <node pkg="nodelet" type="nodelet" name="special_tasks_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet special_tasks_nodelet_manager"> -->
@@ -30,6 +32,7 @@
     <param name="tf_broadcast_freq" value="5.0"/>
     <param name="resources_path" value="$(find waiterbot)/resources"/>
     <param name="play_sounds" value="false"/>
+    <param name="debug_mode" value="$(arg debug_mode)"/>
 
     <!-- Incoming remaps -->
     <remap from="new_goal"      to="move_base_simple/goal"/>
