@@ -25,11 +25,9 @@
   </include>
 
   <!--  ************* Kobuki IR half ring *************  -->
-  <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch">
-    <arg name="irscan_topic" value="ir_scan"/>
-  </include>
+  <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
 
-  <!--  ********** Kobuki mobile base extras ********** --> 
+  <!--  ********** Kobuki mobile base extras **********  -->
   <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
