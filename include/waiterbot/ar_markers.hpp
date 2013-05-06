@@ -66,6 +66,7 @@ public:
 
   bool spotDockMarker(uint32_t base_marker_id);
 
+  static bool setTrackerFreq(double frequency);
   static bool enableTracker();
   static bool disableTracker();
 

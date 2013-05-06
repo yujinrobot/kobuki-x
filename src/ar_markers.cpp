@@ -5,6 +5,8 @@
  *      Author: jorge
  */
 
+#include <dynamic_reconfigure/Reconfigure.h>
+
 #include "waiterbot/common.hpp"
 #include "waiterbot/ar_markers.hpp"
 
@@ -395,6 +397,14 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
 
 bool ARMarkers::enableTracker()
 {
+  // TODO do not use by now because:
+  //  - most times takes really long; I cannot find a pattern on timings
+  //  - with -no kinect version of the tracker is not necessary anymore
+  //  - a couple of times crashed and arduino gateway cpu usage spiked to 90%  NO IDEA WHY!!!!
+  //   update: call service takes also too long; do not use
+  return true;
+
+  ros::Time t0 = ros::Time::now();
   int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
 
   if (status != 0)
@@ -402,12 +412,46 @@ bool ARMarkers::enableTracker()
     ROS_ERROR("Enable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
-
+ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
   return true;
 }
 
 bool ARMarkers::disableTracker()
 {
+  return true;
+
+  ros::Time t0 = ros::Time::now();
+  ros::NodeHandle nh;
+  ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
+  dynamic_reconfigure::Reconfigure srv;
+
+  srv.request.config.doubles.resize(1);
+  srv.request.config.doubles[0].name = "max_frequency";
+  srv.request.config.doubles[0].value = 3.333;
+  srv.request.config.bools.resize(1);
+  srv.request.config.bools[0].name = "enabled";
+  srv.request.config.bools[0].value = false;
+
+  if (client.call(srv))
+  {
+    ROS_INFO("Sum:");
+    ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service add_two_ints");
+    ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
+    return false;
+  }
+
+
+  // TODO do not use by now because:
+  //  - disable takes really long (if I use again, use instead max_frequency: 1.0 (the minimum))
+  //  - with -no kinect version of the tracker is not necessary anymore
+  //  - a couple of times crashed and arduino gateway cpu usage spiked to 90%  NO IDEA WHY!!!!
+//  return true;
+
 //  char system_cmd[256];
 //  snprintf(system_cmd, 256,
 //           "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
@@ -420,6 +464,22 @@ bool ARMarkers::disableTracker()
     return false;
   }
 
+  return true;
+}
+
+
+bool ARMarkers::setTrackerFreq(double freq)
+{
+  ros::Time t0 = ros::Time::now();
+  char system_cmd[256];
+  sprintf(system_cmd, "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ max_frequency: %f }\"", freq);
+  int status = system(system_cmd);
+  if (status != 0)
+  {
+    ROS_ERROR("Set AR markers frequency tracker failed (%d/%d)", status, WEXITSTATUS(status));
+    return false;
+  }
+ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
   return true;
 }
 
