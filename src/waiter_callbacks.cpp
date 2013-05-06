@@ -119,6 +119,8 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
   if (order_id == 9)       boost::thread kk(&Navigator::turn, &navigator_, -M_PI*0.5);
   if (order_id == 10)      ar_markers_.enableTracker();
   if (order_id == 11)      ar_markers_.disableTracker();
+  if (order_id == 13)      ar_markers_.setTrackerFreq(11);
+  if (order_id == 14)      ar_markers_.setTrackerFreq(3);
 }
 //> DEBUG
 
