@@ -16,7 +16,10 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   waitForPoses();
 
   // 0. wakeup or leave nest WaiterNode::wakeUp,leaveNest
+  ros::Time t0 = ros::Time::now();
   sendFeedback(cafe_msgs::Status::GO_TO_KITCHEN);
+  ROS_DEBUG("%f", ros::Time::now() - t0);
+
   ros::Duration(1).sleep();
   if (getReadyToWork() == false)
   {
@@ -28,7 +31,10 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   {
     return setFailure("Waiter failed to go to pickup place");
   }
+  t0 = ros::Time::now();
   sendFeedback(cafe_msgs::Status::ARRIVE_KITCHEN);
+  ROS_DEBUG("%f", ros::Time::now() - t0);
+
   ros::Duration(1).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_KITCHEN);
   ros::Duration(1).sleep();
