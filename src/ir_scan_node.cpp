@@ -48,8 +48,17 @@ void IrScanNode::rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
     // KF - collect data
     rangers[i].last_range = distanceKF;
 
-    scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF <= maximum_range ? distanceKF + ir_ring_radius : 6.0;
-    scan.intensities[msg->ranges.size() - (i + 1)] = distanceKF <= maximum_range ? r + ir_ring_radius : 6.0;
+    if (i == 0)
+    {
+      // TODO This bloody sensor reports floor at 40 cm!!! until I find why....
+      scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF <= 35 ? distanceKF + ir_ring_radius : 6.0;
+      scan.intensities[msg->ranges.size() - (i + 1)] = distanceKF <= 35 ? r + ir_ring_radius : 6.0;
+    }
+    else
+    {
+      scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF <= maximum_range ? distanceKF + ir_ring_radius : 6.0;
+      scan.intensities[msg->ranges.size() - (i + 1)] = distanceKF <= maximum_range ? r + ir_ring_radius : 6.0;
+    }
   }
 
   ir_scan_pub.publish(scan);
