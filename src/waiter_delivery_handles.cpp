@@ -81,9 +81,10 @@ bool WaiterNode::setFailure(std::string reason)
   cafe_msgs::DeliverOrderResult result;
   ROS_ERROR_STREAM(reason);
   result.result = reason;
-  as_.setSucceeded(result);
+  as_.setAborted(result);
 
   // Try to go back to nest
+  ROS_ERROR("Going back to nest...");
   if (ar_markers_.dockingBaseSpotted() == true)
     navigator_.dockInBase(ar_markers_.getDockingBasePose());
   else
@@ -96,7 +97,7 @@ void WaiterNode::sendFeedback(int feedback_status)
 {
   cafe_msgs::DeliverOrderFeedback feedback;
 
-  ROS_DEBUG("Sending Feedback %d", feedback_status);
+//  ROS_DEBUG("Sending Feedback %d", feedback_status);
   feedback.status = feedback_status;
   as_.publishFeedback(feedback);
 }

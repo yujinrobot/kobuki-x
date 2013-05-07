@@ -26,10 +26,6 @@ NavWatchdog::~NavWatchdog()
 
 void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
 {
-  ROS_DEBUG_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f",
-                     msg->pose.pose.position.x, msg->pose.pose.position.y,
-                     tf::getYaw(msg->pose.pose.orientation));
-
   tf::Pose amcl_pose, armk_pose;
   tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
   tf::poseMsgToTF(msg->pose.pose,       armk_pose);
@@ -48,8 +44,12 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
 //  }
 
 
-
-
+  if (! localized_)
+  {
+    ROS_DEBUG_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f",
+                       msg->pose.pose.position.x, msg->pose.pose.position.y,
+                       tf::getYaw(msg->pose.pose.orientation));
+  }
 
   if ((! (localized_ & LOCALIZED_AMCL)) ||
       ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 0.2) &&

@@ -187,15 +187,13 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   // Going to goal in front of the docking base marker
   while (move_base_ac_.waitForResult(ros::Duration(0.5)) == false)
   {
-//    ROS_DEBUG("%d %.2f %.2f", state_, (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
-
     if ((state_ == GLOBAL_DOCKING) &&
         ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 1.0) &&
-        (base_rel_pose_.pose.position.z <= relay_on_marker_distance_))  // NOTE: frontal approach assumed!
-    {
+        (tk::distance(base_rel_pose_.pose) <= relay_on_marker_distance_))  // NOTE: base marker pose is relative to the robot
+      {
       // Here is!
       ROS_INFO("Docking base spotted at %.2f m; switching to marker-based local navigation...",
-               base_rel_pose_.pose.position.z);
+               tk::distance(base_rel_pose_.pose));
 
       // Docking base marker spotted at relay_on_marker_distance; switch to relative goal
       if (cancelAllGoals(move_base_ac_) == false)
@@ -278,11 +276,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
     ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
   }
 
-  if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-  {
-    ROS_INFO("Switching to beacon-based auto-docking...");
-  }
-  else
+  if (move_base_ac_.getState() != actionlib::SimpleClientGoalState::SUCCEEDED)
   {
     ROS_WARN("Go to docking base failed: %s", move_base_ac_.getState().toString().c_str());
     return cleanupAndError();
@@ -294,7 +288,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
     if (base_marker_id_ < AR_MARKERS_COUNT)
     {
       ROS_WARN("Last spot was %.2f seconds ago at %.2f meters",
-               (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), base_rel_pose_.pose.position.z);
+               (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), tk::distance(base_rel_pose_.pose));
     }
     // We cannot see the marker; that's normal if we are trying the odometry origin fallback solution (see
     // no-parameters dockInBase method). If not, probably we have a problem; switch on auto-docking anyway
@@ -678,7 +672,6 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
         {
           // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???
           ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-          ROS_INFO("HEY!!!!  fat buttons!  let me go in!!!!");
           return cleanupAndSuccess();
         }
 
@@ -771,6 +764,7 @@ bool Navigator::moveBaseReset()
 
 bool Navigator::enableRecovery()
 {
+  // TODO this takes quite long!!! ~ 3 seconds;  I need a different strategy
   if (recovery_behavior_ == true)
     return true;
 ros::Time t0 = ros::Time::now();

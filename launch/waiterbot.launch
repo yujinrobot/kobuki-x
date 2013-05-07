@@ -65,7 +65,7 @@
   </include>
 
   <!--  ***************** Visualisation *****************
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />   -->
-  <node name="cpu_temperature" pkg="waiterbot" type="cpu_temp.sh"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />
+  <node name="cpu_temperature" pkg="waiterbot" type="cpu_temp.sh"/>-->
 
 </launch>
