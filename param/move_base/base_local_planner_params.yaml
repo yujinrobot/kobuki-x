@@ -1,7 +1,7 @@
 TrajectoryPlannerROS:
 
 # Robot Configuration Parameters
-  max_vel_x: 0.35
+  max_vel_x: 0.30
   min_vel_x: 0.10
 
   max_vel_theta:  1.0
@@ -10,7 +10,6 @@ TrajectoryPlannerROS:
   
   acc_lim_theta: 0.8
   acc_lim_x: 0.30
-  acc_lim_y: 0.30
 
   holonomic_robot: false
 
@@ -32,3 +31,9 @@ TrajectoryPlannerROS:
 
 # Oscillation Prevention Parameters
   oscillation_reset_dist: 0.05
+
+# Differential-drive robot configuration
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+  acc_lim_y: 0.0
+  vy_samples: 0
