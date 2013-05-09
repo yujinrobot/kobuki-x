@@ -199,6 +199,7 @@ private:
   double close_to_pickup_distance_;    /**< At which distance from pickup point switch off recovery behavior */
   double close_to_delivery_distance_;  /**< At which distance from delivery point switch off recovery behavior */
   double tables_serving_distance_;     /**< At which distance from the table we try to serve our orders */
+  double default_planner_frequency_;   /**< Global planner default rate; restored after try-error navigation */
   double go_to_pose_timeout_;
   double auto_docking_timeout_;
   double wait_for_pickup_point_;

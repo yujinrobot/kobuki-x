@@ -55,6 +55,7 @@ bool Navigator::init()
 
   nh.getParam("move_base/local_costmap/robot_radius", robot_radius_);
   nh.getParam("move_base/local_costmap/width", close_to_pickup_distance_);
+  nh.getParam("move_base/planner_frequency", default_planner_frequency_);
 
   // We must disable recovery behavior well before entering the local costmap
   close_to_pickup_distance_ = close_to_pickup_distance_/2.0 + 0.8;
@@ -767,20 +768,19 @@ bool Navigator::moveBaseReset()
 
 bool Navigator::enableRecovery()
 {
-  // TODO this takes quite long!!! ~ 3 seconds;  I need a different strategy
   if (recovery_behavior_ == true)
     return true;
-ROS_DEBUG("enableRecovery starts....");
+
   ros::Time t0 = ros::Time::now();
   ros::NodeHandle nh;
   ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("move_base/set_parameters");
   dynamic_reconfigure::Reconfigure srv;
   srv.request.config.bools.resize(1);
-  srv.request.config.bools[0].name = "recovery_behavior_enabled";
+  srv.request.config.bools[0].name = "clearing_rotation_allowed";
   srv.request.config.bools[0].value = true;
   srv.request.config.doubles.resize(1);
   srv.request.config.doubles[0].name = "planner_frequency";
-  srv.request.config.doubles[0].value = 1.0;
+  srv.request.config.doubles[0].value = default_planner_frequency_;
 
   if (client.call(srv) == true)
   {
@@ -820,7 +820,7 @@ bool Navigator::disableRecovery()
   ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("move_base/set_parameters");
   dynamic_reconfigure::Reconfigure srv;
   srv.request.config.bools.resize(1);
-  srv.request.config.bools[0].name = "recovery_behavior_enabled";
+  srv.request.config.bools[0].name = "clearing_rotation_allowed";
   srv.request.config.bools[0].value = false;
   srv.request.config.doubles.resize(1);
   srv.request.config.doubles[0].name = "planner_frequency";
