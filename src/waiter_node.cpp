@@ -9,6 +9,7 @@
 #include <geometry_msgs/Twist.h>
 #include <kobuki_msgs/Led.h>
 #include <kobuki_msgs/Sound.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include "waiterbot/waiter_node.hpp"
 
@@ -18,7 +19,8 @@ namespace waiterbot
 bool WaiterNode::init()
 {
   ros::NodeHandle pnh("~");
-  pnh.param("debug_mode", debug_mode_, false);
+  pnh.param("debug_mode",   debug_mode_,   false);
+  pnh.param("global_frame", global_frame_, std::string("map"));
 
   // register the goal and preempt callbacks
   as_.registerGoalCallback(boost::bind(&WaiterNode::deliverOrderCB, this));
@@ -28,6 +30,7 @@ bool WaiterNode::init()
   led_1_pub_ = nh_.advertise <kobuki_msgs::Led>     ("/mobile_base/commands/led1", 1);
   led_2_pub_ = nh_.advertise <kobuki_msgs::Led>     ("/mobile_base/commands/led2", 1);
   sound_pub_ = nh_.advertise <kobuki_msgs::Sound>   ("/mobile_base/commands/sound", 1);
+  table_marker_pub_  = nh_.advertise <visualization_msgs::MarkerArray> ("/table_marker", 1, true);
 
   digital_input_sub_ = nh_.subscribe("digital_input",   5, &WaiterNode::digitalInputCB, this);
   core_sensors_sub_  = nh_.subscribe("core_sensors",    5, &WaiterNode::coreSensorsCB, this);

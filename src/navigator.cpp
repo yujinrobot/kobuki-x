@@ -8,6 +8,7 @@
 #include <std_msgs/Empty.h>
 #include <actionlib_msgs/GoalID.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <dynamic_reconfigure/Reconfigure.h>
 
 #include <kobuki_msgs/MotorPower.h>
 
@@ -259,12 +260,14 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
     }
     else if ((ros::Time::now() - t0).toSec() < go_to_pose_timeout_)
     {
-      ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)  %s",
+      ROS_DEBUG_THROTTLE(5.0, "Move base action state: %s (%.2f seconds elapsed)  %s",
                          move_base_ac_.getState().toString().c_str(),
                          (ros::Time::now() - t0).toSec(), state_ == GLOBAL_DOCKING?"GLOBAL_DOCKING":"MARKER_DOCKING");
     }
     else
     {
+      // We reached go_to_pose_timeout_; given this timeout is generous, we must be lost or have another problem
+      // TODO notify navigation watchdog and try to recover somehow
       ROS_WARN("Cannot she the docking base after %.2f seconds; current state is %s. Aborting...",
                go_to_pose_timeout_, move_base_ac_.getState().toString().c_str());
       return cleanupAndError();
@@ -316,7 +319,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   {
     if ((ros::Time::now() - t0).toSec() < auto_docking_timeout_)
     {
-      ROS_DEBUG_THROTTLE(4.0, "Auto-dock action state: %s (%.2f seconds elapsed)",
+      ROS_DEBUG_THROTTLE(5.0, "Auto-dock action state: %s (%.2f seconds elapsed)",
                          auto_dock_ac_.getState().toString().c_str(), (ros::Time::now() - t0).toSec());
     }
     else
@@ -391,7 +394,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
     {
       if ((ros::Time::now() - t0).toSec() < go_to_pose_timeout_)
       {
-        ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
+        ROS_DEBUG_THROTTLE(5.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
                            (ros::Time::now() - t0).toSec());
 
         if (recovery_behavior_ == true)
@@ -572,7 +575,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
     {
       if ((ros::Time::now() - t0).toSec() < go_to_pose_timeout_)
       {
-        ROS_DEBUG_THROTTLE(4.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
+        ROS_DEBUG_THROTTLE(5.0, "Move base action state: %s (%.2f seconds elapsed)", move_base_ac_.getState().toString().c_str(),
                            (ros::Time::now() - t0).toSec());
 
         // Get latest robot global pose to calculate heading and distance from robot to table and goal (delivery point)
@@ -585,14 +588,14 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
         if (distance_to_table < (table_radius + tables_serving_distance_ + 0.1))
         {
           // Somehow we manage to approach the table, so... why to bother more? Just cancel goal and head to the table center
+          if (cancelAllGoals(move_base_ac_) == false)
+            ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
+
           double to_turn = tk::wrapAngle(heading_to_table - tf::getYaw(robot_gb.getRotation()));
           ROS_DEBUG("Already close to the table while going to next goal (%.2f m); just turn %.2f rad to face the table",
                     distance_to_table, to_turn);
           if (std::abs(to_turn) > 0.3)
             turn(to_turn);
-
-          if (cancelAllGoals(move_base_ac_) == false)
-            ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
 
           return cleanupAndSuccess();
         }
@@ -767,7 +770,32 @@ bool Navigator::enableRecovery()
   // TODO this takes quite long!!! ~ 3 seconds;  I need a different strategy
   if (recovery_behavior_ == true)
     return true;
-ros::Time t0 = ros::Time::now();
+ROS_DEBUG("enableRecovery starts....");
+  ros::Time t0 = ros::Time::now();
+  ros::NodeHandle nh;
+  ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("move_base/set_parameters");
+  dynamic_reconfigure::Reconfigure srv;
+  srv.request.config.bools.resize(1);
+  srv.request.config.bools[0].name = "recovery_behavior_enabled";
+  srv.request.config.bools[0].value = true;
+  srv.request.config.doubles.resize(1);
+  srv.request.config.doubles[0].name = "planner_frequency";
+  srv.request.config.doubles[0].value = 1.0;
+
+  if (client.call(srv) == true)
+  {
+    ROS_INFO("Recovery behavior enabled (%f seconds)", (ros::Time::now() - t0).toSec());
+    recovery_behavior_ = true;
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to enable recovery behavior (%f seconds)", (ros::Time::now() - t0).toSec());
+    return false;
+  }
+
+
+
   int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
                        "\"{ recovery_behavior_enabled: true }\"");  // clearing_rotation_allowed
   if (status != 0)
@@ -775,7 +803,7 @@ ros::Time t0 = ros::Time::now();
     ROS_ERROR("Enable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
-ROS_DEBUG("enableRecovery   %f", (ros::Time::now() - t0).toSec());
+ROS_DEBUG("enableRecovery ended on %f s", (ros::Time::now() - t0).toSec());
   recovery_behavior_ = true;
   return true;
 }
@@ -784,7 +812,33 @@ bool Navigator::disableRecovery()
 {
   if (recovery_behavior_ == false)
     return true;
-ros::Time t0 = ros::Time::now();
+
+  ros::Time t0 = ros::Time::now();
+  ROS_DEBUG("disableRecovery starts....");
+
+  ros::NodeHandle nh;
+  ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("move_base/set_parameters");
+  dynamic_reconfigure::Reconfigure srv;
+  srv.request.config.bools.resize(1);
+  srv.request.config.bools[0].name = "recovery_behavior_enabled";
+  srv.request.config.bools[0].value = false;
+  srv.request.config.doubles.resize(1);
+  srv.request.config.doubles[0].name = "planner_frequency";
+  srv.request.config.doubles[0].value = 0.0;
+
+  if (client.call(srv) == true)
+  {
+    ROS_INFO("Recovery behavior disabled (%f seconds)", (ros::Time::now() - t0).toSec());
+    recovery_behavior_ = false;
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to disable recovery behavior (%f seconds)", (ros::Time::now() - t0).toSec());
+    return false;
+  }
+
+
   int status = system("rosrun dynamic_reconfigure dynparam set move_base " \
                        "\"{ recovery_behavior_enabled: false }\"");  // clearing_rotation_allowed
   if (status != 0)
@@ -792,7 +846,7 @@ ros::Time t0 = ros::Time::now();
     ROS_ERROR("Disable recovery behavior failed (%d/%d)", status, WEXITSTATUS(status));
     return false;
   }
-ROS_DEBUG("disableRecovery  %f", (ros::Time::now() - t0).toSec());
+ROS_DEBUG("disableRecovery ended on %f", (ros::Time::now() - t0).toSec());
   recovery_behavior_ = false;
   return true;
 }

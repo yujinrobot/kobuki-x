@@ -95,8 +95,11 @@ private:
   void globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
   void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
 
+  bool getMarkerTf(const std::string& ref_frame, uint32_t marker_id,
+                     const ros::Time& timestamp, tf::StampedTransform& tf);
+
   bool included(const uint32_t id, const ar_track_alvar::AlvarMarkers& v,
-                ar_track_alvar::AlvarMarker* e = NULL)
+                 ar_track_alvar::AlvarMarker* e = NULL)
   {
     for (unsigned int i = 0; i < v.markers.size(); i++)
     {

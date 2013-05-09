@@ -84,13 +84,17 @@ bool WaiterNode::setFailure(std::string reason)
   as_.setAborted(result);
 
   // Try to go back to nest
-  ROS_ERROR("Going back to nest...");
+  bool at_base;
+  ROS_ERROR("Something went wrong while processing order; try to go back to nest...");
   if (ar_markers_.dockingBaseSpotted() == true)
-    navigator_.dockInBase(ar_markers_.getDockingBasePose());
+    at_base = navigator_.dockInBase(ar_markers_.getDockingBasePose());
   else
-    navigator_.dockInBase();
+    at_base = navigator_.dockInBase();
 
-  return true;
+  if (at_base == false)
+    ROS_ERROR("Go back to nest failed; we don't have a recovery mechanism, so... just stand and cry");
+
+  return at_base;
 }
 
 void WaiterNode::sendFeedback(int feedback_status)

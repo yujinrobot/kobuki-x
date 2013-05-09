@@ -29,9 +29,11 @@ def delivery_order_client():
 
     # Sends the goal to the action server.
     client.send_goal(goal)
+    print "Order sent; waiting for result..."
 
     # Waits for the server to finish performing the action.
     client.wait_for_result()
+    print "Result ready!"
 
     # Prints out the result of executing the action
     return client.get_result()  # A DeliverOrderResult

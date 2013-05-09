@@ -5,6 +5,8 @@
  *      Author: jorge
  */
 
+#include <visualization_msgs/MarkerArray.h>
+
 #include "waiterbot/waiter_node.hpp"
 
 namespace waiterbot
@@ -15,10 +17,30 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
   // Just take first message; ignore the rest, as global markers list is not dynamic
   if ((table_poses_.tables.size() == 0) && (msg->tables.size() > 0))
   {
+    // We will also publish table markers to help visualizing single robot navigation in a rocon environment
+    visualization_msgs::MarkerArray markers_array;
+
     table_poses_ = *msg;
     ROS_INFO("%lu table pose(s) received", table_poses_.tables.size());
     for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
     {
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = global_frame_;
+      marker.header.stamp = ros::Time::now();
+      marker.ns = table_poses_.tables[i].name;
+      marker.id = i;
+      marker.type = visualization_msgs::Marker::CYLINDER;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.scale.x = table_poses_.tables[i].radius * 2.0;
+      marker.scale.y = table_poses_.tables[i].radius * 2.0;
+      marker.scale.z = 0.1;
+      marker.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+      marker.color.r = 0.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 1.0f;
+      marker.color.a = 0.5f;
+      markers_array.markers.push_back(marker);
+
       // Look for the pickup point
       if (table_poses_.tables[i].name.find("pickup") != std::string::npos)
       {
@@ -32,8 +54,13 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
                   tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
       }
     }
+
+    initialized_table_ = true;
+
+    // Is a latched topic, so we just need to publish once
+    if (markers_array.markers.size() > 0)
+      table_marker_pub_.publish(markers_array);
   }
-  initialized_table_ = true;
 }
 
 void WaiterNode::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)

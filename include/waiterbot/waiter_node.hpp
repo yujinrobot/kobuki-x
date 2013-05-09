@@ -62,7 +62,7 @@ protected:
   ros::NodeHandle nh_;
   std::string node_name_;
 
-  // NodeHandle instance must be created before this line. Otherwise strange error may occur.
+  // NodeHandle instance must be created before this line. Otherwise strange error may occur
   actionlib::SimpleActionServer<cafe_msgs::DeliverOrderAction> as_;
 
   // create messages that are used to published feedback/result
@@ -75,6 +75,7 @@ protected:
   ros::Publisher led_1_pub_;
   ros::Publisher led_2_pub_;
   ros::Publisher sound_pub_;
+  ros::Publisher table_marker_pub_;
 
   /*********************
   ** Subscribers
@@ -92,7 +93,7 @@ protected:
   kobuki_msgs::SensorState core_sensors_;
   cafe_msgs::Order  order_;
   cafe_msgs::Status status_;
-
+  std::string global_frame_;
 
   boost::thread order_process_thread_;
 
