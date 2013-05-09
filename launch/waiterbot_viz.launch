@@ -5,7 +5,9 @@
  -->
 
 <launch>
+  <arg name="rocon_robot" default="one_robot"/>
+
   <!--  ***************** Visualisation *****************  -->
-  <include file="$(find turtlebot_rviz_launchers)/launch/view_navigation.launch"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/$(arg rocon_robot)_navigation.rviz"/>
   <include file="$(find turtlebot_dashboard)/launch/turtlebot_dashboard.launch"/>
 </launch>
