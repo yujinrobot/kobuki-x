@@ -5,6 +5,8 @@
  *      Author: jorge
  */
 
+#include <dynamic_reconfigure/Reconfigure.h>
+
 #include "waiterbot/common.hpp"
 #include "waiterbot/ar_markers.hpp"
 
@@ -44,6 +46,8 @@ bool ARMarkers::init()
 
   tracked_markers_sub_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkers::arPoseMarkersCB, this);
   global_markers_sub_  = nh.subscribe(             "marker_pose_list", 1, &ARMarkers::globalMarkersCB, this);
+
+  tracker_params_srv_  = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
 
   // There are 18 different markers
   times_spotted_.resize(AR_MARKERS_COUNT, 0);
@@ -367,87 +371,83 @@ bool ARMarkers::enableTracker()
   //  - most times takes really long; I cannot find a pattern on timings
   //  - with -no kinect version of the tracker is not necessary anymore
   //  - a couple of times crashed and arduino gateway cpu usage spiked to 90%  NO IDEA WHY!!!!
-  //   update: call service takes also too long; do not use
+  //  * Update:  retest with service call;  probably solves the last issue
+  // TODO should I call waitForServer? here? on init? mollaio...
   return true;
+
+  if (tracker_enabled_ == true)
+    return true;
 
   ros::Time t0 = ros::Time::now();
-  int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
-
-  if (status != 0)
-  {
-    ROS_ERROR("Enable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));
-    return false;
-  }
-ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
-  return true;
-}
-
-bool ARMarkers::disableTracker()
-{
-  return true;
-  /*
-  ros::Time t0 = ros::Time::now();
-  ros::NodeHandle nh;
-  ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
   dynamic_reconfigure::Reconfigure srv;
-
-  srv.request.config.doubles.resize(1);
-  srv.request.config.doubles[0].name = "max_frequency";
-  srv.request.config.doubles[0].value = 3.333;
   srv.request.config.bools.resize(1);
   srv.request.config.bools[0].name = "enabled";
-  srv.request.config.bools[0].value = false;
+  srv.request.config.bools[0].value = true;
 
-  if (client.call(srv))
+  if (tracker_params_srv_.call(srv))
   {
-    ROS_INFO("Sum:");
-    ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
+    ROS_INFO("AR markers tracker enabled (%f seconds)", (ros::Time::now() - t0).toSec());
+    tracker_enabled_ = true;
     return true;
   }
   else
   {
-    ROS_ERROR("Failed to call service add_two_ints");
-    ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
+    ROS_ERROR("Failed to enable AR markers tracker (%f seconds)", (ros::Time::now() - t0).toSec());
     return false;
   }
-*/
+}
 
+bool ARMarkers::disableTracker()
+{
   // TODO do not use by now because:
   //  - disable takes really long (if I use again, use instead max_frequency: 1.0 (the minimum))
   //  - with -no kinect version of the tracker is not necessary anymore
   //  - a couple of times crashed and arduino gateway cpu usage spiked to 90%  NO IDEA WHY!!!!
-//  return true;
+  //  * Update:  retest with service call;  probably solves the last issue
+  // TODO should I call waitForServer? here? on init? mollaio...
+  return true;
 
-//  char system_cmd[256];
-//  snprintf(system_cmd, 256,
-//           "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: true }\"");
-  // TODO I think I can also call /ar_track_alvar/set_parameters... if the server is not up, system call blocks,
-  // what is very shitty; another option is create a generic tk::waitForServer and reuse for action servers
+  if (tracker_enabled_ == false)
+    return true;
+
   ros::Time t0 = ros::Time::now();
-  int status = system("rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ enabled: false }\"");
-  if (status != 0)
+  dynamic_reconfigure::Reconfigure srv;
+  srv.request.config.bools.resize(1);
+  srv.request.config.bools[0].name = "enabled";
+  srv.request.config.bools[0].value = false;
+
+  if (tracker_params_srv_.call(srv))
   {
-    ROS_ERROR("Disable AR markers tracker failed (%d/%d)", status, WEXITSTATUS(status));
+    ROS_INFO("AR markers tracker disabled (%f seconds)", (ros::Time::now() - t0).toSec());
+    tracker_enabled_ = false;
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to disable AR markers tracker (%f seconds)", (ros::Time::now() - t0).toSec());
     return false;
   }
-ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
-  return true;
 }
 
 
-bool ARMarkers::setTrackerFreq(double freq)
+bool ARMarkers::setTrackerFreq(double frequency)
 {
   ros::Time t0 = ros::Time::now();
-  char system_cmd[256];
-  sprintf(system_cmd, "rosrun dynamic_reconfigure dynparam set ar_track_alvar \"{ max_frequency: %f }\"", freq);
-  int status = system(system_cmd);
-  if (status != 0)
+  dynamic_reconfigure::Reconfigure srv;
+  srv.request.config.doubles.resize(1);
+  srv.request.config.doubles[0].name = "max_frequency";
+  srv.request.config.doubles[0].value = frequency;
+
+  if (tracker_params_srv_.call(srv))
   {
-    ROS_ERROR("Set AR markers frequency tracker failed (%d/%d)", status, WEXITSTATUS(status));
+    ROS_INFO("AR markers tracker frequency changed to %f (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to change AR markers tracker frequency (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
     return false;
   }
-ROS_DEBUG("%f", (ros::Time::now() - t0).toSec());
-  return true;
 }
 
 

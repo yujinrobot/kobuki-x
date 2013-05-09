@@ -85,8 +85,10 @@ private:
   ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
-  ros::Subscriber tracked_markers_sub_;
-  ros::Subscriber global_markers_sub_;
+  static bool              tracker_enabled_;    // TODO  horrible;  singleton o redisenyar
+  static ros::ServiceClient tracker_params_srv_;
+  ros::Subscriber    tracked_markers_sub_;
+  ros::Subscriber    global_markers_sub_;
 
   boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)>  robot_pose_cb_;
   boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)>    base_spotted_cb_;
