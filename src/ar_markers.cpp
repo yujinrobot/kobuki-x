@@ -47,7 +47,7 @@ bool ARMarkers::init()
   tracked_markers_sub_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkers::arPoseMarkersCB, this);
   global_markers_sub_  = nh.subscribe(             "marker_pose_list", 1, &ARMarkers::globalMarkersCB, this);
 
-  tracker_params_srv_  = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
+//  tracker_params_srv_  = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
 
   // There are 18 different markers
   times_spotted_.resize(AR_MARKERS_COUNT, 0);
@@ -58,7 +58,8 @@ bool ARMarkers::init()
   }
 
   // Disable tracking until needed
-  disableTracker();
+//  tracker_enabled_ = true;
+//  disableTracker();
 
   return true;
 }
@@ -375,26 +376,26 @@ bool ARMarkers::enableTracker()
   // TODO should I call waitForServer? here? on init? mollaio...
   return true;
 
-  if (tracker_enabled_ == true)
-    return true;
-
-  ros::Time t0 = ros::Time::now();
-  dynamic_reconfigure::Reconfigure srv;
-  srv.request.config.bools.resize(1);
-  srv.request.config.bools[0].name = "enabled";
-  srv.request.config.bools[0].value = true;
-
-  if (tracker_params_srv_.call(srv))
-  {
-    ROS_INFO("AR markers tracker enabled (%f seconds)", (ros::Time::now() - t0).toSec());
-    tracker_enabled_ = true;
-    return true;
-  }
-  else
-  {
-    ROS_ERROR("Failed to enable AR markers tracker (%f seconds)", (ros::Time::now() - t0).toSec());
-    return false;
-  }
+//  if (tracker_enabled_ == true)
+//    return true;
+//
+//  ros::Time t0 = ros::Time::now();
+//  dynamic_reconfigure::Reconfigure srv;
+//  srv.request.config.bools.resize(1);
+//  srv.request.config.bools[0].name = "enabled";
+//  srv.request.config.bools[0].value = true;
+//
+//  if (tracker_params_srv_.call(srv))
+//  {
+//    ROS_INFO("AR markers tracker enabled (%f seconds)", (ros::Time::now() - t0).toSec());
+//    tracker_enabled_ = true;
+//    return true;
+//  }
+//  else
+//  {
+//    ROS_ERROR("Failed to enable AR markers tracker (%f seconds)", (ros::Time::now() - t0).toSec());
+//    return false;
+//  }
 }
 
 bool ARMarkers::disableTracker()
@@ -407,47 +408,49 @@ bool ARMarkers::disableTracker()
   // TODO should I call waitForServer? here? on init? mollaio...
   return true;
 
-  if (tracker_enabled_ == false)
-    return true;
-
-  ros::Time t0 = ros::Time::now();
-  dynamic_reconfigure::Reconfigure srv;
-  srv.request.config.bools.resize(1);
-  srv.request.config.bools[0].name = "enabled";
-  srv.request.config.bools[0].value = false;
-
-  if (tracker_params_srv_.call(srv))
-  {
-    ROS_INFO("AR markers tracker disabled (%f seconds)", (ros::Time::now() - t0).toSec());
-    tracker_enabled_ = false;
-    return true;
-  }
-  else
-  {
-    ROS_ERROR("Failed to disable AR markers tracker (%f seconds)", (ros::Time::now() - t0).toSec());
-    return false;
-  }
+//  if (tracker_enabled_ == false)
+//    return true;
+//
+//  ros::Time t0 = ros::Time::now();
+//  dynamic_reconfigure::Reconfigure srv;
+//  srv.request.config.bools.resize(1);
+//  srv.request.config.bools[0].name = "enabled";
+//  srv.request.config.bools[0].value = false;
+//
+//  if (tracker_params_srv_.call(srv))
+//  {
+//    ROS_INFO("AR markers tracker disabled (%f seconds)", (ros::Time::now() - t0).toSec());
+//    tracker_enabled_ = false;
+//    return true;
+//  }
+//  else
+//  {
+//    ROS_ERROR("Failed to disable AR markers tracker (%f seconds)", (ros::Time::now() - t0).toSec());
+//    return false;
+//  }
 }
 
 
 bool ARMarkers::setTrackerFreq(double frequency)
 {
+  return true;
+
   ros::Time t0 = ros::Time::now();
   dynamic_reconfigure::Reconfigure srv;
   srv.request.config.doubles.resize(1);
   srv.request.config.doubles[0].name = "max_frequency";
   srv.request.config.doubles[0].value = frequency;
 
-  if (tracker_params_srv_.call(srv))
-  {
-    ROS_INFO("AR markers tracker frequency changed to %f (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
-    return true;
-  }
-  else
-  {
-    ROS_ERROR("Failed to change AR markers tracker frequency (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
-    return false;
-  }
+//  if (tracker_params_srv_.call(srv))
+//  {
+//    ROS_INFO("AR markers tracker frequency changed to %f (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
+//    return true;
+//  }
+//  else
+//  {
+//    ROS_ERROR("Failed to change AR markers tracker frequency (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
+//    return false;
+//  }
 }
 
 

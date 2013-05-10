@@ -85,8 +85,8 @@ private:
   ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
-  static bool              tracker_enabled_;    // TODO  horrible;  singleton o redisenyar
-  static ros::ServiceClient tracker_params_srv_;
+//  static bool              tracker_enabled_;    // TODO  horrible;  singleton o redisenyar
+//  static ros::ServiceClient tracker_params_srv_;
   ros::Subscriber    tracked_markers_sub_;
   ros::Subscriber    global_markers_sub_;
 
