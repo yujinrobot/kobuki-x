@@ -5,6 +5,7 @@
  *      Author: jorge
  */
 
+#include <std_srvs/Empty.h>
 #include <std_msgs/Empty.h>
 #include <actionlib_msgs/GoalID.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -472,6 +473,9 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
             // Do not moo at more than 0.1 Hz... we don't want to be bothersome...
             ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying", wait_for_pickup_point_);
             if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+
+            // Clear also the costmaps (at this point we have disabled recovery behaviors!)
+            clearCostmaps();
           }
         }
 
@@ -624,13 +628,14 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
             ROS_DEBUG("Heading to the table has notably changed (%.2f -> %.2f m); replan approach point",
                       last_plan_heading_to_table, heading_to_table);
             if (cancelAllGoals(move_base_ac_) == false)
-              ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");
+              ROS_WARN("Aish... we should not be here; nothing good is gonna happen...");  // TODO do I really need to cancel?  cannot just preempt?
             break;
           }
         }
       }
       else
       {
+        // Go to pose timeout... assuming it's long enough, we must be really lost; TODO notify nav watchdog
         ROS_WARN("Cannot reach delivery point after %.2f seconds; current state is %s. Aborting...",
                  go_to_pose_timeout_, move_base_ac_.getState().toString().c_str());
         return cleanupAndError();
@@ -662,25 +667,26 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
         if (attempts > 3)
           return cleanupAndError();
       }
+      else if (( max_tried_heading - min_tried_heading) > (2.0*M_PI - heading_increment))
+      {
+        // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???  TODO-OOOOOOOOOOOOOOOOO!!!!
+        ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
+        return cleanupAndSuccess();
+      }
       else
       {
+        ROS_WARN("Delivery point looks busy; try another one (%d attempts)", attempts);
+
         // Delivery point looks busy; increase the already tried sector so the planner can choose a new delivery point
         // Note that we wrap busy sector thresholds from -2*pi to +2*pi to deal with the -pi/+pi singularity
         min_tried_heading = std::min(min_tried_heading, heading_to_goal - heading_increment);
         max_tried_heading = std::max(max_tried_heading, heading_to_goal + heading_increment);
 
-        ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %.2f           %.2f     %d", heading_to_goal, min_tried_heading ,max_tried_heading,
-                     heading_increment ,  ( max_tried_heading - min_tried_heading),  (( max_tried_heading - min_tried_heading) >= 2.0*M_PI));
+        // Clear also the costmaps (at this point we have disabled recovery behaviors!)
+        clearCostmaps();
 
-        if (( max_tried_heading - min_tried_heading) > (2.0*M_PI - heading_increment))
-        {
-          // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???
-          ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-          return cleanupAndSuccess();
-        }
-
-        // So much waiting for delivery point... maybe something is wrong
-        ROS_WARN("Delivery point looks busy; try another one (%d attempts)", attempts);
+//        ROS_DEBUG("heading_to_goal: %.2f, %.2f, %.2f      %.2f           %.2f     %d", heading_to_goal, min_tried_heading ,max_tried_heading,
+//                     heading_increment ,  ( max_tried_heading - min_tried_heading),  (( max_tried_heading - min_tried_heading) >= 2.0*M_PI));
       }
     }
     else
@@ -776,11 +782,11 @@ bool Navigator::enableRecovery()
   ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("move_base/set_parameters");
   dynamic_reconfigure::Reconfigure srv;
   srv.request.config.bools.resize(1);
-  srv.request.config.bools[0].name = "clearing_rotation_allowed";
+  srv.request.config.bools[0].name = "recovery_behavior_enabled";
   srv.request.config.bools[0].value = true;
-  srv.request.config.doubles.resize(1);
-  srv.request.config.doubles[0].name = "planner_frequency";
-  srv.request.config.doubles[0].value = default_planner_frequency_;
+//  srv.request.config.doubles.resize(1);
+//  srv.request.config.doubles[0].name = "planner_frequency";
+//  srv.request.config.doubles[0].value = default_planner_frequency_;
 
   if (client.call(srv) == true)
   {
@@ -820,11 +826,11 @@ bool Navigator::disableRecovery()
   ros::ServiceClient client = nh.serviceClient<dynamic_reconfigure::Reconfigure>("move_base/set_parameters");
   dynamic_reconfigure::Reconfigure srv;
   srv.request.config.bools.resize(1);
-  srv.request.config.bools[0].name = "clearing_rotation_allowed";
+  srv.request.config.bools[0].name = "recovery_behavior_enabled";
   srv.request.config.bools[0].value = false;
-  srv.request.config.doubles.resize(1);
-  srv.request.config.doubles[0].name = "planner_frequency";
-  srv.request.config.doubles[0].value = 0.0;
+//  srv.request.config.doubles.resize(1);
+//  srv.request.config.doubles[0].name = "planner_frequency";
+//  srv.request.config.doubles[0].value = 0.0;
 
   if (client.call(srv) == true)
   {
@@ -849,6 +855,26 @@ bool Navigator::disableRecovery()
 ROS_DEBUG("disableRecovery ended on %f", (ros::Time::now() - t0).toSec());
   recovery_behavior_ = false;
   return true;
+}
+
+bool Navigator::clearCostmaps()
+{
+  ros::Time t0 = ros::Time::now();
+
+  ros::NodeHandle nh;
+  ros::ServiceClient client = nh.serviceClient<std_srvs::Empty>("move_base/clear_costmaps");
+  std_srvs::Empty srv;
+
+  if (client.call(srv) == true)
+  {
+    ROS_INFO("Successfully cleared costmaps (%f seconds)", (ros::Time::now() - t0).toSec());
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to clear costmaps (%f seconds)", (ros::Time::now() - t0).toSec());
+    return false;
+  }
 }
 
 bool Navigator::shoftRecovery()

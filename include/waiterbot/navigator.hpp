@@ -225,6 +225,7 @@ private:
   bool cleanupAndError();
   bool enableRecovery();
   bool disableRecovery();
+  bool clearCostmaps();
   bool shoftRecovery();
   bool hardRecovery();
 
