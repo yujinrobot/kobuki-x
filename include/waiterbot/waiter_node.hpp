@@ -91,8 +91,7 @@ protected:
   geometry_msgs::PoseStamped             pickup_pose_;
   semantic_region_handler::TablePoseList table_poses_;
   kobuki_msgs::SensorState core_sensors_;
-  cafe_msgs::Order  order_;
-  cafe_msgs::Status status_;
+  cafe_msgs::Order order_;
   std::string global_frame_;
 
   boost::thread order_process_thread_;
@@ -109,10 +108,35 @@ protected:
   bool waitForButton();
   bool gotoTable(int table_id);
   void sendFeedback(int feedback_status);
-  bool setFailure(std::string reason);
+  bool setSucceeded(std::string message);
+  bool setFailure(std::string message);
 
   bool cleanupAndSuccess();
   bool cleanupAndError();
+
+  const std::string toStr(int16_t status)
+  {
+    return std::string(toCStr(status));
+  }
+
+  const char* toCStr(int16_t status)
+  {
+    switch (status)
+    {
+      case cafe_msgs::Status::IDLE                          : return "idle";
+      case cafe_msgs::Status::GO_TO_KITCHEN                 : return "going to kitchen";
+      case cafe_msgs::Status::ARRIVE_KITCHEN                : return "arrived to kitchen";
+      case cafe_msgs::Status::WAITING_FOR_KITCHEN           : return "waiting for kitchen";
+      case cafe_msgs::Status::IN_DELIVERY                   : return "going to table";
+      case cafe_msgs::Status::ARRIVE_TABLE                  : return "arrived to table";
+      case cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION : return "waiting for customer";
+      case cafe_msgs::Status::COMPLETE_DELIVERY             : return "delivery completed";
+      case cafe_msgs::Status::RETURNING_TO_DOCK             : return "going to base";
+      case cafe_msgs::Status::END_DELIVERY_ORDER            : return "order completed";
+      case cafe_msgs::Status::ERROR                         : return "error";
+      default                                               : return "UNRECOGNIZED STATUS";
+    }
+  }
 
   //< DEBUG
   void fakeOrderForEasyDebugging(int order_id, int table_id);

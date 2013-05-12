@@ -65,7 +65,10 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
 
 void WaiterNode::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
 {
-  // TODO msg->values[0] red button -> use to stop action in course
+  // TODO msg->values[1] red button -> use to stop action in course;  by now just use it to reset error status to accept new orders
+  if (msg->values[1] == false)
+    order_.status = cafe_msgs::Status::IDLE;
+
   if (msg->values[0] == false)
     wait_for_button_ = false;
 }
@@ -77,14 +80,21 @@ void WaiterNode::coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg)
 
 void WaiterNode::deliverOrderCB()
 {
-  // accept the new goal
-  cafe_msgs::Order order = as_.acceptNewGoal()->order;
-  ROS_INFO("Deliver order action requested [order: %d, table: %d]", order.order_id, order.table_id);
-
-  //< DEBUG
-  if ((debug_mode_ == true) && (order.order_id < 0))
+  if (order_.status != cafe_msgs::Status::IDLE)
   {
-    fakeOrderForEasyDebugging(order.order_id * -1, order.table_id);
+    ROS_WARN("Waiterbot not in idle status; cannot attend request (current status is %s)", toCStr(order_.status));
+    return;
+    // TODO how the hell I inform of this to the task coordinator???
+  }
+
+  // Sccept the new goal
+  order_ = as_.acceptNewGoal()->order;
+  ROS_INFO("Deliver order action requested [order: %d, table: %d]", order_.order_id, order_.table_id);
+
+  //< DEBUG  Fake orders for evaluating individual tasks
+  if ((debug_mode_ == true) && (order_.order_id < 0))
+  {
+    fakeOrderForEasyDebugging(order_.order_id * -1, order_.table_id);
     // Return the result to Task Coordinator
     cafe_msgs::DeliverOrderResult result;
     result.result = "VAMONOS!!!!";
@@ -94,15 +104,16 @@ void WaiterNode::deliverOrderCB()
   //> DEBUG
 
   // starts a thread to process order
-  order_process_thread_ = boost::thread(&WaiterNode::processOrder, this, order);
+  order_process_thread_ = boost::thread(&WaiterNode::processOrder, this, order_);
 }
 
 void WaiterNode::preemptOrderCB()
 {
-  ROS_WARN("Current order preempted [order: %d, table: %d]", order_.order_id, order_.table_id);
+  ROS_WARN("Current order preempted [order: %d, table: %d] (current status is %s)",
+           order_.order_id, order_.table_id, toCStr(order_.status));
   // set the action state to preempted
   //  TODO WE REALLY WANT???  as_.setPreempted();
-  as_.setPreempted();
+//  as_.setPreempted();
 }
 
 

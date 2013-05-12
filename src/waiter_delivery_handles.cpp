@@ -69,18 +69,27 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   sendFeedback(cafe_msgs::Status::END_DELIVERY_ORDER);
   ros::Duration(1).sleep();
 
+  return setSucceeded("Delivery successfully completed (hopefully...)");
+}
+
+bool WaiterNode::setSucceeded(std::string message)
+{
   // Return the result to Task Coordinator
+  ROS_INFO_STREAM(message);
   cafe_msgs::DeliverOrderResult result;
-  result.result = "Delivery successfully completed (hopefully...)";
+  result.result = message;
   as_.setSucceeded(result);
+  order_.status = cafe_msgs::Status::IDLE;
+
   return true;
 }
 
-bool WaiterNode::setFailure(std::string reason)
+bool WaiterNode::setFailure(std::string message)
 {
+  // Return the result to Task Coordinator
+  ROS_ERROR_STREAM(message);
   cafe_msgs::DeliverOrderResult result;
-  ROS_ERROR_STREAM(reason);
-  result.result = reason;
+  result.result = message;
   as_.setAborted(result);
 
   // Try to go back to nest
@@ -92,7 +101,14 @@ bool WaiterNode::setFailure(std::string reason)
     at_base = navigator_.dockInBase();
 
   if (at_base == false)
+  {
     ROS_ERROR("Go back to nest failed; we don't have a recovery mechanism, so... just stand and cry");
+    order_.status = cafe_msgs::Status::ERROR;
+  }
+  else
+  {
+    order_.status = cafe_msgs::Status::IDLE;
+  }
 
   return at_base;
 }
@@ -104,6 +120,8 @@ void WaiterNode::sendFeedback(int feedback_status)
 //  ROS_DEBUG("Sending Feedback %d", feedback_status);
   feedback.status = feedback_status;
   as_.publishFeedback(feedback);
+
+  order_.status = feedback_status;
 }
 
 } // namespace waiterbot
