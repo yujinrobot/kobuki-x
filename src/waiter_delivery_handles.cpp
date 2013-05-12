@@ -90,9 +90,13 @@ bool WaiterNode::setFailure(std::string message)
   ROS_ERROR_STREAM(message);
   cafe_msgs::DeliverOrderResult result;
   result.result = message;
-  as_.setAborted(result);
+//  as_.setAborted(result);
 
-  // Try to go back to nest
+  // NEW POLITICS:  we don't close the action until we are in the docking base, ready to take a new order, or someone press the red button (manual recovery)
+
+  // Try to go back to nest   TODO  a better feedback would be RECOVERING
+  sendFeedback(cafe_msgs::Status::ERROR);
+
   bool at_base;
   ROS_ERROR("Something went wrong while processing order; try to go back to nest...");
   if (ar_markers_.dockingBaseSpotted() == true)
@@ -102,12 +106,13 @@ bool WaiterNode::setFailure(std::string message)
 
   if (at_base == false)
   {
-    ROS_ERROR("Go back to nest failed; we don't have a recovery mechanism, so... just stand and cry");
+    ROS_ERROR("Go back to nest failed; we don't have a recovery mechanism, so... please put me on my nest and press the red button to notify TC that I'm ready again");
     order_.status = cafe_msgs::Status::ERROR;
   }
   else
   {
     order_.status = cafe_msgs::Status::IDLE;
+    as_.setAborted(result);
   }
 
   return at_base;

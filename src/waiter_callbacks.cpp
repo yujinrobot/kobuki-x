@@ -65,9 +65,17 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
 
 void WaiterNode::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
 {
-  // TODO msg->values[1] red button -> use to stop action in course;  by now just use it to reset error status to accept new orders
-  if (msg->values[1] == false)
+  // TODO msg->values[1] red button -> use to stop action in course;
+  // by now just close the current action with failure, so we can accept new orders; but we cannot cancel current task
+  if ((msg->values[1] == false) && (order_.status == cafe_msgs::Status::ERROR))
+  {
+    // Return the result to Task Coordinator
+    ROS_INFO("This is embarrassing... looks like I have being rescued by a human...   %d", as_.isActive());
+    cafe_msgs::DeliverOrderResult result;
+    result.result = "Robot manually recovered";
+    as_.setAborted(result);
     order_.status = cafe_msgs::Status::IDLE;
+  }
 
   if (msg->values[0] == false)
     wait_for_button_ = false;
@@ -83,7 +91,7 @@ void WaiterNode::deliverOrderCB()
   if (order_.status != cafe_msgs::Status::IDLE)
   {
     ROS_WARN("Waiterbot not in idle status; cannot attend request (current status is %s)", toCStr(order_.status));
-    return;
+//    return;
     // TODO how the hell I inform of this to the task coordinator???
   }
 
@@ -113,7 +121,7 @@ void WaiterNode::preemptOrderCB()
            order_.order_id, order_.table_id, toCStr(order_.status));
   // set the action state to preempted
   //  TODO WE REALLY WANT???  as_.setPreempted();
-//  as_.setPreempted();
+  as_.setPreempted();
 }
 
 
