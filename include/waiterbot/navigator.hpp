@@ -221,7 +221,7 @@ private:
   ros::Publisher  safety_on_pub_;
   ros::Publisher  safety_off_pub_;
 
-  bool cleanupAndSuccess();
+  bool cleanupAndSuccess(const std::string& wav_file = "");
   bool cleanupAndError();
   bool enableRecovery();
   bool disableRecovery();

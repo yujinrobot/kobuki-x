@@ -43,7 +43,9 @@ bool Navigator::init()
   pnh.param("odom_frame",     odom_frame_,     std::string("odom"));
   pnh.param("base_frame",     base_frame_,     std::string("base_footprint"));
   pnh.param("play_sounds",    play_sounds_,    false);
-  pnh.param("resources_path", resources_path_, std::string(""));
+  pnh.param("resources_path", resources_path_, std::string("/"));
+  if (resources_path_[resources_path_.length() - 1] != '/')
+    resources_path_ += "/";
 
   pnh.param("relay_on_beacon_distance", relay_on_beacon_distance_, 0.4);
   pnh.param("relay_on_marker_distance", relay_on_marker_distance_, 1.0);
@@ -337,7 +339,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
     ROS_INFO("Successfully docked...  zzz...   zzz...");
-    return cleanupAndSuccess();
+    return cleanupAndSuccess("yawn.wav");
   }
   else
   {
@@ -430,8 +432,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At pickup point! Waiting for 맛있는 커피...");
-      if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/pab.wav").c_str());
-      return cleanupAndSuccess();
+      return cleanupAndSuccess("pab.wav");
     }
     else
     {
@@ -602,7 +603,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
           if (std::abs(to_turn) > 0.3)
             turn(to_turn);
 
-          return cleanupAndSuccess();
+          return cleanupAndSuccess("kaku.wav");
         }
         else if (distance_to_goal < close_to_delivery_distance_)
         {
@@ -647,8 +648,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At delivery point! Waiting for user confirmation...");
-      if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/kak.wav").c_str());
-      return cleanupAndSuccess();
+      return cleanupAndSuccess("kaku.wav");
     }
     else if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::PREEMPTED)
     {
@@ -671,7 +671,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
       {
         // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???  TODO-OOOOOOOOOOOOOOOOO!!!!
         ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-        return cleanupAndSuccess();
+        return cleanupAndSuccess("kaku.wav");
       }
       else
       {
@@ -698,8 +698,11 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
   } while (true);
 }
 
-bool Navigator::cleanupAndSuccess()
+bool Navigator::cleanupAndSuccess(const std::string& wav_file)
 {
+  if ((wav_file.length() > 0) && (play_sounds_))
+    system(("rosrun waiterbot play_sound.bash " + resources_path_ + wav_file).c_str());
+
   // Revert to standard configuration after completing a task
   //  - (re)enable safety controller for normal operation
   //  - disable AR markers tracker as it's a CPU spendthrift
