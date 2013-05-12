@@ -23,7 +23,7 @@ TrajectoryPlannerROS:
   vtheta_samples: 20
 
 # Trajectory Scoring Parameters
-  pdist_scale: 0.7
+  pdist_scale: 0.9
   gdist_scale: 0.8
   occdist_scale: 0.01
   heading_lookahead: 0.325
