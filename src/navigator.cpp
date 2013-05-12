@@ -647,7 +647,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At delivery point! Waiting for user confirmation...");
-      //if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/pab.wav").c_str());
+      if (play_sounds_) system(("rosrun waiterbot play_sound.bash " + resources_path_ + "/kak.wav").c_str());
       return cleanupAndSuccess();
     }
     else if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::PREEMPTED)
