@@ -3,7 +3,7 @@
 -->
 <launch>
   <!-- Velocity smoother -->
-  <node pkg="nodelet" type="nodelet" name="safetey_nodelet_manager" args="manager"/>
+  <node pkg="nodelet" type="nodelet" name="safety_nodelet_manager" args="manager"/>
   <node pkg="nodelet" type="nodelet" name="safety_ctrl_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet safety_nodelet_manager">
 
   <!-- <node pkg="nodelet" type="nodelet" name="safety_ctrl_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet mobile_base_nodelet_manager"> -->
@@ -17,7 +17,7 @@
   </node>
 
   <!-- Safety controller -->
-  <node pkg="nodelet" type="nodelet" name="navigation_safety_controller" args="load kobuki_safety_controller/SafetyControllerNodelet mobile_base_nodelet_manager">
+  <node pkg="nodelet" type="nodelet" name="navigation_safety_controller" args="load kobuki_safety_controller/SafetyControllerNodelet safety_nodelet_manager">
     <remap from="navigation_safety_controller/cmd_vel"           to="safety_ctrl_velocity_smoother/raw_cmd_vel"/>
     <remap from="navigation_safety_controller/events/bumper"     to="/mobile_base/events/bumper"/>
     <remap from="navigation_safety_controller/events/cliff"      to="/mobile_base/events/cliff"/>
