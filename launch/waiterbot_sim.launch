@@ -45,7 +45,6 @@
     <remap from="base_scan" to="scan"/>
   </node>
 
-
   <!--  ***************** Robot Model *****************  -->
   <include file="$(find turtlebot_bringup)/launch/includes/_robot.launch">
     <arg name="base" value="$(arg base)" />
@@ -56,13 +55,12 @@
     <param name="use_gui" value="true"/>
   </node>
 
-  <!--  ********** Kobuki mobile base extras **********  
-  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>/////////////////////////////////////////////////////-->
+  <!--  ********** Kobuki mobile base extras **********  -->
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
     <!-- velocity commands multiplexer -->
   <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
   <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
     <param name="yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml" />
-    <!-- <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/> -->
   </node>
 
   <!--  ************* Navigation manager **************  -->
@@ -72,32 +70,31 @@
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
 
   <!--  ****** Geometric and semantic map servers *****  -->
-<!--   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
   <include file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
- -->
-  <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>
- 
- 
-  <!--  ******************** Amcl *********************  
+ <!--   <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/> --> 
+  
+  <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
-    <arg name="delta_x" value="$(arg initial_pose_x)"/>
-    <arg name="delta_y" value="$(arg initial_pose_y)"/>
-    <arg name="delta_yaw" value="$(arg initial_pose_a)"/>
-  </include>-->
-  <!--  ************** Fake Localization *************  -->
-  <node name="fake_localization" pkg="fake_localization" type="fake_localization">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  </include>
+  <!--  ************** Fake Localization **************  -->
+<!--   <node name="fake_localization" pkg="fake_localization" type="fake_localization">
     <param name="odom_frame_id" value="/odom"/>
     <param name="global_frame_id" value="/map"/>
     <param name="base_frame_id" value="/base_footprint"/>
   </node>
-  
-  <!--  ********** Mixing with the real world **********  -->
+ -->
+
+  <!--  ********** Mixing with the real world *********  -->
   <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
   <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>
 
-  <!--  ***************** Visualisation *****************  -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />
+  <!--  **************** Visualisation ****************  -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/$(arg rocon_robot)_navigation.rviz"/>
 </launch>
