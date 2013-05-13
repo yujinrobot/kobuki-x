@@ -36,11 +36,6 @@ public:
   ~IrScanNode();
   int init(ros::NodeHandle& nh);
 
-  /*********************
-  ** Runtime
-  **********************/
-  int spin();
-
 private:
   int      rangers_count;
   double   range_variance;
