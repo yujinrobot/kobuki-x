@@ -704,8 +704,10 @@ bool Navigator::cleanupAndSuccess(const std::string& wav_file)
     system(("rosrun waiterbot play_sound.bash " + resources_path_ + wav_file).c_str());
 
   // Revert to standard configuration after completing a task
+  //  - clear costmaps, mostly to restore global map to source bitmap
   //  - (re)enable safety controller for normal operation
   //  - disable AR markers tracker as it's a CPU spendthrift
+  clearCostmaps();
   disableSafety();
   enableRecovery();
 
@@ -721,8 +723,9 @@ bool Navigator::cleanupAndError()
 {
   // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
   // WARN1 cancel move base goals fails if it's executing recovery behavior  TODO: how to deal with this?
-  //  >>> if I try disableSafety at that point takes ages to return
+  //  >>> if I try disableSafety at that point takes ages to return; there's an issue open opened on this
   // WARN2 we are very radical on this method, restoring things that probably have not being used... be careful!
+  clearCostmaps();
   disableSafety();
   enableRecovery();
   cancelAllGoals(move_base_ac_);
