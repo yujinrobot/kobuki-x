@@ -6,5 +6,4 @@ global_costmap:
    static_map: true
    transform_tolerance: 0.5
    observation_sources: NONE
-   publish_voxel_map: true 
    map_type: costmap
