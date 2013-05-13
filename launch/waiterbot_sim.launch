@@ -78,17 +78,11 @@
   
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
+    <arg name="scan_topic" value="/scan"/>
     <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
-  <!--  ************** Fake Localization **************  -->
-<!--   <node name="fake_localization" pkg="fake_localization" type="fake_localization">
-    <param name="odom_frame_id" value="/odom"/>
-    <param name="global_frame_id" value="/map"/>
-    <param name="base_frame_id" value="/base_footprint"/>
-  </node>
- -->
 
   <!--  ********** Mixing with the real world *********  -->
   <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
@@ -96,5 +90,5 @@
   <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>
 
   <!--  **************** Visualisation ****************  -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/$(arg rocon_robot)_navigation.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/one_robot_navigation.rviz"/>
 </launch>
