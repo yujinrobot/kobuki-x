@@ -4,7 +4,7 @@ project(waiterbot)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED actionlib actionlib_msgs  kobuki_msgs sensor_msgs cafe_msgs ar_track_alvar move_base_msgs)
+find_package(catkin REQUIRED actionlib actionlib_msgs  kobuki_msgs sensor_msgs cafe_msgs ar_track_alvar move_base_msgs pcl_ros)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -50,7 +50,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot
-  CATKIN_DEPENDS actionlib actionlib_msgs kobuki_msgs cafe_msgs ar_track_alvar move_base_msgs
+  CATKIN_DEPENDS actionlib actionlib_msgs kobuki_msgs cafe_msgs ar_track_alvar move_base_msgs pcl_ros
   DEPENDS system_lib
 )
 
@@ -69,18 +69,23 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 ## Declare the executables
 add_executable(ir_scan_node src/ir_scan_node.cpp)
-add_executable(waiterbot_node src/waiter_node.cpp src/waiter_tasks.cpp src/waiter_delivery_handles.cpp src/ar_markers.cpp src/nav_watchdog.cpp src/navigator.cpp src/common.cpp src/waiter_callbacks.cpp)
+add_executable(virtual_sensor_node src/virtual_sensor_node.cpp)
+add_executable(waiterbot_node src/waiter_node.cpp src/waiter_tasks.cpp src/waiter_delivery_handles.cpp src/waiter_callbacks.cpp src/ar_markers.cpp src/nav_watchdog.cpp src/navigator.cpp src/common.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(waiterbot_node waiterbot_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(waiterbot_node
+target_link_libraries(ir_scan_node
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(ir_scan_node
+target_link_libraries(virtual_sensor_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(waiterbot_node
   ${catkin_LIBRARIES}
 )
 

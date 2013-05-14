@@ -1,0 +1,8 @@
+<!--
+ Virtual sensor that uses semantic map information to "see" head-cutting tables
+-->
+<launch>
+  <node name="virtual_sensor" pkg="waiterbot" type="virtual_sensor_node">
+    <param name="obstacle_height" value="0.35"/>
+  </node>
+</launch>
