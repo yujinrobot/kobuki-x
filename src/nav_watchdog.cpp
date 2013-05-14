@@ -8,6 +8,7 @@
 #include <tf/tf.h>
 
 #include "waiterbot/common.hpp"
+#include "waiterbot/navigator.hpp"
 #include "waiterbot/nav_watchdog.hpp"
 
 
@@ -82,7 +83,9 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
               tk::distance(amcl_pose, armk_pose), tk::minAngle(amcl_pose, armk_pose),
                (last_amcl_pose_.header.stamp - msg->header.stamp).toSec());
 
-    // TODO reset global costmap!!!
+    // Reset costmaps, as they surely contains a lot of errors due to bad localization
+    // TODO/WARN this will take effect BEFORE the relocalization, so the maps can get wrong again!!!
+    Navigator::getInstance().clearCostmaps();
   }
 
   localized_ |= LOCALIZED_ARMK;

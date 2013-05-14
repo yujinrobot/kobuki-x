@@ -53,7 +53,7 @@ bool WaiterNode::init()
     ROS_ERROR("AR markers initialization failed; shutting down %s node", node_name_.c_str());
     return false;
   }
-  if (navigator_.init() == false)
+  if (Navigator::getInstance().init() == false)
   {
     ROS_ERROR("Navigator initialization failed; shutting down %s node", node_name_.c_str());
     return false;
@@ -61,10 +61,10 @@ bool WaiterNode::init()
 
   // Configure call-backs between submodules
   ar_markers_.setRobotPoseCB(boost::bind(&NavWatchdog::arMarkerMsgCB, &nav_watchd_, _1));
-  ar_markers_.baseSpottedCB(boost::bind(&Navigator::baseSpottedMsgCB, &navigator_, _1, _2));
+  ar_markers_.baseSpottedCB(boost::bind(&Navigator::baseSpottedMsgCB, &Navigator::getInstance(), _1, _2));
 
   // Enable safety controller by default
-  navigator_.enableSafety();
+  //Navigator::getInstance().enableSafety();
 
   return true;
 }

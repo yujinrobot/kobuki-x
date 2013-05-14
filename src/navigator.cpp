@@ -80,7 +80,9 @@ bool Navigator::init()
   // Disable navigation safety controller until we start moving
   // NOTE: it must be disable after completing any mission. Note also that we use latched
   // topics, as this first message can arrive before the controller gets up and running
-  disableSafety();
+ // disableSafety();
+  // Enable safety controller by default
+  enableSafety();
 
   return true;
 }
@@ -161,7 +163,7 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
 bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
 {
   // Enable safety controller on normal navigation
-  enableSafety();
+  //enableSafety();
 
   // Wait for move base action servers to come up; the huge timeout is not a whim; move_base
   // action server can take up to 20 seconds to initialize in the official turtlebot laptop,
@@ -317,6 +319,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   // Disable navigation safety controller on auto-docking to avoid bouncing against the base
   disableSafety();
 
+  bool retrying = false;
   t0 = ros::Time::now();
 
   while (auto_dock_ac_.waitForResult(ros::Duration(2.0)) == false)
@@ -326,15 +329,34 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
       ROS_DEBUG_THROTTLE(5.0, "Auto-dock action state: %s (%.2f seconds elapsed)",
                          auto_dock_ac_.getState().toString().c_str(), (ros::Time::now() - t0).toSec());
     }
+    else if ((ros::Time::now() - t0).toSec() < auto_docking_timeout_*1.5)
+    {
+      if (retrying == false)
+      {
+        // Go back a bit and retry for an extra half timeout period  TODO really poor-man recovery...
+        backward(0.20);
+        ROS_WARN("Cannot auto-dock after %.2f seconds; current state is %s. Going backward to retry...",
+                 (ros::Time::now() - t0).toSec(), auto_dock_ac_.getState().toString().c_str());
+        retrying = true;
+      }
+      else
+      {
+        ROS_DEBUG_THROTTLE(5.0, "Auto-dock action state: %s (%.2f seconds elapsed)",
+                           auto_dock_ac_.getState().toString().c_str(), (ros::Time::now() - t0).toSec());
+      }
+    }
     else
     {
       ROS_WARN("Cannot auto-dock after %.2f seconds; current state is %s. Aborting...",
-               auto_docking_timeout_, auto_dock_ac_.getState().toString().c_str());
-      // TODO go back and retry or change auto-docking algorithm
-      return cleanupAndError();
+               (ros::Time::now() - t0).toSec(), auto_dock_ac_.getState().toString().c_str());
+      break;
+      //enableSafety();
+      //return cleanupAndError();
     }
-
   }
+
+  // Restore safety controller for normal navigation
+  enableSafety();
 
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
@@ -351,7 +373,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
 bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 {
   // Enable safety controller on normal navigation
-  enableSafety();
+ // enableSafety();
 
   if (pickup_pose.header.frame_id != global_frame_)
   {
@@ -498,7 +520,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, double table_radius)
 {
   // Enable safety controller on normal navigation
-  enableSafety();
+ // enableSafety();
 
   if (table_pose.header.frame_id != global_frame_)
   {
@@ -708,7 +730,7 @@ bool Navigator::cleanupAndSuccess(const std::string& wav_file)
   //  - (re)enable safety controller for normal operation
   //  - disable AR markers tracker as it's a CPU spendthrift
   clearCostmaps();
-  disableSafety();
+ // disableSafety();
   enableRecovery();
 
 //  cancelAllGoals(move_base_ac_);//, recovery_behavior_ == true ? 10.0 : 2.0);
@@ -726,7 +748,7 @@ bool Navigator::cleanupAndError()
   //  >>> if I try disableSafety at that point takes ages to return; there's an issue open opened on this
   // WARN2 we are very radical on this method, restoring things that probably have not being used... be careful!
   clearCostmaps();
-  disableSafety();
+//  disableSafety();
   enableRecovery();
   cancelAllGoals(move_base_ac_);
   cancelAllGoals(auto_dock_ac_);

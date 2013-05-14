@@ -71,12 +71,12 @@ bool WaiterNode::wakeUp()
   {
     if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT)
     {
-      navigator_.slowBackward();
+      Navigator::getInstance().slowBackward();
     }
     else if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT + 2.0)
     {
       // Wait stopped an extra couple of seconds before giving up
-      navigator_.stop();
+      Navigator::getInstance().stop();
     }
     else
     {
@@ -84,7 +84,7 @@ bool WaiterNode::wakeUp()
     }
   }
 
-  navigator_.stop();
+  Navigator::getInstance().stop();
 
   if (timeout == true)
   {
@@ -103,7 +103,7 @@ bool WaiterNode::wakeUp()
   //base_marker_.header.frame_id = "map";
 
   // Now look for a global marker to initialize our localization; full spin clockwise
-  navigator_.spinClockwise();
+  Navigator::getInstance().spinClockwise();
 
   // After a full spin, we should be localized and in front of our docking base marker
   if (nav_watchd_.localized() == false)
@@ -120,14 +120,14 @@ bool WaiterNode::wakeUp()
   ros::Time t1 = ros::Time::now();
   while ((ar_markers_.spotDockMarker(base_marker_id) == false) && (timeout == false))
   {
-    navigator_.turnClockwise();
+    Navigator::getInstance().turnClockwise();
     if ((ros::Time::now() - t1).toSec() >= SPOT_BASE_MARKER_TIMEOUT)
     {
       timeout = true;
     }
   }
 
-  navigator_.stop();
+  Navigator::getInstance().stop();
 
   if (timeout == true)
   {
@@ -149,13 +149,16 @@ bool WaiterNode::wakeUp()
   ROS_INFO("Waking up successfully completed in %.2f seconds; ready to go!", (ros::Time::now() - t0).toSec());
   initialized_ = true;
 
+  // Reset costmaps, as they surely contains a lot of errors due to the wrong initial localization
+  Navigator::getInstance().clearCostmaps();
+
   return cleanupAndSuccess();
 }
 
 bool WaiterNode::leaveNest()
 {
   ROS_DEBUG("Leaving the nest when already localized; slowly moving back for half meter");
-  navigator_.backward(0.5);
+  Navigator::getInstance().backward(0.5);
   return true;
 }
 
@@ -164,7 +167,7 @@ bool WaiterNode::cleanupAndSuccess()
   // Revert to standard configuration after completing a task
   //  - (re)enable safety controller for normal operation
   //  - disable AR markers tracker as it's a CPU spendthrift
-  navigator_.enableSafety();
+//  Navigator::getInstance().enableSafety();
   ar_markers_.disableTracker();
 
   return true;
@@ -173,7 +176,7 @@ bool WaiterNode::cleanupAndSuccess()
 bool WaiterNode::cleanupAndError()
 {
   // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
-  navigator_.enableSafety();
+//  Navigator::getInstance().enableSafety();
   ar_markers_.disableTracker();
 
   return false;
@@ -207,7 +210,7 @@ bool WaiterNode::gotoTable(int table_id)
   }
   else
   {
-    return navigator_.deliverOrder(table_pose, radius);
+    return Navigator::getInstance().deliverOrder(table_pose, radius);
   }
 }
 

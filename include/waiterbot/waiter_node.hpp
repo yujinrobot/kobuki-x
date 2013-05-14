@@ -86,7 +86,7 @@ protected:
 
   ARMarkers   ar_markers_;
   NavWatchdog nav_watchd_;
-  Navigator   navigator_;
+//  Navigator   navigator_;
 
   geometry_msgs::PoseStamped             pickup_pose_;
   semantic_region_handler::TablePoseList table_poses_;

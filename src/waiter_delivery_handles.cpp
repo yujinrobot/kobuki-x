@@ -24,7 +24,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   }
 
   // 1. goto pickup place Navigator::pickUpOrder
-  if (navigator_.pickUpOrder(pickup_pose_) == false)
+  if (Navigator::getInstance().pickUpOrder(pickup_pose_) == false)
   {
     return setFailure("Waiter failed to go to pickup place");
   }
@@ -61,7 +61,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   ros::Duration(1).sleep();
 
   // 5. return to dock Navigator::dockInBase
-  if (navigator_.dockInBase(ar_markers_.getDockingBasePose()) == false)
+  if (Navigator::getInstance().dockInBase(ar_markers_.getDockingBasePose()) == false)
   {
     return setFailure("Waiter failed to go back to nest");
   }
@@ -100,9 +100,9 @@ bool WaiterNode::setFailure(std::string message)
   bool at_base;
   ROS_ERROR("Something went wrong while processing order; try to go back to nest...");
   if (ar_markers_.dockingBaseSpotted() == true)
-    at_base = navigator_.dockInBase(ar_markers_.getDockingBasePose());
+    at_base = Navigator::getInstance().dockInBase(ar_markers_.getDockingBasePose());
   else
-    at_base = navigator_.dockInBase();
+    at_base = Navigator::getInstance().dockInBase();
 
   if (at_base == false)
   {

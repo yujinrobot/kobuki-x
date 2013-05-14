@@ -44,17 +44,28 @@ public:
 
   } state_;
 
-  Navigator();
+  static Navigator& getInstance()
+  {
+    // Guaranteed to be destroyed; instantiated on first use
+    // TODO/WARN: We don't check whether the single instance has been initialized
+    static Navigator instance;
+    return instance;
+  }
+
   virtual ~Navigator();
 
   bool init();
-
 
   void enableMotors();
   void disableMotors();
 
   void enableSafety() { safety_on_pub_.publish(std_msgs::Empty()); };
   void disableSafety() { safety_off_pub_.publish(std_msgs::Empty()); };
+  bool enableRecovery();
+  bool disableRecovery();
+  bool shoftRecovery();
+  bool hardRecovery();
+  bool clearCostmaps();
 
   bool dockInBase();
   bool dockInBase(const geometry_msgs::PoseStamped& base_marker_pose);
@@ -221,13 +232,13 @@ private:
   ros::Publisher  safety_on_pub_;
   ros::Publisher  safety_off_pub_;
 
+  // Inaccessible constructors and assignment operator
+  Navigator();
+  Navigator(Navigator const&);
+  void operator = (Navigator const&);
+
   bool cleanupAndSuccess(const std::string& wav_file = "");
   bool cleanupAndError();
-  bool enableRecovery();
-  bool disableRecovery();
-  bool clearCostmaps();
-  bool shoftRecovery();
-  bool hardRecovery();
 
   tf::StampedTransform getOdomTf();
   tf::StampedTransform getRobotTf();

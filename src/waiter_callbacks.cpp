@@ -132,9 +132,9 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
 
   if (order_id == 1)       boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
   if (order_id == 2)       boost::thread wakeUpThread(&WaiterNode::leaveNest, this);
-  if (order_id == 3)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose()));
-  if (order_id == 4)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_));
-  if (order_id == 5)       boost::thread pickUpThread(&Navigator::pickUpOrder, &navigator_, pickup_pose_);
+  if (order_id == 3)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &Navigator::getInstance(), ar_markers_.getDockingBasePose()));
+  if (order_id == 4)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &Navigator::getInstance()));
+  if (order_id == 5)       boost::thread pickUpThread(&Navigator::pickUpOrder, &Navigator::getInstance(), pickup_pose_);
   if (order_id == 6)
   {
     bool table_found = false;
@@ -149,7 +149,7 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
         table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
         table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
 
-        boost::thread pickUpThread(&Navigator::deliverOrder, &navigator_,
+        boost::thread pickUpThread(&Navigator::deliverOrder, &Navigator::getInstance(),
                                    table_pose, table_poses_.tables[i].radius);
         table_found = true;
         break;
@@ -161,9 +161,9 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
       ROS_WARN("Table %d not found! bloody jihoon...  ignoring order", table_id);
     }
   }
-  if (order_id == 666)     boost::thread kk(&Navigator::moveBaseReset, &navigator_);
-  if (order_id == 8)       boost::thread kk(&Navigator::turn, &navigator_, M_PI*1.5);
-  if (order_id == 9)       boost::thread kk(&Navigator::turn, &navigator_, -M_PI*0.5);
+  if (order_id == 666)     boost::thread kk(&Navigator::moveBaseReset, &Navigator::getInstance());
+  if (order_id == 8)       boost::thread kk(&Navigator::turn, &Navigator::getInstance(), M_PI*1.5);
+  if (order_id == 9)       boost::thread kk(&Navigator::turn, &Navigator::getInstance(), -M_PI*0.5);
   if (order_id == 10)      ar_markers_.enableTracker();
   if (order_id == 11)      ar_markers_.disableTracker();
   if (order_id == 13)      ar_markers_.setTrackerFreq(11);
