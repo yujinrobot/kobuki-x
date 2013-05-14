@@ -18,12 +18,12 @@ subscribers:
     topic:       "input/teleop"
     timeout:     1.0
     priority:    8
-  - name:        "Auto-dock control"
-    topic:       "input/auto_docking"
-    timeout:     1.0
-    priority:    6
   - name:        "Waiterbot control"
     topic:       "input/special_task"
+    timeout:     1.0
+    priority:    6
+  - name:        "Auto-dock control"
+    topic:       "input/auto_docking"
     timeout:     1.0
     priority:    5
   - name:        "Navigation"
