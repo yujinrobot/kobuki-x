@@ -85,14 +85,15 @@ void ARMarkers::broadcastMarkersTF()
     }
 
 // TODO remove definitively or recover id I finally decide not to include docking base on global markers
-//    if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
-//    {
-//      sprintf(child_frame, "docking_base_%d", docking_marker_.id);
-//      tk::pose2tf(docking_marker_.pose, tf);
-//      tf.child_frame_id_ = child_frame;
-//      tf.stamp_ = ros::Time::now();
-//      tf_brcaster_.sendTransform(tf);
-//    }
+// CHANGED  look below
+    if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
+    {
+      sprintf(child_frame, "docking_base_%d", docking_marker_.id);
+      tk::pose2tf(docking_marker_.pose, tf);
+      tf.child_frame_id_ = child_frame;
+      tf.stamp_ = ros::Time::now();
+      tf_brcaster_.sendTransform(tf);
+    }
 
     rate.sleep();
   }
@@ -324,10 +325,12 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
 
       // From now we consider it as another global marker
       tk::tf2pose(marker_gb, docking_marker_.pose.pose);
-      global_markers_.markers.push_back(docking_marker_);
       ROS_DEBUG("Docking AR marker registered with global pose: %.2f, %.2f, %.2f",
                 docking_marker_.pose.pose.position.x, docking_marker_.pose.pose.position.y,
                 tf::getYaw(docking_marker_.pose.pose.orientation));
+
+//      CHANGED... doing this avoids reconfiguring in case of failure, and it's not a real advantage
+//      global_markers_.markers.push_back(docking_marker_);
       return true;
     }
   }

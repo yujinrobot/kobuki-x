@@ -26,7 +26,7 @@ Navigator::Navigator() :
     move_base_ac_("move_base", true),                // tell the action clients that we
     auto_dock_ac_("dock_drive_action", true),        // want to spin a thread by default  TODO sure???
     base_marker_id_(std::numeric_limits<uint32_t>::max()),
-    recovery_behavior_(true)  // enable by default; check base_local_planner_params.yaml if not
+    recovery_behavior_(true)  // enabled by default; check base_local_planner_params.yaml if not
 {
 }
 
@@ -78,11 +78,9 @@ bool Navigator::init()
   safety_off_pub_  = nh.advertise <std_msgs::Empty> ("navigation_safety_controller/disable", 1, true);
 
   // Disable navigation safety controller until we start moving
-  // NOTE: it must be disable after completing any mission. Note also that we use latched
+  // NOTE: it must be enabled after completing the wake-up. Note also that we use latched
   // topics, as this first message can arrive before the controller gets up and running
- // disableSafety();
-  // Enable safety controller by default
-  enableSafety();
+  disableSafety();
 
   return true;
 }
@@ -179,7 +177,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
             mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
             tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
   goal_poses_pub_.publish(mb_goal.target_pose);
-  move_base_ac_.sendGoal(mb_goal);
+  sendGoal(mb_goal);
   state_ = GLOBAL_DOCKING;
 
   // Keep an eye open to detect the marker as we approach it
@@ -260,7 +258,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
                 mb_goal_2.target_pose.pose.position.x, mb_goal_2.target_pose.pose.position.y,
                 tf::getYaw(mb_goal_2.target_pose.pose.orientation), mb_goal_2.target_pose.header.frame_id.c_str());
       goal_poses_pub_.publish(mb_goal_2.target_pose);
-      move_base_ac_.sendGoal(mb_goal_2);
+      sendGoal(mb_goal_2);
 
      state_ = MARKER_DOCKING;
     }
@@ -317,6 +315,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   auto_dock_ac_.sendGoal(ad_goal);
 
   // Disable navigation safety controller on auto-docking to avoid bouncing against the base
+  // It must be re-enabled on next wake-up
   disableSafety();
 
   bool retrying = false;
@@ -354,9 +353,6 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
       //return cleanupAndError();
     }
   }
-
-  // Restore safety controller for normal navigation
-  enableSafety();
 
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
@@ -410,7 +406,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
               mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
               tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
     goal_poses_pub_.publish(mb_goal.target_pose);
-    move_base_ac_.sendGoal(mb_goal);
+    sendGoal(mb_goal);
     state_ = GOING_TO_PICKUP;
 
     ros::Time t0 = ros::Time::now();
@@ -593,7 +589,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
               mb_goal.target_pose.pose.position.x, mb_goal.target_pose.pose.position.y,
               tf::getYaw(mb_goal.target_pose.pose.orientation), mb_goal.target_pose.header.frame_id.c_str());
     goal_poses_pub_.publish(mb_goal.target_pose);
-    move_base_ac_.sendGoal(mb_goal);
+    sendGoal(mb_goal);
     state_ = GOING_TO_TABLE;
 
     ros::Time t0 = ros::Time::now();
@@ -745,7 +741,6 @@ bool Navigator::cleanupAndError()
 {
   // Something went wrong in one of the chaotic methods of this class; try at least the let all properly
   // WARN1 cancel move base goals fails if it's executing recovery behavior  TODO: how to deal with this?
-  //  >>> if I try disableSafety at that point takes ages to return; there's an issue open opened on this
   // WARN2 we are very radical on this method, restoring things that probably have not being used... be careful!
   clearCostmaps();
 //  disableSafety();

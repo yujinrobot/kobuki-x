@@ -8,7 +8,7 @@
 #include <tf/tf.h>
 
 #include "waiterbot/common.hpp"
-#include "waiterbot/navigator.hpp"
+//#include "waiterbot/navigator.hpp"
 #include "waiterbot/nav_watchdog.hpp"
 
 
@@ -53,9 +53,9 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
   }
 
   if ((! (localized_ & LOCALIZED_AMCL)) ||
-      ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 0.2) &&
+      ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 0.5) &&
        (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 4.0) &&
-       ((tk::distance(amcl_pose, armk_pose) > 1.5) || (tk::minAngle(amcl_pose, armk_pose) > 1.0))))
+       ((tk::distance(amcl_pose, armk_pose) > 1.0) || (tk::minAngle(amcl_pose, armk_pose) > 0.5))))
   {
     // If amcl has not received an initial pose from the user, or it's reporting a pose
     // far away from the one reported by the AR marker, initialize it with this message.
@@ -85,7 +85,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
 
     // Reset costmaps, as they surely contains a lot of errors due to bad localization
     // TODO/WARN this will take effect BEFORE the relocalization, so the maps can get wrong again!!!
-    Navigator::getInstance().clearCostmaps();
+    //Navigator::getInstance().clearCostmaps();
   }
 
   localized_ |= LOCALIZED_ARMK;

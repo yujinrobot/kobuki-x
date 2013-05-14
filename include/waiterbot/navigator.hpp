@@ -44,14 +44,15 @@ public:
 
   } state_;
 
-  static Navigator& getInstance()
-  {
-    // Guaranteed to be destroyed; instantiated on first use
-    // TODO/WARN: We don't check whether the single instance has been initialized
-    static Navigator instance;
-    return instance;
-  }
+//  static Navigator& getInstance()
+//  {
+//    // Guaranteed to be destroyed; instantiated on first use
+//    // TODO/WARN: We don't check whether the single instance has been initialized
+//    static Navigator instance;
+//    return instance;
+//  }
 
+  Navigator();
   virtual ~Navigator();
 
   bool init();
@@ -233,9 +234,9 @@ private:
   ros::Publisher  safety_off_pub_;
 
   // Inaccessible constructors and assignment operator
-  Navigator();
-  Navigator(Navigator const&);
-  void operator = (Navigator const&);
+//  Navigator();
+//  Navigator(Navigator const&);
+//  void operator = (Navigator const&);
 
   bool cleanupAndSuccess(const std::string& wav_file = "");
   bool cleanupAndError();
@@ -248,6 +249,22 @@ private:
   /********************************************************
   ** Template methods valid for all action clients
   *********************************************************/
+
+  void sendGoal(const move_base_msgs::MoveBaseGoal& mb_goal)
+  {
+    // TODO This is a horrible workaround for a problem I cannot solve: send a new goal
+    // when the previous one has been cancelled return immediately with succeeded state
+    int times_sent = 0;
+    do
+    {
+      move_base_ac_.sendGoal(mb_goal);
+      times_sent++;
+    } while ((move_base_ac_.waitForResult(ros::Duration(0.1)) == true) &&
+              (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED));
+
+    if (times_sent > 1)
+      ROS_DEBUG("Again the strange case of instantaneous goals... (goal sent %d times)", times_sent);
+  }
 
   template <typename T>
   bool cancelAllGoals(actionlib::SimpleActionClient<T> & action_client, double timeout = 2.0)
@@ -272,7 +289,7 @@ private:
       return false;
     }
 
-    ROS_WARN("Cancel %s goal succeed. New state is %s", acName(action_client), goal_state.toString().c_str());
+    ROS_INFO("Cancel %s goal succeed. New state is %s", acName(action_client), goal_state.toString().c_str());
     return true;
   }
 
