@@ -5,9 +5,8 @@ global_costmap:
    publish_frequency: 0.5
    static_map: true
    transform_tolerance: 0.5
-#   observation_sources: NONE
-#   map_type: costmap
 
-   origin_z: 0.0
-   z_resolution: 0.1
-   z_voxels: 4
+# Ensure that the virtual sensor cannot clear the static map, as of course it cannot "see" the physical obstacles
+   vs_scan:
+      clearing: false
+

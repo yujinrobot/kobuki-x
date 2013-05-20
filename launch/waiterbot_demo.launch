@@ -1,34 +1,38 @@
 <!--
-  Waiterbot global navigation:
-  - turtlebot
+  Waiterbot remote app:
   - 3d sensor
-  - map_server
+  - ir half ring
+  - virtual sensor (throat-cutting tables)
+  - safety controller
+  - auto-docking
+  - ar marker tracker
+  - navigation manager
   - move_base
-  - static map
-  - amcl
-  - ar_track
-  - rviz view
+  - amcl localization
  -->
 
 <launch>
-  <!-- Name of the map to use (without path nor extension) and initial position -->
-  <arg name="map_name"       default="map"/>
+  <!-- Initial position -->
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
 
-  <!--  *********** 3d sensor ***********  -->
+  <!--  ****************** 3d sensor ******************  -->
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
     <arg name="rgb_processing" value="true" />
     <arg name="depth_registration" value="true" />
     <arg name="depth_processing" value="true" />
   </include>
 
-  <!--  ************* Kobuki IR half ring *************  -->
+  <!--  ************** Additional sensors *************  -->
   <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
+  <include file="$(find waiterbot)/launch/includes/_virt_sensor.launch"/>
 
   <!--  ********** Kobuki mobile base extras **********  -->
   <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
+  <!-- WARNING: This doesn't work in the waiterbot rapp; we worked around the problem
+       by changing turtlebot_bringup minimal.launch, but a proper solution is required
+  <param name="/cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/> -->
 
   <!--  ******** Kobuki auto-docking controller *******  -->
   <include file="$(find waiterbot)/launch/includes/_autodock.launch"/>

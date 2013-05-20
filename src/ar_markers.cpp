@@ -235,7 +235,7 @@ bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
     if ((included(spotted_markers_.markers[i].id, including) == true) &&
         (excluded(spotted_markers_.markers[i].id, excluding) == true))
     {
-      double d = tk::distance(spotted_markers_.markers[i].pose.pose.position);
+      double d = tk::distance2D(spotted_markers_.markers[i].pose.pose.position);
       if (d < closest_dist)
       {
         closest_dist = d;
@@ -288,7 +288,7 @@ bool ARMarkers::closest(double younger_than, int min_confidence, bool exclude_gl
   double closest_dist = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < spotted_markers.markers.size(); i++)
   {
-    double d = tk::distance(spotted_markers.markers[i].pose.pose.position);
+    double d = tk::distance2D(spotted_markers.markers[i].pose.pose.position);
     if (d < closest_dist)
     {
       closest_dist = d;

@@ -63,6 +63,10 @@
     <param name="yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml" />
   </node>
 
+
+  <include file="$(find waiterbot)/launch/includes/_virt_sensor.launch"/>
+  
+  
   <!--  ************* Navigation manager **************  -->
   <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch"/>
 
@@ -84,10 +88,10 @@
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
 
-  <!--  ********** Mixing with the real world *********  -->
+  <!--  ********** Mixing with the real world *********  
   <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch"/>
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch"/>
-  <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>
+  <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>-->
 
   <!--  **************** Visualisation ****************  -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/one_robot_navigation.rviz"/>

@@ -55,7 +55,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
   if ((! (localized_ & LOCALIZED_AMCL)) ||
       ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 0.5) &&
        (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 4.0) &&
-       ((tk::distance(amcl_pose, armk_pose) > 1.0) || (tk::minAngle(amcl_pose, armk_pose) > 0.5))))
+       ((tk::distance2D(amcl_pose, armk_pose) > 1.0) || (tk::minAngle(amcl_pose, armk_pose) > 0.5))))
   {
     // If amcl has not received an initial pose from the user, or it's reporting a pose
     // far away from the one reported by the AR marker, initialize it with this message.
@@ -80,7 +80,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
     ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
               msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
     ROS_DEBUG("Cartesian distance = %.2f, Yaw difference = %.2f, TIME = %f",    // explain the reason
-              tk::distance(amcl_pose, armk_pose), tk::minAngle(amcl_pose, armk_pose),
+              tk::distance2D(amcl_pose, armk_pose), tk::minAngle(amcl_pose, armk_pose),
                (last_amcl_pose_.header.stamp - msg->header.stamp).toSec());
 
     // Reset costmaps, as they surely contains a lot of errors due to bad localization

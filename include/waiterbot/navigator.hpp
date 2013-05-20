@@ -119,14 +119,14 @@ public:
   void forward(double distance)
   {
     geometry_msgs::Point pos0 = odometry_.pose.pose.position;
-    while (tk::distance(pos0, odometry_.pose.pose.position) < distance)
+    while (tk::distance2D(pos0, odometry_.pose.pose.position) < distance)
       slowForward();
   }
 
   void backward(double distance)
   {
     geometry_msgs::Point pos0 = odometry_.pose.pose.position;
-    while (tk::distance(pos0, odometry_.pose.pose.position) < distance)
+    while (tk::distance2D(pos0, odometry_.pose.pose.position) < distance)
       slowBackward();
   }
 

@@ -69,24 +69,49 @@ double pitch(geometry_msgs::PoseStamped pose)
   return tk::pitch(pose.pose);
 }
 
-double distance(const tf::Vector3& a, const tf::Vector3& b)
+double distance3D(const tf::Vector3& a, const tf::Vector3& b)
 {
   return tf::tfDistance(a, b);
 }
 
-double distance(geometry_msgs::Point a, geometry_msgs::Point b)
+double distance3D(geometry_msgs::Point a, geometry_msgs::Point b)
 {
-  return tk::distance(tf::Vector3(a.x, a.y, a.z), tf::Vector3(b.x, b.y, b.z));
+  return tk::distance3D(tf::Vector3(a.x, a.y, a.z), tf::Vector3(b.x, b.y, b.z));
 }
 
-double distance(geometry_msgs::Pose a, geometry_msgs::Pose b)
+double distance3D(geometry_msgs::Pose a, geometry_msgs::Pose b)
 {
-  return tk::distance(a.position, b.position);
+  return tk::distance3D(a.position, b.position);
 }
 
-double distance(const tf::Transform& a, const tf::Transform& b)
+double distance3D(const tf::Transform& a, const tf::Transform& b)
 {
-  return tk::distance(a.getOrigin(), b.getOrigin());
+  return tk::distance3D(a.getOrigin(), b.getOrigin());
+}
+
+double distance2D(double ax, double ay, double bx, double by)
+{
+  return std::sqrt(std::pow(ax - bx, 2) + std::pow(ay - by, 2));
+}
+
+double distance2D(const tf::Vector3& a, const tf::Vector3& b)
+{
+  return std::sqrt(std::pow(a.x() - b.x(), 2) + std::pow(a.y() - b.y(), 2));
+}
+
+double distance2D(geometry_msgs::Point a, geometry_msgs::Point b)
+{
+  return tk::distance2D(tf::Vector3(a.x, a.y, a.z), tf::Vector3(b.x, b.y, b.z));
+}
+
+double distance2D(geometry_msgs::Pose a, geometry_msgs::Pose b)
+{
+  return tk::distance2D(a.position, b.position);
+}
+
+double distance2D(const tf::Transform& a, const tf::Transform& b)
+{
+  return tk::distance2D(a.getOrigin(), b.getOrigin());
 }
 
 double heading(const tf::Vector3& a, const tf::Vector3& b)

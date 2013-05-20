@@ -139,10 +139,10 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
   tf::StampedTransform marker_gb(tf, ros::Time::now(), global_frame_, "docking_base");
 
   // Check that we are not already close to the docking base
-  if (tk::distance(robot_gb, marker_gb) < relay_on_marker_distance_)
+  if (tk::distance2D(robot_gb, marker_gb) < relay_on_marker_distance_)
   {
     ROS_DEBUG("Already close to the docking base (%.2f m), but we are not smart enough to make use of this... pabo io...",
-              tk::distance(robot_gb, marker_gb));
+              tk::distance2D(robot_gb, marker_gb));
   }
 
   // Half turn and translate to put goal at some distance in front of the marker
@@ -194,11 +194,11 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
   {
     if ((state_ == GLOBAL_DOCKING) &&
         ((ros::Time::now() - base_rel_pose_.header.stamp).toSec() < 1.0) &&
-        (tk::distance(base_rel_pose_.pose) <= relay_on_marker_distance_))  // NOTE: base marker pose is relative to the robot
+        (tk::distance2D(base_rel_pose_.pose) <= relay_on_marker_distance_))  // NOTE: base marker pose is relative to the robot
       {
       // Here is!
       ROS_INFO("Docking base spotted at %.2f m; switching to marker-based local navigation...",
-               tk::distance(base_rel_pose_.pose));
+               tk::distance2D(base_rel_pose_.pose));
 
       // Docking base marker spotted at relay_on_marker_distance; switch to relative goal
       if (cancelAllGoals(move_base_ac_) == false)
@@ -295,7 +295,7 @@ bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
     if (base_marker_id_ < AR_MARKERS_COUNT)
     {
       ROS_WARN("Last spot was %.2f seconds ago at %.2f meters",
-               (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), tk::distance(base_rel_pose_.pose));
+               (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), tk::distance2D(base_rel_pose_.pose));
     }
     // We cannot see the marker; that's normal if we are trying the odometry origin fallback solution (see
     // no-parameters dockInBase method). If not, probably we have a problem; switch on auto-docking anyway
@@ -426,7 +426,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
 
           // When close enough to the pickup pose, switch off recovery behavior so planner immediately fails if the
           // pickup point is busy; if not, robot will stupidly spin for a while before deciding that he must wait
-          distance_to_pickup = tk::distance(robot_gb, pickup_gb);
+          distance_to_pickup = tk::distance2D(robot_gb, pickup_gb);
           if (distance_to_pickup < close_to_pickup_distance_)
           {
             ROS_DEBUG("Close enough to the pickup point (%.2f < %.2f m); switch off recovery behavior",
@@ -549,7 +549,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
 
     double distance_to_table, last_plan_distance_to_table;
     double heading_to_table,  last_plan_heading_to_table;
-    distance_to_table = last_plan_distance_to_table = tk::distance(robot_gb, table_gb);
+    distance_to_table = last_plan_distance_to_table = tk::distance2D(robot_gb, table_gb);
     heading_to_table  = last_plan_heading_to_table  = tk::heading(robot_gb, table_gb);
 
     // Heading to goal is the same that to table for the first try, but it drifts when we fail to reach a goal
@@ -574,7 +574,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
     tf::Transform towards_robot(tf::Quaternion::getIdentity(),
                                 tf::Vector3(- table_radius - tables_serving_distance_, 0.0, 0.0));
     tf::StampedTransform goal_gb(table_gb*towards_robot, ros::Time::now(), global_frame_, "DELIVERY_POINT");
-    double distance_to_goal = tk::distance(robot_gb, goal_gb);
+    double distance_to_goal = tk::distance2D(robot_gb, goal_gb);
 
     //< DEBUG
     tf::StampedTransform table(table_gb, ros::Time::now(),  global_frame_, "TABLE");
@@ -604,10 +604,10 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
 
         // Get latest robot global pose to calculate heading and distance from robot to table and goal (delivery point)
         robot_gb = getRobotTf();
-        distance_to_table = tk::distance(robot_gb, table_gb);
+        distance_to_table = tk::distance2D(robot_gb, table_gb);
         heading_to_table  = tk::heading(robot_gb, table_gb);
 
-        distance_to_goal  = tk::distance(robot_gb, goal_gb);
+        distance_to_goal  = tk::distance2D(robot_gb, goal_gb);
 
         if (distance_to_table < (table_radius + tables_serving_distance_ + 0.1))
         {

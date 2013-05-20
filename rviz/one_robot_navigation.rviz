@@ -187,9 +187,9 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        /ar_marker_255:
-          Value: true
         /base_footprint:
+          Value: true
+        /base_laser_link:
           Value: true
         /base_link:
           Value: true
@@ -218,8 +218,6 @@ Visualization Manager:
         /global_marker_1:
           Value: true
         /gyro_link:
-          Value: true
-        /ir_link:
           Value: true
         /map:
           Value: true
@@ -282,6 +280,8 @@ Visualization Manager:
           /odom:
             /base_footprint:
               /base_link:
+                /base_laser_link:
+                  {}
                 /camera_rgb_frame:
                   /camera_depth_frame:
                     /camera_depth_optical_frame:
@@ -289,8 +289,7 @@ Visualization Manager:
                   /camera_link:
                     {}
                   /camera_rgb_optical_frame:
-                    /ar_marker_255:
-                      {}
+                    {}
                 /caster_back_link:
                   {}
                 /caster_front_link:
@@ -302,8 +301,6 @@ Visualization Manager:
                 /cliff_sensor_right_link:
                   {}
                 /gyro_link:
-                  {}
-                /ir_link:
                   {}
                 /plate_bottom_link:
                   {}
@@ -577,23 +574,23 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/PointCloud2
+      Class: rviz/LaserScan
       Color: 255; 255; 255
-      Color Transformer: FlatColor
+      Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
       Max Color: 255; 255; 255
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: LaserScan
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.04
+      Size (m): 0.02
       Style: Flat Squares
-      Topic: /virtual_sensor_pointcloud
+      Topic: /virtual_sensor_scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -616,17 +613,17 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.85705
+      Distance: 5.05255
       Focal Point:
-        X: 3.17457
-        Y: 1.92936
-        Z: -0.107198
+        X: 2.36436
+        Y: 2.00701
+        Z: -0.0957958
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.5698
+      Pitch: 1.4098
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.2982
+      Yaw: 4.70321
     Saved: ~
 Window Geometry:
   Displays:
