@@ -10,6 +10,7 @@
 
 
 #include <ros/ros.h>
+#include <arduino_interface.hpp>
 #include <arduino_resources/Rangers.h>
 
 namespace waiterbot
@@ -34,6 +35,8 @@ public:
   **********************/
   IrScanNode();
   ~IrScanNode();
+  bool read(ArduinoInterface& ai);
+  bool spin();
   int init(ros::NodeHandle& nh);
 
 private:

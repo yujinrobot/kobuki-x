@@ -124,7 +124,7 @@ void VirtualSensorNode::spin()
 
         if (new_obs->distance() <= 0.0)
         {
-          ROS_WARN("The robot is inside the obstacle??? Ignore this obstacle  %f", new_obs->distance());
+          ROS_WARN_THROTTLE(2, "The robot is inside an obstacle??? Ignore it (distance: %f)", new_obs->distance());
           continue;
         }
 

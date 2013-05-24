@@ -68,7 +68,9 @@
   
   
   <!--  ************* Navigation manager **************  -->
-  <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch"/>
+  <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch">
+    <arg name="debug_mode" value="true"/>
+  </include>
 
   <!--  ************** Rosnav move base ***************  -->
   <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>

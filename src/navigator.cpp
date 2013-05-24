@@ -112,10 +112,7 @@ bool Navigator::dockInBase()
   mb_goal.target_pose.header.stamp = ros::Time::now();
   mb_goal.target_pose.header.frame_id = global_frame_;
 
-  ROS_WARN("Trying to go to docking base without recognizing its AR marker; not an easy business... %f %f %f  %s",
-           getOdomTf().getOrigin().x(), odom_gb.getOrigin().x(), relay_on_beacon_distance_, odom_gb.frame_id_.c_str());
-
-  return dockInBase___(mb_goal);
+  return dockInBase_(mb_goal);
 }
 
 bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
@@ -155,10 +152,10 @@ bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
   mb_goal.target_pose.header.stamp = ros::Time::now();
   mb_goal.target_pose.header.frame_id = global_frame_;
 
-  return dockInBase___(mb_goal);
+  return dockInBase_(mb_goal);
 }
 
-bool Navigator::dockInBase___(const move_base_msgs::MoveBaseGoal& mb_goal)
+bool Navigator::dockInBase_(const move_base_msgs::MoveBaseGoal& mb_goal)
 {
   // Enable safety controller on normal navigation
   //enableSafety();
@@ -660,6 +657,8 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
         return cleanupAndError();
       }
     }
+
+    ROS_DEBUG("KKKK  %s", move_base_ac_.getState().getText().c_str());
 
     // Ok, we left the wait for goal loop; let's see what happened
 

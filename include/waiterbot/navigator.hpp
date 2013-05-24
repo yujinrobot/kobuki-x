@@ -70,7 +70,6 @@ public:
 
   bool dockInBase();
   bool dockInBase(const geometry_msgs::PoseStamped& base_marker_pose);
-  bool dockInBase___(const move_base_msgs::MoveBaseGoal& move_base_goal);
   bool pickUpOrder(const geometry_msgs::PoseStamped& pick_up_pose);
   bool deliverOrder(const geometry_msgs::PoseStamped& table_pose, double table_radius);
 
@@ -237,6 +236,14 @@ private:
 //  Navigator();
 //  Navigator(Navigator const&);
 //  void operator = (Navigator const&);
+
+  /**
+   * Private version of dockInBase that already receives a move_base goal in front (hopefully) of the
+   * docking station. The trailing _ is because boost bind fails to resolve overloaded function types.
+   * @param move_base_goal
+   * @return
+   */
+  bool dockInBase_(const move_base_msgs::MoveBaseGoal& move_base_goal);
 
   bool cleanupAndSuccess(const std::string& wav_file = "");
   bool cleanupAndError();
