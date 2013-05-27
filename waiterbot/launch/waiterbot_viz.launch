@@ -1,0 +1,13 @@
+<!--
+  Waiterbot global navigation visualization:
+  - rviz view
+  - dashboard
+ -->
+
+<launch>
+  <arg name="rocon_robot" default="one_robot"/>
+
+  <!--  ***************** Visualisation *****************  -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/$(arg rocon_robot)_navigation.rviz"/>
+  <include file="$(find turtlebot_dashboard)/launch/turtlebot_dashboard.launch"/>
+</launch>
