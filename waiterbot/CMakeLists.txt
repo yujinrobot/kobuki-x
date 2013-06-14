@@ -4,7 +4,7 @@ project(waiterbot)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED actionlib actionlib_msgs  kobuki_msgs sensor_msgs cafe_msgs ar_track_alvar move_base_msgs)
+find_package(catkin REQUIRED actionlib actionlib_msgs  kobuki_msgs sensor_msgs cafe_msgs ar_track_alvar move_base_msgs semantic_region_handler)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -50,7 +50,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot
-  CATKIN_DEPENDS actionlib actionlib_msgs kobuki_msgs cafe_msgs ar_track_alvar move_base_msgs
+  CATKIN_DEPENDS actionlib actionlib_msgs kobuki_msgs cafe_msgs ar_track_alvar move_base_msgs semantic_region_handler
   DEPENDS system_lib
 )
 
