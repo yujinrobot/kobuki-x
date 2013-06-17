@@ -6,7 +6,6 @@ global_costmap:
    static_map: true
    transform_tolerance: 0.5
 
-# Ensure that the virtual sensor cannot clear the static map, as of course it cannot "see" the physical obstacles
+# Ensure that the virtual sensor cannot clear the static map, as of course it cannot "see" the physical obstacles;  NOT NEEDED WITH MULTI-LAYER
    vs_scan:
       clearing: false
-
