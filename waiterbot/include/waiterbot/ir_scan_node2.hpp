@@ -10,6 +10,8 @@
 
 
 #include <ros/ros.h>
+#include <arduino_interface.hpp>
+#include <adc_driver/adc_driver.h>
 #include <arduino_resources/Rangers.h>
 
 namespace waiterbot
@@ -34,6 +36,8 @@ public:
   **********************/
   IrScanNode();
   ~IrScanNode();
+//  bool read(AdcDriver& adc_driver);
+  bool read(ArduinoInterface& adc_driver);
   bool spin();
   int init(ros::NodeHandle& nh);
 
