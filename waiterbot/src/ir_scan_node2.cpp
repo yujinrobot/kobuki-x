@@ -8,7 +8,6 @@
 #include <sensor_msgs/LaserScan.h>
 
 #include "waiterbot/common.hpp"
-
 #include "waiterbot/ir_scan_node.hpp"
 
 namespace waiterbot
@@ -22,31 +21,29 @@ IrScanNode::~IrScanNode()
 {
 }
 
-bool IrScanNode::read(ArduinoInterface& ai)
+bool IrScanNode::read(AdcDriver& adc_driver)
 {
   for (unsigned int i = 0; i < rangers.size(); i++)
   {
-    uint8_t data[2];
-    int flags = 0; //bosch_drivers_common::SPI_READ_FLAG;
-
-    flags = ( (0x0F & flags) | ((54 + i) << 4) ); // is this correct??
-    flags = ( (0xFB & flags) | (bosch_drivers_common::MSB_FIRST << 2) );
-    flags = ( (0xFC & flags) | (bosch_drivers_common::SPI_MODE_3) ); // 111111xx, where xx is the mode.
-
-    flags = ((54 + i) << 4)  |  (bosch_drivers_common::MSB_FIRST << 2)  |  (bosch_drivers_common::SPI_MODE_3);
-    //  or 86???  http://arduino.cc/en/Hacking/PinMapping2560
-
-    ssize_t bytes_read = ai.read(0, bosch_drivers_common::SPI, 400000, &flags, 0, data, 2);
-
-    ROS_DEBUG_STREAM(bytes_read << "    "  << flags << "    "  << i << "    "  << (int)data[1] << "   " << (int)data[0]);
+//    uint8_t data[2];
+//    int flags = 0; //bosch_drivers_common::SPI_READ_FLAG;
+//
+//    flags = ( (0x0F & flags) | ((54 + i) << 4) ); // is this correct??
+//    flags = ( (0xFB & flags) | (bosch_drivers_common::MSB_FIRST << 2) );
+//    flags = ( (0xFC & flags) | (bosch_drivers_common::SPI_MODE_3) ); // 111111xx, where xx is the mode.
+//
+//    flags = ((54 + i) << 4)  |  (bosch_drivers_common::MSB_FIRST << 2)  |  (bosch_drivers_common::SPI_MODE_3);
+//    //  or 86???  http://arduino.cc/en/Hacking/PinMapping2560
+//
+//    ssize_t bytes_read = ai.read(0, bosch_drivers_common::SPI, 400000, &flags, 0, data, 2);
+//
+//    ROS_DEBUG_STREAM(bytes_read << "    "  << flags << "    "  << i << "    "  << (int)data[1] << "   " << (int)data[0]);
 //    if( hardware_->read( this->getDeviceAddress(), SPI, this->getFrequency(), this->getFlags(), ((1 << SPI_READ_FLAG)|reg), data, num_bytes ) < 0 )
 
 
   //  ROS_DEBUG_STREAM(bytes_read);
 
-    int v = data[1];
-    v <<= 8;
-    v += data[0];
+    int v = adc_driver.read();
     double r = 1.06545479706866e-15*pow(v, 6) - 2.59219822235705e-12*pow(v, 5) + 2.52095247302813e-09*pow(v, 4)
               - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
 
@@ -83,7 +80,9 @@ bool IrScanNode::read(ArduinoInterface& ai)
 
 bool IrScanNode::spin()
 {
+  ROS_INFO("1");
   ArduinoInterface ai("/dev/arduino");
+  ROS_INFO("2");
   if (ai.initialize() == false)
   {
     ROS_ERROR("Arduino interface initialization failed on port %s", "/dev/arduino");
@@ -91,6 +90,8 @@ bool IrScanNode::spin()
   }
 
   ROS_INFO("Arduino interface opened on port %s", ai.getID().c_str(), "/dev/arduino");
+
+  AdcDriver adc_driver(&ai, 5);
 
   scan.header.frame_id = ir_frame_id;
 
@@ -102,7 +103,7 @@ bool IrScanNode::spin()
   {
     scan.header.seq = i++;
     scan.header.stamp = ros::Time::now();
-    read(ai);
+    read(adc_driver);
     ir_scan_pub.publish(scan);
 
     ros::spinOnce();
