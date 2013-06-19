@@ -154,6 +154,13 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
     if ((included(msg->markers[i].id, global_markers_, &global_marker) == true) &&
         (times_spotted_[msg->markers[i].id] > 4))  // publish only with 3 or more spots
     {
+      double dist = tk::distance2D(msg->markers[i].pose.pose);
+      if (dist > 1.5)
+      {
+        ROS_DEBUG_THROTTLE(1, "Discarding global marker for being very far (%f > %f)", dist, 1.5);
+        continue;
+      }
+
       // This is a global marker! infer the robot's global pose and call the registered callbacks
       boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
 
