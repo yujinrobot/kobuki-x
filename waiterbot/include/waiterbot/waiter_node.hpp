@@ -34,7 +34,10 @@ public:
     as_(nh_, "delivery_order", false),
     node_name_(name),
     SPOT_BASE_MARKER_TIMEOUT(10.0),
-    SPOT_POSE_MARKER_TIMEOUT(15.0)
+    SPOT_POSE_MARKER_TIMEOUT(15.0),
+    blink_frequency_(2.0),
+    last_blink_time_(0.0),
+    last_blink_led_(1)
   {
   }
 
@@ -93,6 +96,11 @@ protected:
   kobuki_msgs::SensorState core_sensors_;
   cafe_msgs::Order order_;
   std::string global_frame_;
+
+  // LED blinking attributes; TODO make a separate HRI class
+  double blink_frequency_;
+  double last_blink_time_;
+  uint8_t last_blink_led_;
 
   boost::thread order_process_thread_;
 

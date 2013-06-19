@@ -73,8 +73,42 @@ void WaiterNode::spin()
 {
   ros::Rate rate(50.0);
 
+  kobuki_msgs::Led red_led_msg, off_led_msg;
+  red_led_msg.value = kobuki_msgs::Led::RED;
+  off_led_msg.value = kobuki_msgs::Led::BLACK;
+
+  (new kobuki_msgs::Led);
+
   while (ros::ok())
   {
+    if (order_.status == cafe_msgs::Status::ERROR)
+    {
+      double now = ros::Time::now().toSec();
+      double delta_t = now - last_blink_time_;
+      if (delta_t > (1 / blink_frequency_))
+      {
+        last_blink_time_ = now;
+        if (last_blink_led_ == 2)
+        {
+          led_1_pub_.publish(red_led_msg);
+          led_2_pub_.publish(off_led_msg);
+          last_blink_led_ = 1;
+        }
+        else
+        {
+          led_2_pub_.publish(red_led_msg);
+          led_1_pub_.publish(off_led_msg);
+          last_blink_led_ = 2;
+        }
+      }
+    }
+    else if ((ros::Time::now().toSec() - last_blink_time_) <= (1 / blink_frequency_))
+    {
+      // Switch of LEDs
+      led_1_pub_.publish(off_led_msg);
+      led_2_pub_.publish(off_led_msg);
+    }
+
     ros::spinOnce();
     rate.sleep();
   }
