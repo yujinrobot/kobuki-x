@@ -133,6 +133,11 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
 {
   ROS_INFO("FAKE delivery order action requested [order: %d, table: %d]", order_id, table_id);
 
+//  if (order_id == 1)       order_.status = cafe_msgs::Status::ERROR;
+//  if (order_id == 2)       order_.status = cafe_msgs::Status::WAITING_FOR_KITCHEN;
+//  if (order_id == 3)       order_.status = cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION;
+//  if (order_id == 4)       order_.status = cafe_msgs::Status::IDLE;
+
   if (order_id == 1)       boost::thread wakeUpThread(&WaiterNode::wakeUp, this);
   if (order_id == 2)       boost::thread wakeUpThread(&WaiterNode::leaveNest, this);
   if (order_id == 3)       boost::thread dockingThread(boost::bind(&Navigator::dockInBase, &navigator_, ar_markers_.getDockingBasePose()));

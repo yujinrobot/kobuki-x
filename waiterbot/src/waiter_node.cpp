@@ -73,8 +73,45 @@ void WaiterNode::spin()
 {
   ros::Rate rate(50.0);
 
+  // LED blinking stuff; TODO make a separate HRI class
+  double blink_frequency = 2.0;
+  double last_blink_time = 0.0;
+  uint8_t last_blink_led  = 2;
+  kobuki_msgs::Led green_led_msg, orange_led_msg, red_led_msg, off_led_msg;
+  red_led_msg.value    = kobuki_msgs::Led::RED;
+  off_led_msg.value    = kobuki_msgs::Led::BLACK;
+  green_led_msg.value  = kobuki_msgs::Led::GREEN;
+  orange_led_msg.value = kobuki_msgs::Led::ORANGE;
+
   while (ros::ok())
   {
+    // Make LEDs blink to show current status
+    double now = ros::Time::now().toSec();
+    double delta_t = now - last_blink_time;
+    if (delta_t > (1 / blink_frequency))
+    {
+      last_blink_time = now;
+      last_blink_led = (last_blink_led % 2) + 1;
+
+      switch (order_.status)
+      {
+        case cafe_msgs::Status::ERROR:
+          led_1_pub_.publish(last_blink_led == 1 ?   off_led_msg :   red_led_msg);
+          led_2_pub_.publish(last_blink_led == 1 ?   red_led_msg :   off_led_msg);
+          break;
+        case cafe_msgs::Status::WAITING_FOR_KITCHEN:
+        case cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION:
+          led_1_pub_.publish(last_blink_led == 1 ?   off_led_msg : green_led_msg);
+          led_2_pub_.publish(last_blink_led == 1 ? green_led_msg :   off_led_msg);
+          break;
+        default:
+          // Switch off LEDs by default
+          led_1_pub_.publish(off_led_msg);
+          led_2_pub_.publish(off_led_msg);
+          break;
+      }
+    }
+
     ros::spinOnce();
     rate.sleep();
   }
