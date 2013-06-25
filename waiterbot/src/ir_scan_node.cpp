@@ -8,7 +8,6 @@
 #include <sensor_msgs/LaserScan.h>
 
 #include "waiterbot/common.hpp"
-
 #include "waiterbot/ir_scan_node.hpp"
 
 namespace waiterbot
@@ -22,14 +21,17 @@ IrScanNode::~IrScanNode()
 {
 }
 
-void IrScanNode::rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
+bool IrScanNode::readRanges()
 {
-  scan.header          = msg->header;
-  scan.header.frame_id = ir_frame_id;
-
-  for (unsigned int i = 0; i < msg->ranges.size(); i++)
+  for (unsigned int i = 0; i < rangers.size(); i++)
   {
-    double v = msg->ranges[i];
+    uint32_t reading = rangers[i].adc_driver->read();
+    if (reading == 0)
+    {
+      // TODO stop reading when fails a couple of times to avoid spaming the log
+    }
+
+    double v = reading/5000.0;
     double r = 1.06545479706866e-15*pow(v, 6) - 2.59219822235705e-12*pow(v, 5) + 2.52095247302813e-09*pow(v, 4)
               - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
 
@@ -48,36 +50,48 @@ void IrScanNode::rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg)
     // KF - collect data
     rangers[i].last_range = distanceKF;
 
-    if (i == 0)
-    {
-      // TODO This bloody sensor reports floor at 40 cm!!! until I find why....
-      scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF <= 0.35 ? distanceKF + ir_ring_radius : 6.0;
-//      scan.intensities[msg->ranges.size() - (i + 1)] = distanceKF <= 0.35 ? r + ir_ring_radius : 6.0;
-    }
-    else
-    {
-      scan.ranges[msg->ranges.size() - (i + 1)] = distanceKF <= maximum_range ? distanceKF + ir_ring_radius : 6.0;
-//      scan.intensities[msg->ranges.size() - (i + 1)] = distanceKF <= maximum_range ? r + ir_ring_radius : 6.0;
-    }
-    scan.intensities[msg->ranges.size() - (i + 1)] = v;
+    scan.ranges[rangers.size() - (i + 1)] = distanceKF <= 0.35 ? distanceKF + ir_ring_radius : 6.0;
+    scan.intensities[rangers.size() - (i + 1)] = v;
   }
 
-  ir_scan_pub.publish(scan);
+  return true;
 }
 
-int IrScanNode::init(ros::NodeHandle& nh)
+bool IrScanNode::spin()
+{
+  scan.header.frame_id = ir_frame_id;
+
+  ros::Rate rate(20.0);
+
+  unsigned long long i = 0;
+
+  while (ros::ok())
+  {
+    scan.header.seq = i++;
+    scan.header.stamp = ros::Time::now();
+    readRanges();
+    ir_scan_pub.publish(scan);
+
+    ros::spinOnce();
+    rate.sleep();
+  }
+
+  return true;
+}
+
+bool IrScanNode::init(ros::NodeHandle& nh)
 {
   // Parameters
   std::string default_frame("/ir_link");
-  nh.param("ir_to_laserscan/ir_frame_id",      ir_frame_id, default_frame);
+  std::string default_port("/dev/arduino");
   nh.param("ir_to_laserscan/rangers_count",    rangers_count,  11);
   nh.param("ir_to_laserscan/range_variance",   range_variance,  0.025);
   nh.param("ir_to_laserscan/maximum_range",    maximum_range,   0.8);
   nh.param("ir_to_laserscan/infinity_range",   infinity_range,  6.0);
   nh.param("ir_to_laserscan/ir_ring_radius",   ir_ring_radius,  0.155);
   nh.param("ir_to_laserscan/read_frequency",   read_frequency, 20.0);
-
-  rangers.resize(rangers_count, Ranger());
+  nh.param("ir_to_laserscan/arduino_port",     arduino_port, default_port);
+  nh.param("ir_to_laserscan/ir_frame_id",      ir_frame_id, default_frame);
 
   scan.ranges.resize(rangers_count, 0.0);
   scan.intensities.resize(rangers_count, 0.0);
@@ -89,21 +103,35 @@ int IrScanNode::init(ros::NodeHandle& nh)
   scan.range_min = 0.10 + ir_ring_radius;
   scan.range_max = 11.00 + ir_ring_radius;
 
+  // Open an interface with the arduino board and create an ADC driver for every ranger
+  arduino_iface.reset(new ArduinoInterface(arduino_port));
+  if (arduino_iface->initialize() == false)
+  {
+    ROS_ERROR("Arduino interface initialization failed on port %s", arduino_port.c_str());
+    return false;
+  }
+
+  ROS_INFO("Arduino interface opened on port %s", arduino_iface->getID().c_str());
+
+  rangers.resize(rangers_count, Ranger());
+
   for (unsigned int i = 0; i < rangers.size(); i++)
   {
     rangers[i].last_range = maximum_range;
     rangers[i].Q = 0.001;
     rangers[i].R = range_variance; //0.0288;
     rangers[i].P = rangers[i].R;
+
+    rangers[i].adc_driver.reset(new AdcDriver(arduino_iface.get(), i));
+    rangers[i].adc_driver->setReference(5000);
   }
 
-  // Publishers and subscriptors
-  rangers_sub = nh.subscribe("rangers_data", 1, &IrScanNode::rangersMsgCB, this);
+  // Publishers
   ir_scan_pub = nh.advertise< sensor_msgs::LaserScan>("ir_scan", 1);
 
   ROS_INFO("IR scan node successfully initialized with %lu rangers", rangers.size());
 
-  return 0;
+  return true;
 }
 
 } // namespace waiterbot
@@ -115,10 +143,11 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   waiterbot::IrScanNode node;
-  if (node.init(nh) != 0)
+  if (node.init(nh) == false)
     return -1;
 
-  ros::spin();
+  if (node.spin() == false)
+    return -1;
 
   return 0;
 }
