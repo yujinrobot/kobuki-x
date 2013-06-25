@@ -29,10 +29,11 @@
     <param name="global_frame" value="map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
-    <param name="tf_broadcast_freq" value="5.0"/>
     <param name="resources_path" value="$(find waiterbot)/resources"/>
     <param name="play_sounds" value="true"/>
     <param name="debug_mode" value="$(arg debug_mode)"/>
+    
+    <rosparam file="$(find waiterbot)/param/ar_markers.yaml" command="load"/>
 
     <!-- Incoming remaps -->
     <remap from="new_goal"      to="move_base_simple/goal"/>
