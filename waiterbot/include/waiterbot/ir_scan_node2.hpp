@@ -12,7 +12,6 @@
 #include <ros/ros.h>
 #include <arduino_interface.hpp>
 #include <adc_driver/adc_driver.h>
-#include <arduino_resources/Rangers.h>
 
 namespace waiterbot
 {
@@ -29,6 +28,7 @@ public:
   public:
     double Q, R, P;    // KF
     double last_range; /**< Internal buffer to store the latest readings    */
+    boost::shared_ptr<AdcDriver> adc_driver;
   };
 
   /*********************
@@ -36,10 +36,8 @@ public:
   **********************/
   IrScanNode();
   ~IrScanNode();
-//  bool read(AdcDriver& adc_driver);
-  bool read(ArduinoInterface& adc_driver);
   bool spin();
-  int init(ros::NodeHandle& nh);
+  bool init(ros::NodeHandle& nh);
 
 private:
   int      rangers_count;
@@ -48,16 +46,18 @@ private:
   double   infinity_range;
   double   read_frequency;
   double   ir_ring_radius;
-  std::string  ir_frame_id;   /**< Frame id for the output laser scan */
+  std::string ir_frame_id;   /**< Frame id for the output laser scan */
+  std::string arduino_port;
 
   sensor_msgs::LaserScan scan;
 
   std::vector<Ranger> rangers;
 
-  ros::Subscriber rangers_sub;
   ros::Publisher  ir_scan_pub;
 
-  void rangersMsgCB(const arduino_resources::Rangers::ConstPtr& msg);
+  boost::shared_ptr<ArduinoInterface> arduino_iface;
+
+  bool readRanges();
 };
 
 } // namespace waiterbot
