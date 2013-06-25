@@ -133,6 +133,11 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
 {
   ROS_INFO("FAKE delivery order action requested [order: %d, table: %d]", order_id, table_id);
 
+  if (order_id == 11)       ar_markers_.setTrackerFreq(5);
+  if (order_id == 22)       ar_markers_.setTrackerFreq(10);
+
+  if (order_id == 33)       ar_markers_.setTrackerFreq(0);
+//  return;
 //  if (order_id == 1)       order_.status = cafe_msgs::Status::ERROR;
 //  if (order_id == 2)       order_.status = cafe_msgs::Status::WAITING_FOR_KITCHEN;
 //  if (order_id == 3)       order_.status = cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION;
