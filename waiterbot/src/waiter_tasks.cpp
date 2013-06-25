@@ -55,6 +55,9 @@ bool WaiterNode::waitForButton()
 
 bool WaiterNode::wakeUp()
 {
+  // TODO: unlike on the rest of the app. we make calla to ar_markers_ instead of registering callbacks!
+  // (in fact, ar_markers_ should be a node). Also this is very brittle; we have no fallback mechanisms at all
+
   ROS_DEBUG("Waking up! first try to recognize our own nest; slowly moving back...");
 
   if (ar_markers_.enableTracker() == false)
@@ -67,7 +70,7 @@ bool WaiterNode::wakeUp()
   bool timeout = false;
   ros::Time t0 = ros::Time::now();
   ar_track_alvar::AlvarMarkers spotted_markers;
-  while ((ar_markers_.spotted(1.0, 10, true, spotted_markers) == false) && (timeout == false))
+  while ((ar_markers_.spotted(1.0, 0.3, true, spotted_markers) == false) && (timeout == false))
   {
     if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT)
     {
@@ -96,7 +99,7 @@ bool WaiterNode::wakeUp()
   }
 
   ar_track_alvar::AlvarMarker closest_marker;
-  ar_markers_.closest(1.0, 10, true, closest_marker);
+  ar_markers_.closest(1.0, 0.3, true, closest_marker);
   ROS_DEBUG("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
 
   uint32_t base_marker_id = closest_marker.id;

@@ -1,0 +1,19 @@
+ar_markers:
+
+# Confidence evaluation parameters
+
+  global_pose_conf   : 0.75 # Confidence threshold to accept global localization
+  docking_base_conf  : 0.45 # Confidence threshold to accept docking base location
+
+  max_valid_d_inc    : 1.0  # Per second; will get divided by tracker frequency
+  max_valid_h_inc    : 5.0  # Per second; will get divided by tracker frequency
+  max_tracking_time  : 2.0  # In seconds
+
+  min_penalized_dist : 1.4  # Minimum penalized distance (1.0 confidence)
+  max_reliable_dist  : 2.8  # Maximum reliable distance (0.0 confidence)
+  min_penalized_head : 1.0  # Minimum penalized heading (1.0 confidence)
+  max_reliable_head  : 1.4  # Maximum reliable heading (0.0 confidence)
+
+# Other parameters
+
+  tf_broadcast_freq  : 5.0

@@ -39,23 +39,40 @@ bool ARMarkers::init()
   ros::NodeHandle nh, pnh("~");
 
   // Parameters
-  pnh.param("tf_broadcast_freq", tf_brc_freq_, 0.0);  // disabled by default
-  pnh.param("global_frame", global_frame_, std::string("map"));
-  pnh.param("odom_frame",   odom_frame_,   std::string("odom"));
-  pnh.param("base_frame",   base_frame_,   std::string("base_footprint"));
+  pnh.param("global_frame",  global_frame_,  std::string("map"));
+  pnh.param("odom_frame",    odom_frame_,    std::string("odom"));
+  pnh.param("base_frame",    base_frame_,    std::string("base_footprint"));
+  pnh.param("ar_markers/tf_broadcast_freq",  tf_broadcast_freq_,  0.0);  // disabled by default
+  pnh.param("ar_markers/global_pose_conf",   global_pose_conf_,   0.8);
+  pnh.param("ar_markers/docking_base_conf",  docking_base_conf_,  0.5);
+  pnh.param("ar_markers/max_valid_d_inc",    max_valid_d_inc_,    0.8);
+  pnh.param("ar_markers/max_valid_h_inc",    max_valid_h_inc_,    4.0);
+  pnh.param("ar_markers/max_tracking_time",  max_tracking_time_,  2.0);
+  pnh.param("ar_markers/min_penalized_dist", min_penalized_dist_, 1.4);
+  pnh.param("ar_markers/max_reliable_dist",  max_reliable_dist_,  2.8);
+  pnh.param("ar_markers/min_penalized_head", min_penalized_head_, 1.0);
+  pnh.param("ar_markers/max_reliable_head",  max_reliable_head_,  1.4);
+
+  if (nh.getParam("ar_track_alvar/max_frequency", ar_tracker_freq_) == false)
+  {
+    ar_tracker_freq_ = 10.0;
+    ROS_WARN("Cannot get AR tracker frequency; using default value (%f)", ar_tracker_freq_);
+    ROS_WARN("Confidence evaluation can get compromised if this is not the right value!");
+  }
 
   tracked_markers_sub_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkers::arPoseMarkersCB, this);
   global_markers_sub_  = nh.subscribe(             "marker_pose_list", 1, &ARMarkers::globalMarkersCB, this);
 
-//  tracker_params_srv_  = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
+  tracker_params_srv_  = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
 
   // There are 18 different markers
-  times_spotted_.resize(AR_MARKERS_COUNT, 0);
+  tracked_markers_.resize(AR_MARKERS_COUNT);
 
-  if (tf_brc_freq_ > 0.0)
+  if (tf_broadcast_freq_ > 0.0)
   {
     boost::thread(&ARMarkers::broadcastMarkersTF, this);
   }
+
 
   // Disable tracking until needed
 //  tracker_enabled_ = true;
@@ -66,7 +83,7 @@ bool ARMarkers::init()
 
 void ARMarkers::broadcastMarkersTF()
 {
-  ros::Rate rate(tf_brc_freq_);
+  ros::Rate rate(tf_broadcast_freq_);
 
   // TODO semantic map is not broadcasting this already?  only docking base no
   while (ros::ok())
@@ -126,24 +143,91 @@ void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
 
 void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
 {
-  // TODO MAke pointer!!!!  to avoid copying    but take care of multi-threading
-  // more TODO:  inc confidence is very shitty as quality measure ->  we need a filter!!!  >>>   and also incorporate on covariance!!!!
+  // TODO: use confidence to incorporate covariance to global poses
+
+  // Make thresholds relative to the tracking frequency (as it can be dynamically changed)
+  int obs_list_max_size  = (int)round(max_tracking_time_*ar_tracker_freq_);
+  double max_valid_d_inc = max_valid_d_inc_/ar_tracker_freq_;
+  double max_valid_h_inc = max_valid_h_inc_/ar_tracker_freq_;
 
   for (unsigned int i = 0; i < msg->markers.size(); i++)
   {
-    if (msg->markers[i].id >= times_spotted_.size())
+    if (msg->markers[i].id >= tracked_markers_.size())
     {
       // A recognition error from Alvar markers tracker
       ROS_WARN("Discarding AR marker with unrecognized id (%d)", msg->markers[i].id);
       continue;
     }
 
-    times_spotted_[msg->markers[i].id] += 2;
+    // Confidence evaluation
+    TrackedMarker& marker = tracked_markers_[msg->markers[i].id];
+    marker.distance = tk::distance3D(msg->markers[i].pose.pose);
+    marker.heading  = tf::getYaw(msg->markers[i].pose.pose.orientation) + M_PI/2.0;
+    // WARN: note that heading evaluation also assumes vertically aligned markers
 
-    if ((msg->markers[i].id == docking_marker_.id) &&
-        (times_spotted_[msg->markers[i].id] > 4))  // publish only with 3 or more spots
+//    tf::Transform tf;
+//    tf::poseMsgToTF(msg->markers[i].pose.pose, tf);
+//    double r, p, y;
+//    tf.getBasis().getRPY(r, p, y);
+//    ROS_DEBUG("%f     %f       %f  %f  %f", marker.heading, std::min(1.0, 1.0/std::pow(std::abs(marker.heading), 2)), r, p, y);
+
+    int position = 0;
+    ros::Time now = ros::Time::now();
+    geometry_msgs::PoseStamped prev = msg->markers[i].pose;
+    for (ObsList::iterator it = marker.obs_list_.begin(); it != marker.obs_list_.end(); ++it)
     {
-      // This is the docking base marker! call the registered callbacks
+      double age = (now - it->header.stamp).toSec();
+      if (age > ((position + 1)/ar_tracker_freq_) + 1.0)
+      {
+        int s0 = marker.obs_list_.size();
+        marker.obs_list_.erase(it, marker.obs_list_.end());
+        int s1 = marker.obs_list_.size();
+        ROS_DEBUG("%d observations discarded (fist one with position %d in the list) for being %f seconds old ( > %f)",
+                  s0 - s1, position, age, ((position + 1)/ar_tracker_freq_) + 1.0);
+        break;
+      }
+
+      if ((tk::distance3D(prev.pose, it->pose) > max_valid_d_inc) ||
+          (std::abs(tk::minAngle(prev.pose, it->pose)) > max_valid_h_inc))
+      {
+        // Incoherent observation; stop going over the list and use current position value to fill confidence values
+//        ROS_ERROR("%d  BREAK at %d   %f  %f     %f   %f        %f", msg->markers[i].id, position, tk::distance3D(prev.pose, it->pose),  tk::minAngle(prev.pose, it->pose), max_valid_d_inc, max_valid_h_inc, ar_tracker_freq_);
+        break;
+      }
+
+      prev = *it;
+      position++;
+    }
+
+    marker.conf_distance = marker.distance <= min_penalized_dist_ ? 1.0
+                         : marker.distance >= max_reliable_dist_  ? 0.0
+                         : 1.0 - std::pow((marker.distance - min_penalized_dist_) / (max_reliable_dist_ - min_penalized_dist_), 2);
+    marker.conf_heading  = std::abs(marker.heading) <= min_penalized_head_ ? 1.0
+                         : std::abs(marker.heading) >= max_reliable_head_  ? 0.0
+                         : 1.0 - std::pow((std::abs(marker.heading) - min_penalized_head_) / (max_reliable_head_ - min_penalized_head_), 2);
+    marker.stability     = marker.obs_list_.size() == 0 ? 0.0 : std::sqrt((double)position/(double)marker.obs_list_.size());
+    marker.persistence   = std::sqrt((double)marker.obs_list_.size()/(double)obs_list_max_size);
+    marker.confidence    = marker.conf_distance*marker.conf_heading*marker.stability*marker.persistence;
+    marker.obs_list_.insert(marker.obs_list_.begin(), msg->markers[i].pose);
+    marker.obs_list_.begin()->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
+    if (marker.obs_list_.size() > obs_list_max_size)
+      marker.obs_list_.pop_back();
+
+//    ROS_DEBUG_STREAM(msg->markers[i].id << ":  "
+//                 /* << marker.distance << "   " << marker.heading << "  " */<< marker.confidence << "      "
+//                  << marker.conf_distance << "   " << marker.conf_heading << "   "
+//                  << marker.stability << "   "<< marker.persistence << position << "   " << "   " << marker.obs_list_.size());
+
+    if (msg->markers[i].id == docking_marker_.id)
+    {
+      // This is the docking base marker! call the registered callbacks if it's reliable enough
+      if (marker.confidence <= docking_base_conf_)
+      {
+        ROS_WARN_THROTTLE(1, "Ignoring docking base marker at it is not reliable enough (%f < %f)",
+                              marker.confidence, docking_base_conf_);
+        continue;
+      }
+
       boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
       *ps = msg->markers[i].pose;
       ps->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
@@ -151,17 +235,17 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
     }
 
     ar_track_alvar::AlvarMarker global_marker;
-    if ((included(msg->markers[i].id, global_markers_, &global_marker) == true) &&
-        (times_spotted_[msg->markers[i].id] > 4))  // publish only with 3 or more spots
+    if (included(msg->markers[i].id, global_markers_, &global_marker) == true)
     {
-      double dist = tk::distance2D(msg->markers[i].pose.pose);
-      if (dist > 1.5)
+      // This is a global marker! infer robot's global pose and call registered callbacks if it's reliable enough
+      if (marker.confidence <= global_pose_conf_)
       {
-        ROS_DEBUG_THROTTLE(1, "Discarding global marker for being very far (%f > %f)", dist, 1.5);
+        //if (msg->markers[i].id == 1)
+        ROS_DEBUG_THROTTLE(1, "Discarding global marker at it is not reliable enough (%f < %f)",
+                               marker.confidence, global_pose_conf_);
         continue;
       }
 
-      // This is a global marker! infer the robot's global pose and call the registered callbacks
       boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
 
       // Marker tf on global reference system
@@ -185,6 +269,7 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
       pwcs->header.stamp = msg->markers[i].header.stamp;
       pwcs->header.frame_id = global_frame_;
 
+      //if (msg->markers[i].id == 1)
       robot_pose_cb_(pwcs);
 
       //< DEBUG
@@ -196,13 +281,6 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
     }
   }
   spotted_markers_ = *msg;
-
-  // Decay ALL markers; that's why spotted ones got a +2 on times spotted
-  for (unsigned int i = 0; i < times_spotted_.size(); i++)
-  {
-    if (times_spotted_[i] > 0)
-      times_spotted_[i]--;
-  }
 }
 
 bool ARMarkers::spotted(double younger_than,
@@ -254,7 +332,7 @@ bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
   return (closest_dist < std::numeric_limits<double>::max());
 }
 
-bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_globals,
+bool ARMarkers::spotted(double younger_than, double min_confidence, bool exclude_globals,
                            ar_track_alvar::AlvarMarkers& spotted)
 {
   if (spotted_markers_.markers.size() == 0)
@@ -276,7 +354,7 @@ bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_gl
     if ((exclude_globals == true) && (included(spotted_markers_.markers[i].id, global_markers_) == true))
       continue;
 
-    if (times_spotted_[spotted_markers_.markers[i].id] >= min_confidence)
+    if (tracked_markers_[spotted_markers_.markers[i].id].confidence >= min_confidence)
     {
       spotted.markers.push_back(spotted_markers_.markers[i]);
     }
@@ -285,7 +363,7 @@ bool ARMarkers::spotted(double younger_than, int min_confidence, bool exclude_gl
   return (spotted.markers.size() > 0);
 }
 
-bool ARMarkers::closest(double younger_than, int min_confidence, bool exclude_globals,
+bool ARMarkers::closest(double younger_than, double min_confidence, bool exclude_globals,
                            ar_track_alvar::AlvarMarker& closest)
 {
   ar_track_alvar::AlvarMarkers spotted_markers;
@@ -312,9 +390,10 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
   {
     if (spotted_markers_.markers[i].id == base_marker_id)
     {
-      if (times_spotted_[spotted_markers_.markers[i].id] < 2)
+      if (tracked_markers_[spotted_markers_.markers[i].id].confidence < 0.3)
       {
-        ROS_WARN("Low confidence on spotted docking marker. Dangerous...", spotted_markers_.markers[i].confidence);
+        ROS_WARN("Low confidence on spotted docking marker. Very dangerous...",
+                 tracked_markers_[spotted_markers_.markers[i].id].confidence);
       }
 
       docking_marker_ = spotted_markers_.markers[i];
@@ -443,7 +522,7 @@ bool ARMarkers::disableTracker()
 
 bool ARMarkers::setTrackerFreq(double frequency)
 {
-  return true;
+//  return true;
 
   ros::Time t0 = ros::Time::now();
   dynamic_reconfigure::Reconfigure srv;
@@ -451,16 +530,17 @@ bool ARMarkers::setTrackerFreq(double frequency)
   srv.request.config.doubles[0].name = "max_frequency";
   srv.request.config.doubles[0].value = frequency;
 
-//  if (tracker_params_srv_.call(srv))
-//  {
-//    ROS_INFO("AR markers tracker frequency changed to %f (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
-//    return true;
-//  }
-//  else
-//  {
-//    ROS_ERROR("Failed to change AR markers tracker frequency (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
-//    return false;
-//  }
+  if (tracker_params_srv_.call(srv))
+  {
+    ROS_INFO("AR markers tracker frequency changed to %f (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
+    ar_tracker_freq_ = frequency;
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to change AR markers tracker frequency (%f seconds)", frequency, (ros::Time::now() - t0).toSec());
+    return false;
+  }
 }
 
 

@@ -59,39 +59,91 @@ public:
    * @param spotted_markers
    * @return
    */
-  bool spotted(double younger_than, int min_confidence, bool exclude_globals,
+  bool spotted(double younger_than, double min_confidence, bool exclude_globals,
                ar_track_alvar::AlvarMarkers& spotted_markers);
-  bool closest(double younger_than, int min_confidence, bool exclude_globals,
+  bool closest(double younger_than, double min_confidence, bool exclude_globals,
                ar_track_alvar::AlvarMarker& closest_marker);
 
   bool spotDockMarker(uint32_t base_marker_id);
 
-  static bool setTrackerFreq(double frequency);
+  bool setTrackerFreq(double frequency);
   static bool enableTracker();
   static bool disableTracker();
 
 private:
+
+  // Confidence evaluation attributes
+
+  double global_pose_conf_;
+  double docking_base_conf_;
+  double min_penalized_dist_;
+  double max_reliable_dist_;
+  double min_penalized_head_;
+  double max_reliable_head_;
+  double max_tracking_time_;  /**< Maximum time tacking a marker to ensure that it's a stable observation */
+  double max_valid_d_inc_;    /**< Maximum valid distance increment per second to consider stable tracking */
+  double max_valid_h_inc_;    /**< Maximum valid heading increment per second to consider stable tracking */
+  double ar_tracker_freq_;    /**< AR tracker frequency; unless changed with setTrackerFreq, it must be the
+                                    same value configured on ar_track_alvar node */
+
+  typedef std::list<geometry_msgs::PoseStamped> ObsList;
+
+  class TrackedMarker
+  {
+  public:
+    TrackedMarker()
+    {
+      distance      = 0.0;
+      heading       = 0.0;
+      confidence    = 0.0;
+      conf_distance = 0.0;
+      conf_heading  = 0.0;
+      persistence   = 0.0;
+      stability     = 0.0;
+    }
+
+    ~TrackedMarker()
+    {
+      obs_list_.clear();
+    }
+
+    ObsList obs_list_;
+    double distance;
+    double heading;
+    double confidence;
+    double conf_distance;
+    double conf_heading;
+    double persistence;
+    double stability;
+  };
+
+  std::vector<TrackedMarker> tracked_markers_;
+
+  // Other attributes
+
   std::string global_frame_;
   std::string odom_frame_;
   std::string base_frame_;
 
-  std::vector<uint32_t> times_spotted_;
-
   tf::TransformListener    tf_listener_;
   tf::TransformBroadcaster tf_brcaster_;
-  double                   tf_brc_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
+  double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
 
   ar_track_alvar::AlvarMarker  docking_marker_;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
-//  static bool              tracker_enabled_;    // TODO  horrible;  singleton o redisenyar
-//  static ros::ServiceClient tracker_params_srv_;
+  bool               tracker_enabled_;
+  ros::ServiceClient tracker_params_srv_;
   ros::Subscriber    tracked_markers_sub_;
   ros::Subscriber    global_markers_sub_;
 
+  // Registered callbacks to notify our observations
+
   boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)>  robot_pose_cb_;
   boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)>    base_spotted_cb_;
+
+  // Private methods
 
   void broadcastMarkersTF();
   void globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
