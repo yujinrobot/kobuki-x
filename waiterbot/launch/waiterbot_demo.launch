@@ -28,11 +28,13 @@
   <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
   <include file="$(find waiterbot)/launch/includes/_virt_sensor.launch"/>
 
-  <!--  ********** Kobuki mobile base extras **********  -->
+  <!--  ***** Kobuki mobile base safety controller ****  -->
   <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
-  <!-- WARNING: This doesn't work in the waiterbot rapp; we worked around the problem
-       by changing turtlebot_bringup minimal.launch, but a proper solution is required
-  <param name="/cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/> -->
+
+  <!-- Reconfigure command velocity multiplexer to fit waiterbot needs. Just set the parameter doesn't work
+       if we start the waiterbot rapp with app manager; we must explicitly call the reconfigure service -->
+  <node pkg="rosservice" type="rosservice" name="reconfig_vel_mux" args="call --wait /cmd_vel_mux/set_parameters
+            '{config:{strs:[[yaml_cfg_file,/home/turtlebot/cafe_concert/src/kobuki-x/waiterbot/param/vel_multiplexer.yaml]]}}'"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
   <include file="$(find waiterbot)/launch/includes/_autodock.launch"/>
