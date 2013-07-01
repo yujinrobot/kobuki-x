@@ -25,9 +25,9 @@
   <!--  *********** Turtlebot and 3d sensor ***********  -->
   <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
-    <arg name="rgb_processing" value="true" />
-    <arg name="depth_registration" value="true" />
-    <arg name="depth_processing" value="true" />
+    <arg name="rgb_processing" value="true"/>
+    <arg name="scan_processing" value="true"/>
+    <arg name="depth_processing" value="false"/>
   </include>
 
   <!--  ************** Additional sensors *************  -->
