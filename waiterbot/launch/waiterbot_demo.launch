@@ -9,6 +9,10 @@
   - navigation manager
   - move_base
   - amcl localization
+  
+  Before starting the app, the bootstrap setting must be running in the robot:
+    $ roslaunch turtlebot_bringup minimal.launch rapp_lists:=cafe_rapps/cafe.rapps
+  The cafe rapps contains (between others) the waiterbot app.
  -->
 
 <launch>
