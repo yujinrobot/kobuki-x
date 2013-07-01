@@ -70,11 +70,13 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 ## Declare the executables
 add_executable(ir_scan_node src/ir_scan_node.cpp)
 add_executable(virtual_sensor_node src/virtual_sensor_node.cpp)
+add_dependencies(virtual_sensor_node semantic_region_handler_generate_messages_cpp)
+
 add_executable(waiterbot_node src/waiter_node.cpp src/waiter_tasks.cpp src/waiter_delivery_handles.cpp src/waiter_callbacks.cpp src/ar_markers.cpp src/nav_watchdog.cpp src/navigator.cpp src/common.cpp)
+add_dependencies(waiterbot_node cafe_msgs_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(waiterbot_node waiterbot_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(ir_scan_node
