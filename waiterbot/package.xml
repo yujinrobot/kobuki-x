@@ -32,8 +32,6 @@
   <run_depend>semantic_region_handler</run_depend>
   <run_depend>arduino_interface</run_depend>
   <run_depend>adc_driver</run_depend>
-  
-  <run_depend>rosserial_python</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
