@@ -14,8 +14,6 @@
 
   <!-- Waiterbot main node -->
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" output="screen">
-    <param name="check_localized" value="true"/>
-    <param name="amcl_max_error" value="1.0"/>
     <param name="global_frame" value="map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
@@ -23,6 +21,7 @@
     <param name="play_sounds" value="true"/>
     <param name="debug_mode" value="$(arg debug_mode)"/>
     
+    <rosparam file="$(find waiterbot)/param/nav_watchdog.yaml" command="load"/>
     <rosparam file="$(find waiterbot)/param/navigator.yaml" command="load"/>
     <rosparam file="$(find waiterbot)/param/ar_markers.yaml" command="load"/>
 

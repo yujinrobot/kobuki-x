@@ -172,14 +172,14 @@ bool NavWatchdog::init()
   ros::NodeHandle nh, pnh("~");
 
   // Parameters
-  pnh.getParam("check_localized", check_localized_);
+  pnh.getParam("nav_watchdog/check_localized", check_localized_);
   if (check_localized_ == false)
   {
     // Ignore whether we are localized; useful in local navigation or mapping
     localized_ |= LOCALIZED_FAKE;
   }
 
-  pnh.param("amcl_max_error", amcl_max_error_, 2.0);
+  pnh.param("nav_watchdog/amcl_max_error", amcl_max_error_, 2.0);
 
   // Publishers and subscribers
   amcl_p_sub_ = nh.subscribe("amcl_pose", 1, &NavWatchdog::amclPoseMsgCB, this);
