@@ -47,17 +47,16 @@ bool Navigator::init()
   if (resources_path_[resources_path_.length() - 1] != '/')
     resources_path_ += "/";
 
-  pnh.param("relay_on_beacon_distance", relay_on_beacon_distance_, 0.4);
-  pnh.param("relay_on_marker_distance", relay_on_marker_distance_, 1.0);
-  pnh.param("tables_serving_distance",  tables_serving_distance_,  0.4);
-  pnh.param("go_to_pose_timeout",       go_to_pose_timeout_,     300.0);
-  pnh.param("auto_docking_timeout",     auto_docking_timeout_,    90.0);
-  pnh.param("wait_for_pickup_point",    wait_for_pickup_point_,    8.8);
-
-//TODO  pnh.param("close_to_pickup_distance", close_to_pickup_distance_, 2.0);
+  pnh.param("navigator/relay_on_beacon_distance", relay_on_beacon_distance_, 0.4);
+  pnh.param("navigator/relay_on_marker_distance", relay_on_marker_distance_, 1.0);
+  pnh.param("navigator/close_to_pickup_distance", close_to_pickup_distance_, 2.0);
+  pnh.param("navigator/tables_serving_distance",  tables_serving_distance_,  0.4);
+  pnh.param("navigator/go_to_pose_timeout",       go_to_pose_timeout_,     300.0);
+  pnh.param("navigator/auto_docking_timeout",     auto_docking_timeout_,    90.0);
+  pnh.param("navigator/wait_for_pickup_point",    wait_for_pickup_point_,    8.8);
 
   nh.getParam("move_base/local_costmap/robot_radius", robot_radius_);
-  nh.getParam("move_base/local_costmap/width", close_to_pickup_distance_);
+  nh.getParam("move_base/local_costmap/width", close_to_pickup_distance_); // TODO: overwrites navigator parameter
   nh.getParam("move_base/planner_frequency", default_planner_frequency_);
 
   // We must disable recovery behavior well before entering the local costmap

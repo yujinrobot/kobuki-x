@@ -14,13 +14,6 @@
 
   <!-- Waiterbot main node -->
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" output="screen">
-    <param name="relay_on_beacon_distance" value="0.7"/>    <!-- At which distance from the base we start relaying on ir beacons -->
-    <param name="relay_on_marker_distance" value="1.0"/>    <!-- At which distance from the base we start relaying on ar markers -->
-    <param name="close_to_pickup_distance" value="1.5"/>    <!-- At which distance from pickup point switch off recovery behavior -->  
-    <param name="tables_serving_distance"  value="0.4"/>    <!-- At which distance from the table we try to serve our orders -->
-    <param name="wait_for_pickup_point" value="4.0"/>
-    <param name="auto_docking_timeout" value="120.0"/>
-    <param name="go_to_pose_timeout" value="300.0"/>
     <param name="check_localized" value="true"/>
     <param name="amcl_max_error" value="1.0"/>
     <param name="global_frame" value="map"/>
@@ -30,6 +23,7 @@
     <param name="play_sounds" value="true"/>
     <param name="debug_mode" value="$(arg debug_mode)"/>
     
+    <rosparam file="$(find waiterbot)/param/navigator.yaml" command="load"/>
     <rosparam file="$(find waiterbot)/param/ar_markers.yaml" command="load"/>
 
     <!-- Incoming remaps -->
