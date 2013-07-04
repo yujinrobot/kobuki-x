@@ -4,7 +4,7 @@
  of the voxel map at that height (around 41 cm)
 -->
 <launch>
-  <node name="virtual_sensor" pkg="waiterbot" type="virtual_sensor_node">
+  <node name="virtual_sensor" pkg="virtual_sensor" type="virtual_sensor_node">
     <param name="range_min" value="0.0"/>
     <param name="range_max" value="6.0"/>
     <param name="frequency" value="10.0"/>

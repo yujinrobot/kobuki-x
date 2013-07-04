@@ -14,7 +14,7 @@
 
 #include <semantic_region_handler/TablePoseList.h>
 
-namespace waiterbot
+namespace virtual_sensor
 {
 
 class VirtualSensorNode
@@ -72,9 +72,9 @@ private:
   ros::Subscriber table_poses_sub_;
   sensor_msgs::LaserScan     scan_;
   tf::TransformListener tf_listener_;
-  std::vector<tf::Transform> obstacles_tfs_;
   std::vector<semantic_region_handler::TablePose> circles_;
+  std::vector<semantic_region_handler::TablePose> lines_;
 };
 
-} /* namespace waiterbot */
+} /* namespace virtual_sensor */
 #endif /* VIRTUAL_SENSOR_NODE_HPP_ */

@@ -5,12 +5,10 @@
  *      Author: jorge
  */
 
-#include "waiterbot/common.hpp"
-
-#include "waiterbot/virtual_sensor_node.hpp"
+#include "virtual_sensor/virtual_sensor_node.hpp"
 
 
-namespace waiterbot
+namespace virtual_sensor
 {
 
 VirtualSensorNode::VirtualSensorNode()
@@ -71,7 +69,7 @@ bool VirtualSensorNode::init()
 void VirtualSensorNode::tablePosesCB(const semantic_region_handler::TablePoseList::ConstPtr& msg)
 {
   // Just take first message; ignore the rest, as table list is not dynamic
-  if ((obstacles_tfs_.size() == 0) && (msg->tables.size() > 0))
+  if ((circles_.size() == 0) && (msg->tables.size() > 0))
   {
     for (unsigned int i = 0; i < msg->tables.size(); i++)
     {
@@ -229,14 +227,14 @@ bool VirtualSensorNode::Circle::intersects(double rx, double ry, double max_dist
   return true;
 }
 
-} // namespace waiterbot
+} // namespace virtual_sensor
 
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "virtual_sensor");
 
-  waiterbot::VirtualSensorNode node;
+  virtual_sensor::VirtualSensorNode node;
   if (node.init() == false)
   {
     ROS_ERROR("%s initialization failed", ros::this_node::getName().c_str());

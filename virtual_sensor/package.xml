@@ -1,41 +1,25 @@
 <?xml version="1.0"?>
 <package>
-  <name>waiterbot</name>
+  <name>virtual_sensor</name>
   <version>0.0.0</version>
-  <description>The waiterbot package</description>
+  <description>The virtual_sensor package</description>
 
   <maintainer email="jorge@yujinrobot.com">Jorge Santos</maintainer>
   <license>BSD</license>
-  <!-- <url type="website">http://ros.org/wiki/waiterbot</url> -->
+  <!-- <url type="website">http://ros.org/wiki/virtual_sensor</url> -->
   <author email="jorge@yujinrobot.com">Jorge Santos</author> 
 
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>tf</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>actionlib</build_depend>
-  <build_depend>actionlib_msgs</build_depend>
-  <build_depend>move_base_msgs</build_depend>
-  <build_depend>kobuki_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
-  <build_depend>cafe_msgs</build_depend>
-  <build_depend>ar_track_alvar</build_depend>
   <build_depend>semantic_region_handler</build_depend>
-  <build_depend>arduino_interface</build_depend>
-  <build_depend>adc_driver</build_depend>
 
   <run_depend>tf</run_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>actionlib</run_depend>
-  <run_depend>actionlib_msgs</run_depend>
-  <run_depend>move_base_msgs</run_depend>
-  <run_depend>kobuki_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
-  <run_depend>cafe_msgs</run_depend>
-  <run_depend>ar_track_alvar</run_depend>
   <run_depend>semantic_region_handler</run_depend>
-  <run_depend>arduino_interface</run_depend>
-  <run_depend>adc_driver</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
