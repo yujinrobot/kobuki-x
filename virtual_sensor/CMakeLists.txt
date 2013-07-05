@@ -4,7 +4,7 @@ project(virtual_sensor)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED tf roscpp sensor_msgs semantic_region_handler)
+find_package(catkin REQUIRED tf roscpp message_generation sensor_msgs geometry_msgs semantic_region_handler)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -20,11 +20,13 @@ find_package(Boost REQUIRED COMPONENTS system)
 #######################################
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  Wall.msg
+  WallList.msg
+  Column.msg
+  ColumnList.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -34,10 +36,10 @@ find_package(Boost REQUIRED COMPONENTS system)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -50,7 +52,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES virtual_sensor
-  CATKIN_DEPENDS tf roscpp sensor_msgs semantic_region_handler
+  CATKIN_DEPENDS tf roscpp message_runtime sensor_msgs geometry_msgs semantic_region_handler
   DEPENDS system_lib
 )
 
