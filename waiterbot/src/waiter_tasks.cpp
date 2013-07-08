@@ -201,10 +201,10 @@ bool WaiterNode::gotoTable(int table_id)
   for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
   {
     // Look for the requested table's pose (and get rid of the useless covariance)
-    if (table_poses_.tables[i].name.find(tk::nb2str(table_id), strlen("table")) != std::string::npos)
+    if (table_poses_.tables[i].name.find(mtk::nb2str(table_id), strlen("table")) != std::string::npos)
     {
       ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
-                tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+                mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
       table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
       table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
       radius = table_poses_.tables[i].radius;

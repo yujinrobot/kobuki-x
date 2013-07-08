@@ -19,7 +19,6 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <ar_track_alvar/AlvarMarkers.h>
 
-#include "waiterbot/common.hpp"
 
 namespace waiterbot
 {
@@ -27,6 +26,8 @@ namespace waiterbot
 class ARMarkers
 {
 public:
+  static const uint32_t MARKERS_COUNT;
+
   ARMarkers();
   virtual ~ARMarkers();
 

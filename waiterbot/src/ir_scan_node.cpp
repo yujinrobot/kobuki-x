@@ -7,7 +7,6 @@
 
 #include <sensor_msgs/LaserScan.h>
 
-#include "waiterbot/common.hpp"
 #include "waiterbot/ir_scan_node.hpp"
 
 namespace waiterbot

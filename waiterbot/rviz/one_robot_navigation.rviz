@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
+        - /Odometry1
       Splitter Ratio: 0.5
     Tree Height: 769
   - Class: rviz/Selection
@@ -189,8 +190,6 @@ Visualization Manager:
       Frames:
         /base_footprint:
           Value: true
-        /base_laser_link:
-          Value: true
         /base_link:
           Value: true
         /camera_depth_frame:
@@ -213,11 +212,9 @@ Visualization Manager:
           Value: true
         /cliff_sensor_right_link:
           Value: true
-        /global_marker_0:
-          Value: true
-        /global_marker_1:
-          Value: true
         /gyro_link:
+          Value: true
+        /ir_link:
           Value: true
         /map:
           Value: true
@@ -273,15 +270,9 @@ Visualization Manager:
       Show Names: false
       Tree:
         /map:
-          /global_marker_0:
-            {}
-          /global_marker_1:
-            {}
           /odom:
             /base_footprint:
               /base_link:
-                /base_laser_link:
-                  {}
                 /camera_rgb_frame:
                   /camera_depth_frame:
                     /camera_depth_optical_frame:
@@ -301,6 +292,8 @@ Visualization Manager:
                 /cliff_sensor_right_link:
                   {}
                 /gyro_link:
+                  {}
+                /ir_link:
                   {}
                 /plate_bottom_link:
                   {}
@@ -543,11 +536,7 @@ Visualization Manager:
       Marker Topic: /table_marker
       Name: MarkerArray
       Namespaces:
-        concert: true
-        pickup: true
-        table1: true
-        table2: true
-        table3: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -594,6 +583,44 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: ""
+      Decay Time: 0
+      Enabled: true
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: ""
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.01
+      Style: Flat Squares
+      Topic: /point_map
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Angle Tolerance: 0.1
+      Class: rviz/Odometry
+      Color: 255; 25; 0
+      Enabled: true
+      Keep: 100
+      Length: 1
+      Name: Odometry
+      Position Tolerance: 0.1
+      Topic: /icp_odom
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -613,17 +640,17 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.05255
+      Distance: 7.09847
       Focal Point:
-        X: 2.36436
-        Y: 2.00701
-        Z: -0.0957958
+        X: 1.84653
+        Y: -0.0170233
+        Z: -0.425261
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.4098
+      Pitch: 1.5698
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.70321
+      Yaw: 4.67821
     Saved: ~
 Window Geometry:
   Displays:

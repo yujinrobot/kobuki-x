@@ -7,11 +7,15 @@
 
 #include <dynamic_reconfigure/Reconfigure.h>
 
-#include "waiterbot/common.hpp"
+#include <math_toolkit/common.hpp>
+#include <math_toolkit/geometry.hpp>
+
 #include "waiterbot/ar_markers.hpp"
 
 namespace waiterbot
 {
+
+const uint32_t ARMarkers::MARKERS_COUNT = 32;
 
 ARMarkers::ARMarkers()
 {
@@ -66,7 +70,7 @@ bool ARMarkers::init()
   tracker_params_srv_  = nh.serviceClient<dynamic_reconfigure::Reconfigure>("ar_track_alvar/set_parameters");
 
   // There are 18 different markers
-  tracked_markers_.resize(AR_MARKERS_COUNT);
+  tracked_markers_.resize(MARKERS_COUNT);
 
   if (tf_broadcast_freq_ > 0.0)
   {
@@ -95,7 +99,7 @@ void ARMarkers::broadcastMarkersTF()
     for (unsigned int i = 0; i <global_markers_.markers.size(); i++)
     {
       sprintf(child_frame, "%s_%d", i != docking_marker_.id?"global_marker":"docking_base", global_markers_.markers[i].id);
-      tk::pose2tf(global_markers_.markers[i].pose, tf);
+      mtk::pose2tf(global_markers_.markers[i].pose, tf);
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
       tf_brcaster_.sendTransform(tf);
@@ -106,7 +110,7 @@ void ARMarkers::broadcastMarkersTF()
     if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
     {
       sprintf(child_frame, "docking_base_%d", docking_marker_.id);
-      tk::pose2tf(docking_marker_.pose, tf);
+      mtk::pose2tf(docking_marker_.pose, tf);
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
       tf_brcaster_.sendTransform(tf);
@@ -129,14 +133,14 @@ void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
       //TODO cheat for debuging;  remove
             if (global_markers_.markers[i].id >= 4)
             {
-              ROS_DEBUG("Docking marker %d: %s", global_markers_.markers[i].id, tk::pose2str(global_markers_.markers[i].pose.pose));
+              ROS_DEBUG("Docking marker %d: %s", global_markers_.markers[i].id, mtk::pose2str(global_markers_.markers[i].pose.pose));
               docking_marker_ = global_markers_.markers[i];
               global_markers_.markers.pop_back();
             }
             else
 
       */
-      ROS_DEBUG("Marker %d: %s", global_markers_.markers[i].id, tk::pose2str(global_markers_.markers[i].pose.pose));
+      ROS_DEBUG("Marker %d: %s", global_markers_.markers[i].id, mtk::pose2str(global_markers_.markers[i].pose.pose));
     }
   }
 }
@@ -161,7 +165,7 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
 
     // Confidence evaluation
     TrackedMarker& marker = tracked_markers_[msg->markers[i].id];
-    marker.distance = tk::distance3D(msg->markers[i].pose.pose);
+    marker.distance = mtk::distance3D(msg->markers[i].pose.pose);
     marker.heading  = tf::getYaw(msg->markers[i].pose.pose.orientation) + M_PI/2.0;
     // WARN: note that heading evaluation also assumes vertically aligned markers
 
@@ -187,11 +191,11 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
         break;
       }
 
-      if ((tk::distance3D(prev.pose, it->pose) > max_valid_d_inc) ||
-          (std::abs(tk::minAngle(prev.pose, it->pose)) > max_valid_h_inc))
+      if ((mtk::distance3D(prev.pose, it->pose) > max_valid_d_inc) ||
+          (std::abs(mtk::minAngle(prev.pose, it->pose)) > max_valid_h_inc))
       {
         // Incoherent observation; stop going over the list and use current position value to fill confidence values
-//        ROS_ERROR("%d  BREAK at %d   %f  %f     %f   %f        %f", msg->markers[i].id, position, tk::distance3D(prev.pose, it->pose),  tk::minAngle(prev.pose, it->pose), max_valid_d_inc, max_valid_h_inc, ar_tracker_freq_);
+//        ROS_ERROR("%d  BREAK at %d   %f  %f     %f   %f        %f", msg->markers[i].id, position, mtk::distance3D(prev.pose, it->pose),  mtk::minAngle(prev.pose, it->pose), max_valid_d_inc, max_valid_h_inc, ar_tracker_freq_);
         break;
       }
 
@@ -250,7 +254,7 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
 
       // Marker tf on global reference system
       tf::StampedTransform marker_gb;
-      tk::pose2tf(global_marker.pose, marker_gb);
+      mtk::pose2tf(global_marker.pose, marker_gb);
 
       // Marker tf on robot base reference system
       tf::StampedTransform marker_bs;
@@ -264,7 +268,7 @@ void ARMarkers::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
       // Calculate robot tf on global reference system multiplying the global marker tf (known a priori)
       // by marker tf on base reference system, that is, "subtract" the relative tf to the absolute one
       tf::Transform robot_gb = marker_gb*marker_bs.inverse();
-      tk::tf2pose(robot_gb, pwcs->pose.pose);
+      mtk::tf2pose(robot_gb, pwcs->pose.pose);
 
       pwcs->header.stamp = msg->markers[i].header.stamp;
       pwcs->header.frame_id = global_frame_;
@@ -320,7 +324,7 @@ bool ARMarkers::closest(const ar_track_alvar::AlvarMarkers& including,
     if ((included(spotted_markers_.markers[i].id, including) == true) &&
         (excluded(spotted_markers_.markers[i].id, excluding) == true))
     {
-      double d = tk::distance2D(spotted_markers_.markers[i].pose.pose.position);
+      double d = mtk::distance2D(spotted_markers_.markers[i].pose.pose.position);
       if (d < closest_dist)
       {
         closest_dist = d;
@@ -373,7 +377,7 @@ bool ARMarkers::closest(double younger_than, double min_confidence, bool exclude
   double closest_dist = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < spotted_markers.markers.size(); i++)
   {
-    double d = tk::distance2D(spotted_markers.markers[i].pose.pose.position);
+    double d = mtk::distance2D(spotted_markers.markers[i].pose.pose.position);
     if (d < closest_dist)
     {
       closest_dist = d;
@@ -410,7 +414,7 @@ bool ARMarkers::spotDockMarker(uint32_t base_marker_id)
       }
 
       // From now we consider it as another global marker
-      tk::tf2pose(marker_gb, docking_marker_.pose.pose);
+      mtk::tf2pose(marker_gb, docking_marker_.pose.pose);
       ROS_DEBUG("Docking AR marker registered with global pose: %.2f, %.2f, %.2f",
                 docking_marker_.pose.pose.position.x, docking_marker_.pose.pose.position.y,
                 tf::getYaw(docking_marker_.pose.pose.orientation));
@@ -437,7 +441,7 @@ bool ARMarkers::getMarkerTf(const std::string& ref_frame, uint32_t marker_id,
     tf_listener_.waitForTransform(ref_frame, marker_frame, timestamp, ros::Duration(0.05));
     tf_listener_.lookupTransform(ref_frame, marker_frame, timestamp, tf);
 
-    if (tk::roll(tf) < -1.0)
+    if (mtk::roll(tf) < -1.0)
     {
       // Sometimes markers are spotted "inverted" (pointing to -y); as we assume that all the markers are
       // aligned with y pointing up, x pointing right and z pointing to the observer, that's a recognition

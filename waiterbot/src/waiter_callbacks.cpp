@@ -44,14 +44,14 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
       // Look for the pickup point
       if (table_poses_.tables[i].name.find("pickup") != std::string::npos)
       {
-        ROS_DEBUG("Pickup point: %s", tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+        ROS_DEBUG("Pickup point: %s", mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
         pickup_pose_.header = table_poses_.tables[i].pose_cov_stamped.header;
         pickup_pose_.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
       }
       else
       {
         ROS_DEBUG("%s. rad: %f, pose: %s", table_poses_.tables[i].name.c_str(), table_poses_.tables[i].radius,
-                  tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+                  mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
       }
     }
 
@@ -154,10 +154,10 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
     for (unsigned int i = 0; i < table_poses_.tables.size(); i++)
     {
       // Look for the requested table's pose (and get rid of the useless covariance)
-      if (table_poses_.tables[i].name.find(tk::nb2str(table_id), strlen("table")) != std::string::npos)
+      if (table_poses_.tables[i].name.find(mtk::nb2str(table_id), strlen("table")) != std::string::npos)
       {
         ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
-                  tk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+                  mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
         geometry_msgs::PoseStamped table_pose;
         table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
         table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;

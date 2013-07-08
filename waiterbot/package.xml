@@ -23,7 +23,8 @@
   <build_depend>semantic_region_handler</build_depend>
   <build_depend>arduino_interface</build_depend>
   <build_depend>adc_driver</build_depend>
-
+  <build_depend>math_toolkit</build_depend>
+  
   <run_depend>tf</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>actionlib</run_depend>
@@ -36,7 +37,8 @@
   <run_depend>semantic_region_handler</run_depend>
   <run_depend>arduino_interface</run_depend>
   <run_depend>adc_driver</run_depend>
-
+  <run_depend>math_toolkit</run_depend>
+  
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->

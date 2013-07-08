@@ -7,7 +7,8 @@
 
 #include <tf/tf.h>
 
-#include "waiterbot/common.hpp"
+#include <math_toolkit/geometry.hpp>
+
 //#include "waiterbot/navigator.hpp"
 #include "waiterbot/nav_watchdog.hpp"
 
@@ -55,7 +56,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
   if ((! (localized_ & LOCALIZED_AMCL)) ||
       ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 1.0) &&
        (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 4.0) &&
-       ((tk::distance2D(amcl_pose, armk_pose) > 1.0) || (tk::minAngle(amcl_pose, armk_pose) > 0.5))))
+       ((mtk::distance2D(amcl_pose, armk_pose) > 1.0) || (mtk::minAngle(amcl_pose, armk_pose) > 0.5))))
   {
     // If amcl has not received an initial pose from the user, or it's reporting a pose
     // far away from the one reported by the AR marker, initialize it with this message.
@@ -83,7 +84,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
     ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
               msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
     ROS_DEBUG("Cartesian distance = %.2f, Yaw difference = %.2f, TIME = %f",    // explain the reason
-              tk::distance2D(amcl_pose, armk_pose), tk::minAngle(amcl_pose, armk_pose),
+              mtk::distance2D(amcl_pose, armk_pose), mtk::minAngle(amcl_pose, armk_pose),
                (last_amcl_pose_.header.stamp - msg->header.stamp).toSec());
 
     // Reset costmaps, as they surely contains a lot of errors due to bad localization
@@ -96,8 +97,8 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
 //      ROS_DEBUG("POSE TOO OLD  %f", (last_amcl_pose_.header.stamp - msg->header.stamp).toSec());
 //    if (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  <= 4.0)
 //      ROS_DEBUG("INIT TOO RECENT %f", std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec()));
-//    if ((tk::distance2D(amcl_pose, armk_pose) <= 1.0) && (tk::minAngle(amcl_pose, armk_pose) <= 0.5))
-//      ROS_DEBUG("POSE TOO CLOSE %f  %f", tk::distance2D(amcl_pose, armk_pose), tk::minAngle(amcl_pose, armk_pose));
+//    if ((mtk::distance2D(amcl_pose, armk_pose) <= 1.0) && (mtk::minAngle(amcl_pose, armk_pose) <= 0.5))
+//      ROS_DEBUG("POSE TOO CLOSE %f  %f", mtk::distance2D(amcl_pose, armk_pose), mtk::minAngle(amcl_pose, armk_pose));
 //  }
 
   localized_ |= LOCALIZED_ARMK;

@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(waiterbot)
+project(math_toolkit)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED tf roscpp actionlib actionlib_msgs sensor_msgs kobuki_msgs cafe_msgs move_base_msgs
-                             ar_track_alvar semantic_region_handler arduino_interface adc_driver math_toolkit)
+find_package(catkin REQUIRED tf roscpp)
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
+# find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
-## See http://ros.org/doc/groovy/api/catkin/html/user_guide/setup_dot_py.html
+## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # catkin_python_setup()
 
 #######################################
@@ -50,10 +49,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES waiterbot
-  CATKIN_DEPENDS tf roscpp actionlib actionlib_msgs sensor_msgs kobuki_msgs cafe_msgs move_base_msgs
-                 ar_track_alvar semantic_region_handler arduino_interface adc_driver math_toolkit
-  DEPENDS system_lib
+  LIBRARIES math_toolkit
+  CATKIN_DEPENDS tf roscpp
 )
 
 ###########
@@ -62,35 +59,23 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
-# add_library(waiterbot
-#   src/${PROJECT_NAME}/waiterbot.cpp
-# )
+add_library(${PROJECT_NAME}
+   src/common.cpp src/geometry.cpp
+)
 
-## Declare the executables
-add_executable(ir_scan_node src/ir_scan_node.cpp)
-
-add_executable(waiterbot_node src/waiter_node.cpp
-                              src/waiter_tasks.cpp
-                              src/waiter_delivery_handles.cpp
-                              src/waiter_callbacks.cpp
-                              src/ar_markers.cpp
-                              src/nav_watchdog.cpp
-                              src/navigator.cpp)
-add_dependencies(waiterbot_node cafe_msgs_gen_cpp semantic_region_handler_gen_cpp ar_track_alvar_gen_cpp)
+## Declare a cpp executable
+# add_executable(math_toolkit_node src/math_toolkit_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
+# add_dependencies(math_toolkit_node math_toolkit_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(ir_scan_node
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(waiterbot_node
-  ${catkin_LIBRARIES}
+target_link_libraries(${PROJECT_NAME}
+   ${catkin_LIBRARIES}
 )
 
 #############
@@ -98,7 +83,7 @@ target_link_libraries(waiterbot_node
 #############
 
 # all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/groovy/api/catkin/html/adv_user_guide/variables.html
+# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
@@ -108,7 +93,7 @@ target_link_libraries(waiterbot_node
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS waiterbot waiterbot_node
+# install(TARGETS math_toolkit math_toolkit_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -133,7 +118,7 @@ target_link_libraries(waiterbot_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_waiterbot.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_math_toolkit.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

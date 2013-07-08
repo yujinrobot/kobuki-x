@@ -73,7 +73,7 @@
   </include>
 
   <!--  ************** Rosnav move base ***************  -->
-  <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
+  <include file="$(find waiterbot)/launch/includes/_move_base_eband.launch"/>
 
   <!--  ****** Geometric and semantic map servers *****  -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot)/resources/maps/$(arg map_name).yaml">
@@ -96,5 +96,5 @@
   <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>-->
 
   <!--  **************** Visualisation ****************  -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/one_robot_navigation.rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/one_robot_navigation.rviz.MULTI_LAYER"/>
 </launch>

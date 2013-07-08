@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>math_toolkit</name>
+  <version>0.0.0</version>
+  <description>The math_toolkit package</description>
+  
+  <maintainer email="jorge@yujinrobot.com">Jorge Santos</maintainer>
+  <license>BSD</license>
+  <!-- <url type="website">http://ros.org/wiki/virtual_sensor</url> -->
+  <author email="jorge@yujinrobot.com">Jorge Santos</author> 
+  
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>tf</build_depend>
+  <build_depend>roscpp</build_depend>
+
+  <run_depend>tf</run_depend>
+  <run_depend>roscpp</run_depend>
+  
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- You can specify that this package is a metapackage here: -->
+    <!-- <metapackage/> -->
+
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>

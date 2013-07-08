@@ -22,6 +22,8 @@
 
 #include <semantic_region_handler/TablePose.h>
 
+#include <math_toolkit/common.hpp>
+#include <math_toolkit/geometry.hpp>
 
 namespace waiterbot
 {
@@ -118,14 +120,14 @@ public:
   void forward(double distance)
   {
     geometry_msgs::Point pos0 = odometry_.pose.pose.position;
-    while (tk::distance2D(pos0, odometry_.pose.pose.position) < distance)
+    while (mtk::distance2D(pos0, odometry_.pose.pose.position) < distance)
       slowForward();
   }
 
   void backward(double distance)
   {
     geometry_msgs::Point pos0 = odometry_.pose.pose.position;
-    while (tk::distance2D(pos0, odometry_.pose.pose.position) < distance)
+    while (mtk::distance2D(pos0, odometry_.pose.pose.position) < distance)
       slowBackward();
   }
 
@@ -148,24 +150,24 @@ ignore by now turns bigger than 2pi
 */
 
     double yaw0 = tf::getYaw(odometry_.pose.pose.orientation);
-    double yaw1 = tk::wrapAngle(yaw0 + angle);
+    double yaw1 = mtk::wrapAngle(yaw0 + angle);
 
     ROS_DEBUG("%f  %f  %f", angle, yaw0, yaw1);
-    while (std::abs(tk::wrapAngle(yaw1 - tf::getYaw(odometry_.pose.pose.orientation))) > 0.05)
-      moveAt(0.0, tk::sign(angle)*0.5, 0.05);
+    while (std::abs(mtk::wrapAngle(yaw1 - tf::getYaw(odometry_.pose.pose.orientation))) > 0.05)
+      moveAt(0.0, mtk::sign(angle)*0.5, 0.05);
   }
 
   // aaaagh...  TODO make a decent version checking sign change and turns over 2pi! I have no time now
   void turn2(double angle)
   {
     double yaw0 = tf::getYaw(odometry_.pose.pose.orientation);
-    double yaw1 = tk::wrapAngle(yaw0 + angle);
-    double sign = tk::sign(yaw1 - yaw0);
+    double yaw1 = mtk::wrapAngle(yaw0 + angle);
+    double sign = mtk::sign(yaw1 - yaw0);
 
     ROS_DEBUG("%f  %f  %f", angle, yaw0, yaw1);
-    while (tk::sign(tk::wrapAngle(tf::getYaw(odometry_.pose.pose.orientation) - yaw1)) == sign){
-//           (std::abs(tf::getYaw(odometry_.pose.pose.orientation) - yaw1) > 2.0*M_PI - 0.01)){//    ROS_DEBUG("%f > %f", tk::wrap_360(tf::getYaw(odometry_.pose.pose.orientation)), tk::wrap_360(yaw0 + angle360));
-      moveAt(0.0, tk::sign(angle)*0.5, 0.05);
+    while (mtk::sign(mtk::wrapAngle(tf::getYaw(odometry_.pose.pose.orientation) - yaw1)) == sign){
+//           (std::abs(tf::getYaw(odometry_.pose.pose.orientation) - yaw1) > 2.0*M_PI - 0.01)){//    ROS_DEBUG("%f > %f", mtk::wrap_360(tf::getYaw(odometry_.pose.pose.orientation)), mtk::wrap_360(yaw0 + angle360));
+      moveAt(0.0, mtk::sign(angle)*0.5, 0.05);
     }
   }
 
