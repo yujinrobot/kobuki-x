@@ -3,6 +3,7 @@
 	<name>virtual_sensor</name>
 	<comment></comment>
 	<projects>
+		<project>math_toolkit</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

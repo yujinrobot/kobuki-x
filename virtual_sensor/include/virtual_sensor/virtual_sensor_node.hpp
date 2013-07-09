@@ -12,6 +12,8 @@
 #include <tf/transform_listener.h>
 #include <sensor_msgs/LaserScan.h>
 
+#include <math_toolkit/geometry.hpp>
+
 #include <semantic_region_handler/TablePoseList.h>
 
 #include "virtual_sensor/WallList.h"
@@ -33,31 +35,6 @@ public:
   protected:
     tf::Transform tf_;
     double distance_;
-
-    double dist2d(double x, double y)
-    {
-      return std::sqrt(std::pow(x, 2) + std::pow(y, 2));
-    }
-
-    double dist2d(const tf::Point& p)
-    {
-      return std::sqrt(std::pow(p.x(), 2) + std::pow(p.y(), 2));
-    }
-
-    double dist3d(const tf::Point& p)
-    {
-      return std::sqrt(std::pow(p.x(), 2) + std::pow(p.y(), 2) + std::pow(p.z(), 2));
-    }
-
-    double dist2d(const tf::Point& p1, const tf::Point& p2)
-    {
-      return std::sqrt(std::pow(p2.x() - p1.x(), 2) + std::pow(p2.y() - p1.y(), 2));
-    }
-
-    double dist3d(const tf::Point& p1, const tf::Point& p2)
-    {
-      return std::sqrt(std::pow(p2.x() - p1.x(), 2) + std::pow(p2.y() - p1.y(), 2) + std::pow(p2.z() - p1.z(), 2));
-    }
   };
 
   class Circle : public Obstacle
@@ -68,11 +45,21 @@ public:
       tf_     = tf;
       radius_ = radius;
 
-      distance_ = std::sqrt(std::pow(tf.getOrigin().x(), 2) + std::pow(tf.getOrigin().y(), 2)) - radius;
+      distance_ = mtk::distance2D(tf.getOrigin()) - radius;
     }
 
     double radius() { return radius_; }
-    bool intersects(double rx, double ry, double max_dist, double& distance);
+    bool intersects(double rx, double ry, double max_dist, double& distance)
+    {
+      double ix, iy;
+      bool intersects =
+          mtk::rayCircleIntersection(rx, ry, tf_.getOrigin().x(), tf_.getOrigin().y(), radius_, ix, iy, distance);
+      if ((intersects == false) || (distance > max_dist))
+        return false;
+      else
+        return true;
+    }
+
 
   private:
     double radius_;
@@ -98,38 +85,22 @@ public:
       p1_ = tf_ * p1_;
       p2_ = tf_ * p2_;
 
-      distance_ = dist(p1_, p2_);
-    }
-
-    double dist(const tf::Point& p1, const tf::Point& p2)
-    {
-      // Return minimum distance between line segment vw and point p
-//
-//
-//        const float l2 = length_squared(v, w);  // i.e. |w-v|^2 -  avoid a sqrt
-//        if (l2 == 0.0) return distance(p, v);   // v == w case
-//        // Consider the line extending the segment, parameterized as v + t (w - v).
-//        // We find projection of point p onto the line.
-//        // It falls where t = [(p-v) . (w-v)] / |w-v|^2
-//        const float t = dot(p - v, w - v) / l2;
-//        if (t < 0.0) return distance(p, v);       // Beyond the 'v' end of the segment
-//        else if (t > 1.0) return distance(p, w);  // Beyond the 'w' end of the segment
-//        const vec2 projection = v + t * (w - v);  // Projection falls on the segment
-//        return distance(p, projection);
-
-
-          double l = dist2d(p1, p2);
-          if (l == 0.0) return dist2d(p1);
-          double t = (- p1.x() * (p2.x() - p1.x()) - p1.y() * (p2.y() - p1.y())) / l;
-          if (t < 0.0) return dist2d(p1);
-          if (t > 1.0) return dist2d(p2);
-          return dist2d(p1.x() + t * (p2.x() - p1.x()), p1.y() + t * (p2.y() - p1.y()));
+      distance_ = mtk::pointSegmentDistance(0.0, 0.0, p1_.x(), p1_.y(), p2_.x(), p2_.y());
     }
 
     double length() { return length_; }
     double height() { return height_; }
     double width()  { return width_;  }
-    bool intersects(double rx, double ry, double max_dist, double& distance);
+    bool intersects(double rx, double ry, double max_dist, double& distance)
+    {
+      double ix, iy;
+      bool intersects =
+          mtk::raySegmentIntersection(0.0, 0.0, rx, ry, p1_.x(), p1_.y(), p2_.x(), p2_.y(), ix, iy, distance);
+      if ((intersects == false) || (distance > max_dist))
+        return false;
+      else
+        return true;
+    }
 
   private:
     tf::Point p1_;

@@ -2,7 +2,12 @@
 <package>
   <name>math_toolkit</name>
   <version>0.0.0</version>
-  <description>The math_toolkit package</description>
+  <description>
+    Math toolkit for Yujin open control system. This package is intended to contain common use functions,
+    mostly for simple mathematics but also for tf-related conversions.
+    By no means it pretends to be an efficient and robust, widely used math library, but a play ground where
+    to put common code that is typically repeated in many robot control programs.
+  </description>
   
   <maintainer email="jorge@yujinrobot.com">Jorge Santos</maintainer>
   <license>BSD</license>
