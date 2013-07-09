@@ -90,14 +90,6 @@ void VirtualSensorNode::columnPosesCB(const virtual_sensor::ColumnList::ConstPtr
 
 void VirtualSensorNode::wallPosesCB(const virtual_sensor::WallList::ConstPtr& msg)
 {
-  // Just take first message; ignore the rest, as table list is not dynamic
-//  if ((walls_.size() == 0) && (msg->obstacles.size() > 0))
-//  {
-//    for (unsigned int i = 0; i < msg->obstacles.size(); i++)
-//    {
-//      walls_.push_back(msg->obstacles[i]);
-//    }
-//  }
   walls_ = msg->obstacles;
 }
 
@@ -139,7 +131,18 @@ void VirtualSensorNode::spin()
                                                              circles_[i].pose_cov_stamped.pose.pose.position.y,
                                                              0.0));
         tf::Transform obs_tf = robot_gb_inv * obs_abs_tf;
-        boost::shared_ptr<Obstacle> new_obs(new Circle(obs_tf, circles_[i].radius));
+        boost::shared_ptr<Obstacle> new_obs(new Column(obs_tf, circles_[i].radius, columns_[i].height));
+
+        add(new_obs, obstacles);
+      }
+
+      for (unsigned int i = 0; i < columns_.size(); i++)
+      {
+        tf::Transform obs_abs_tf;
+        tf::poseMsgToTF(columns_[i].pose.pose.pose, obs_abs_tf);
+        obs_abs_tf.setRotation(tf::Quaternion::getIdentity());
+        tf::Transform obs_tf = robot_gb_inv * obs_abs_tf;
+        boost::shared_ptr<Obstacle> new_obs(new Column(obs_tf, columns_[i].radius, columns_[i].height));
 
         add(new_obs, obstacles);
       }

@@ -37,13 +37,14 @@ public:
     double distance_;
   };
 
-  class Circle : public Obstacle
+  class Column : public Obstacle
   {
   public:
-    Circle(const tf::Transform& tf, double radius)
+    Column(const tf::Transform& tf, double radius, double height)
     {
       tf_     = tf;
       radius_ = radius;
+      height_ = height;
 
       distance_ = mtk::distance2D(tf.getOrigin()) - radius;
     }
@@ -63,6 +64,7 @@ public:
 
   private:
     double radius_;
+    double height_;
   };
 
   class Wall : public Obstacle
