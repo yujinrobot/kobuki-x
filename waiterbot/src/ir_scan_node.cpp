@@ -49,7 +49,9 @@ bool IrScanNode::readRanges()
     // KF - collect data
     rangers[i].last_range = distanceKF;
 
-    scan.ranges[rangers.size() - (i + 1)] = distanceKF <= 0.35 ? distanceKF + ir_ring_radius : 6.0;
+    // Fill range/intensity vectors inverting readings, as laser scans add beams from right (angle_min)
+    // to left (angle_max), while our sensors are arranged from left (A0 port) to right (A10 port)
+    scan.ranges[rangers.size() - (i + 1)] = distanceKF <= maximum_range ? distanceKF + ir_ring_radius : infinity_range;
     scan.intensities[rangers.size() - (i + 1)] = v;
   }
 
@@ -91,7 +93,7 @@ bool IrScanNode::init(ros::NodeHandle& nh)
   nh.param("ir_to_laserscan/read_frequency",   read_frequency, 20.0);
   nh.param("ir_to_laserscan/arduino_port",     arduino_port, default_port);
   nh.param("ir_to_laserscan/ir_frame_id",      ir_frame_id, default_frame);
-
+  
   scan.ranges.resize(rangers_count, 0.0);
   scan.intensities.resize(rangers_count, 0.0);
 
@@ -128,7 +130,7 @@ bool IrScanNode::init(ros::NodeHandle& nh)
   // Publishers
   ir_scan_pub = nh.advertise< sensor_msgs::LaserScan>("ir_scan", 1);
 
-  ROS_INFO("IR scan node successfully initialized with %lu rangers", rangers.size());
+  ROS_INFO("IR scan node successfully initialized with %u rangers", rangers.size());
 
   return true;
 }
