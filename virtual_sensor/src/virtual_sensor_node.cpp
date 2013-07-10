@@ -120,7 +120,7 @@ void VirtualSensorNode::spin()
       tf::Transform robot_gb_inv = robot_gb.inverse();
 
       // Pre-filter obstacles:
-      //  - put in robot reference system
+      //  - put in sensor reference system
       //  - remove those out of range
       //  - short by increasing distance to the robot
       std::vector< boost::shared_ptr<Obstacle> > obstacles;
@@ -131,7 +131,7 @@ void VirtualSensorNode::spin()
                                                              circles_[i].pose_cov_stamped.pose.pose.position.y,
                                                              0.0));
         tf::Transform obs_tf = robot_gb_inv * obs_abs_tf;
-        boost::shared_ptr<Obstacle> new_obs(new Column(obs_tf, circles_[i].radius, columns_[i].height));
+        boost::shared_ptr<Obstacle> new_obs(new Column(circles_[i].name, obs_tf, circles_[i].radius, columns_[i].height));
 
         add(new_obs, obstacles);
       }
@@ -142,7 +142,7 @@ void VirtualSensorNode::spin()
         tf::poseMsgToTF(columns_[i].pose.pose.pose, obs_abs_tf);
         obs_abs_tf.setRotation(tf::Quaternion::getIdentity());
         tf::Transform obs_tf = robot_gb_inv * obs_abs_tf;
-        boost::shared_ptr<Obstacle> new_obs(new Column(obs_tf, columns_[i].radius, columns_[i].height));
+        boost::shared_ptr<Obstacle> new_obs(new Column(columns_[i].name, obs_tf, columns_[i].radius, columns_[i].height));
 
         add(new_obs, obstacles);
       }
@@ -151,13 +151,8 @@ void VirtualSensorNode::spin()
       {
         tf::Transform obs_abs_tf;
         tf::poseMsgToTF(walls_[i].pose.pose.pose, obs_abs_tf);
-//        tf::Vector3 p1, p2;
-//        tf::pointMsgToTF(walls_[i].p1, p1);
-//        tf::pointMsgToTF(walls_[i].p2, p2);
-//        tf::Transform p1_abs_tf = tf::Transform(tf::Quaternion::getIdentity(), p1);
-//        tf::Transform p2_abs_tf = tf::Transform(tf::Quaternion::getIdentity(), p2);
         tf::Transform obs_tf = robot_gb_inv * obs_abs_tf;
-        boost::shared_ptr<Obstacle> new_obs(new Wall(obs_tf, walls_[i].length, walls_[i].width, walls_[i].height));
+        boost::shared_ptr<Obstacle> new_obs(new Wall(walls_[i].name, obs_tf, walls_[i].length, walls_[i].width, walls_[i].height));
 
         add(new_obs, obstacles);
       }
@@ -207,6 +202,11 @@ void VirtualSensorNode::spin()
 
 bool VirtualSensorNode::add(boost::shared_ptr<Obstacle>& new_obs, std::vector< boost::shared_ptr<Obstacle> >& obstacles)
 {
+  if ((new_obs->minHeight() > 0.0) || (new_obs->maxHeight() < 0.0))
+  {
+    return false;  // Obstacle above/below the virtual sensor (who is a 2D scan)
+  }
+
   if (new_obs->distance() <= 0.0)
   {
     ROS_WARN_THROTTLE(2, "The robot is inside an obstacle??? Ignore it (distance: %f)", new_obs->distance());

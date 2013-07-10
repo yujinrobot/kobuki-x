@@ -16,7 +16,9 @@
 
 #include <semantic_region_handler/TablePoseList.h>
 
+#include "virtual_sensor/Wall.h"
 #include "virtual_sensor/WallList.h"
+#include "virtual_sensor/Column.h"
 #include "virtual_sensor/ColumnList.h"
 
 namespace virtual_sensor
@@ -29,23 +31,29 @@ public:
   class Obstacle
   {
   public:
-    double distance() { return distance_; }
+    Obstacle(const std::string& name, const tf::Transform& tf, double height)
+      : name_(name), tf_(tf), height_(height) { }
+    ~Obstacle() { }
+    std::string& name() { return name_;}
+    double distance()  { return distance_; }
+    double minHeight() { return tf_.getOrigin().z(); }
+    double maxHeight() { return tf_.getOrigin().z() + height_; }
     virtual bool intersects(double rx, double ry, double max_dist, double& distance) = 0;
 
   protected:
+    std::string name_;
     tf::Transform tf_;
     double distance_;
+    double height_;
   };
 
   class Column : public Obstacle
   {
   public:
-    Column(const tf::Transform& tf, double radius, double height)
+    Column(const std::string& name, const tf::Transform& tf, double radius, double height)
+      : Obstacle(name, tf, height)
     {
-      tf_     = tf;
-      radius_ = radius;
-      height_ = height;
-
+      radius_   = radius;
       distance_ = mtk::distance2D(tf.getOrigin()) - radius;
     }
 
@@ -61,20 +69,17 @@ public:
         return true;
     }
 
-
   private:
     double radius_;
-    double height_;
   };
 
   class Wall : public Obstacle
   {
   public:
-    Wall(const tf::Transform& tf, double length, double width, double height)
+    Wall(const std::string& name, const tf::Transform& tf, double length, double width, double height)
+      : Obstacle(name, tf, height)
     {
-      tf_     = tf;
       length_ = length;
-      height_ = height;
       width_  = width;
 
       p1_.setX(- width_/2.0);
@@ -91,7 +96,6 @@ public:
     }
 
     double length() { return length_; }
-    double height() { return height_; }
     double width()  { return width_;  }
     bool intersects(double rx, double ry, double max_dist, double& distance)
     {
@@ -108,7 +112,6 @@ public:
     tf::Point p1_;
     tf::Point p2_;
     double length_;
-    double height_;
     double width_;
   };
 
