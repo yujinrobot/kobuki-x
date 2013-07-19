@@ -43,7 +43,7 @@ add_executable(waiterbot_node src/waiter_node.cpp
                               src/navigator.cpp)
 
 ## Add cmake target dependencies of the executable/library
-add_dependencies(waiterbot_node cafe_msgs_gencpp semantic_region_handler_gencpp ar_track_alvar_gencpp)
+add_dependencies(waiterbot_node kobuki_msgs cafe_msgs_gencpp semantic_region_handler_gencpp ar_track_alvar_gencpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(ir_scan_node
