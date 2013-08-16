@@ -6,7 +6,9 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Odometry1
+        - /PointCloud (bumpers)1
+        - /Global Map1
+        - /Costmap2
       Splitter Ratio: 0.5
     Tree Height: 769
   - Class: rviz/Selection
@@ -214,8 +216,6 @@ Visualization Manager:
           Value: true
         /gyro_link:
           Value: true
-        /ir_link:
-          Value: true
         /map:
           Value: true
         /odom:
@@ -292,8 +292,6 @@ Visualization Manager:
                 /cliff_sensor_right_link:
                   {}
                 /gyro_link:
-                  {}
-                /ir_link:
                   {}
                 /plate_bottom_link:
                   {}
@@ -417,7 +415,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.01
+      Size (m): 0.04
       Style: Flat Squares
       Topic: /mobile_base/sensors/bumper_pointcloud
       Use Fixed Frame: true
@@ -621,6 +619,34 @@ Visualization Manager:
       Position Tolerance: 0.1
       Topic: /icp_odom
       Value: true
+    - Alpha: 0.3
+      Class: enhanced_nav_display/Costmap
+      Enabled: false
+      High Color: 255; 0; 0
+      Low Color: 0; 0; 255
+      Max Value: 100
+      Min Value: 0
+      Name: Costmap
+      Topic: /move_base/local_costmap/costmap
+      Use Special Value:
+        Special Color: 0; 255; 0
+        Special Value: 0
+        Value: false
+      Value: false
+    - Alpha: 0.2
+      Class: enhanced_nav_display/Costmap
+      Enabled: true
+      High Color: 255; 0; 0
+      Low Color: 0; 0; 255
+      Max Value: 100
+      Min Value: 0
+      Name: Costmap
+      Topic: /move_base/global_costmap/costmap
+      Use Special Value:
+        Special Color: 0; 255; 0
+        Special Value: 0
+        Value: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -640,17 +666,17 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.09847
+      Distance: 11.9607
       Focal Point:
-        X: 1.84653
-        Y: -0.0170233
-        Z: -0.425261
+        X: 1.76026
+        Y: 4.3415
+        Z: -0.421476
       Name: Current View
       Near Clip Distance: 0.01
       Pitch: 1.5698
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.67821
+      Yaw: 5.00821
     Saved: ~
 Window Geometry:
   Displays:
