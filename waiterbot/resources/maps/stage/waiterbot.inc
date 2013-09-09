@@ -23,5 +23,5 @@ define waiterbot position
   drive "diff"
   color "gray"
   
-  kinect(pose [ -0.1 0.0 0.3 0.0 ])
+  kinect(pose [ -0.1 0.0 -0.11 0.0 ])
 )
