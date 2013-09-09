@@ -124,6 +124,8 @@ void VirtualSensorNode::spin()
       //  - remove those out of range
       //  - short by increasing distance to the robot
       std::vector< boost::shared_ptr<Obstacle> > obstacles;
+
+      // Circles (deprecated; inherited from waiterbot past)
       for (unsigned int i = 0; i < circles_.size(); i++)
       {
         tf::Transform obs_abs_tf = tf::Transform(tf::Quaternion::getIdentity(),
@@ -131,11 +133,12 @@ void VirtualSensorNode::spin()
                                                              circles_[i].pose_cov_stamped.pose.pose.position.y,
                                                              0.0));
         tf::Transform obs_tf = robot_gb_inv * obs_abs_tf;
-        boost::shared_ptr<Obstacle> new_obs(new Column(circles_[i].name, obs_tf, circles_[i].radius, columns_[i].height));
+        boost::shared_ptr<Obstacle> new_obs(new Column(circles_[i].name, obs_tf, circles_[i].radius, 1.5));
 
         add(new_obs, obstacles);
       }
 
+      // Column obstacles
       for (unsigned int i = 0; i < columns_.size(); i++)
       {
         tf::Transform obs_abs_tf;
@@ -147,6 +150,7 @@ void VirtualSensorNode::spin()
         add(new_obs, obstacles);
       }
 
+      // Wall obstacles
       for (unsigned int i = 0; i < walls_.size(); i++)
       {
         tf::Transform obs_abs_tf;
