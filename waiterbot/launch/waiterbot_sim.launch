@@ -37,7 +37,7 @@
         Args:
           -g : run in headless mode.
   --> 
-  <node pkg="stage" type="stageros" name="stageros" args="$(find waiterbot)/resources/maps/stage/$(arg map_name).world">
+  <node pkg="stage_ros" type="stageros" name="stageros" args="$(find waiterbot)/resources/maps/stage/$(arg map_name).world">
     <param name="base_watchdog_timeout" value="0.5"/>
     <remap from="odom" to="odom"/>
     <remap from="base_pose_ground_truth" to="base_pose_ground_truth"/>
@@ -45,8 +45,11 @@
     <remap from="base_scan" to="scan"/>
   </node>
 
+  <!--  ************** Additional sensors *************  -->
+  <include file="$(find waiterbot)/launch/includes/_virt_sensor.launch"/>
+
   <!--  ***************** Robot Model *****************  -->
-  <include file="$(find turtlebot_bringup)/launch/includes/_robot.launch">
+  <include file="$(find turtlebot_bringup)/launch/includes/robot.launch.xml">
     <arg name="base" value="$(arg base)" />
     <arg name="stacks" value="$(arg stacks)" />
     <arg name="3d_sensor" value="$(arg 3d_sensor)" />
@@ -62,10 +65,6 @@
   <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
     <param name="yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml" />
   </node>
-
-
-  <include file="$(find waiterbot)/launch/includes/_virt_sensor.launch"/>
-  
   
   <!--  ************* Navigation manager **************  -->
   <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch">
@@ -96,5 +95,5 @@
   <include file="$(find kobuki_auto_docking)/launch/standalone.launch"/>-->
 
   <!--  **************** Visualisation ****************  -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/one_robot_navigation.rviz.MULTI_LAYER"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot)/rviz/one_robot_navigation.rviz"/>
 </launch>
