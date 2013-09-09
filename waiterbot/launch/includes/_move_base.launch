@@ -1,5 +1,5 @@
 <!-- 
-         ROS navigation system 
+         ROS navigation system
 -->
 <launch>
   <!-- Velocity smoother nodelet; we must provide the absolute name of nodelet manager, as we can be in an application namespace -->
@@ -16,8 +16,10 @@
     <rosparam file="$(find waiterbot)/param/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
     <rosparam file="$(find waiterbot)/param/move_base/local_costmap_params.yaml"  command="load" />
     <rosparam file="$(find waiterbot)/param/move_base/global_costmap_params.yaml" command="load" />
+
     <rosparam file="$(find waiterbot)/param/move_base/base_local_planner_params.yaml" command="load" />
     <rosparam file="$(find waiterbot)/param/move_base/move_base_params.yaml" command="load" />
+
     <remap from="cmd_vel" to="navigation_velocity_smoother/raw_cmd_vel"/>
     <remap from="odom" to="/odom"/>
   </node>
