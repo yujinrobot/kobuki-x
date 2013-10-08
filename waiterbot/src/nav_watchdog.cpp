@@ -7,7 +7,7 @@
 
 #include <tf/tf.h>
 
-#include <math_toolkit/geometry.hpp>
+#include <yocs_math_toolkit/geometry.hpp>
 
 //#include "waiterbot/navigator.hpp"
 #include "waiterbot/nav_watchdog.hpp"

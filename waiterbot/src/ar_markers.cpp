@@ -7,8 +7,8 @@
 
 #include <dynamic_reconfigure/Reconfigure.h>
 
-#include <math_toolkit/common.hpp>
-#include <math_toolkit/geometry.hpp>
+#include <yocs_math_toolkit/common.hpp>
+#include <yocs_math_toolkit/geometry.hpp>
 
 #include "waiterbot/ar_markers.hpp"
 

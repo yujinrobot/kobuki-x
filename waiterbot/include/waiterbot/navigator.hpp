@@ -22,8 +22,8 @@
 
 #include <semantic_region_handler/TablePose.h>
 
-#include <math_toolkit/common.hpp>
-#include <math_toolkit/geometry.hpp>
+#include <yocs_math_toolkit/common.hpp>
+#include <yocs_math_toolkit/geometry.hpp>
 
 namespace waiterbot
 {

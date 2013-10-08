@@ -3,7 +3,7 @@ project(waiterbot)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED tf roscpp actionlib actionlib_msgs sensor_msgs kobuki_msgs cafe_msgs move_base_msgs
-                             ar_track_alvar semantic_region_handler arduino_interface adc_driver math_toolkit)
+                             ar_track_alvar semantic_region_handler arduino_interface adc_driver yocs_math_toolkit)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -11,17 +11,12 @@ find_package(Boost REQUIRED COMPONENTS system)
 ###################################
 ## catkin specific configuration ##
 ###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot
   CATKIN_DEPENDS tf roscpp actionlib actionlib_msgs sensor_msgs kobuki_msgs cafe_msgs move_base_msgs
-                 ar_track_alvar semantic_region_handler arduino_interface adc_driver math_toolkit
-  DEPENDS system_lib
+                 ar_track_alvar semantic_region_handler arduino_interface adc_driver yocs_math_toolkit
+  DEPENDS Boost
 )
 
 ###########
