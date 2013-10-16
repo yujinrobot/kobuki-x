@@ -32,7 +32,7 @@ bool IrScanNode::readRanges()
 
     double v = reading/5000.0;
     double r = 1.06545479706866e-15*pow(v, 6) - 2.59219822235705e-12*pow(v, 5) + 2.52095247302813e-09*pow(v, 4)
-              - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
+             - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
 
     // KF - estimate - prediction
     rangers[i].P = rangers[i].P + rangers[i].Q;
@@ -130,7 +130,7 @@ bool IrScanNode::init(ros::NodeHandle& nh)
   // Publishers
   ir_scan_pub = nh.advertise< sensor_msgs::LaserScan>("ir_scan", 1);
 
-  ROS_INFO("IR scan node successfully initialized with %u rangers", rangers.size());
+  ROS_INFO("IR scan node successfully initialized with %lu rangers", rangers.size());
 
   return true;
 }
