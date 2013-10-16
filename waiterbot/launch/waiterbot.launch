@@ -25,9 +25,15 @@
   <!--  *********** Turtlebot and 3d sensor ***********  -->
   <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
-    <arg name="rgb_processing" value="true"/>
-    <arg name="scan_processing" value="true"/>
-    <arg name="depth_processing" value="false"/>
+    <!-- We only need RGB images and pseudo laser scan -->
+    <arg name="depth_registration"              value="false"/>
+	  <arg name="rgb_processing"                  value="true" />
+	  <arg name="ir_processing"                   value="false"/>
+	  <arg name="depth_processing"                value="false"/>
+	  <arg name="depth_registered_processing"     value="false"/>
+	  <arg name="disparity_processing"            value="false"/>
+	  <arg name="disparity_registered_processing" value="false"/>
+	  <arg name="scan_processing"                 value="true" />
   </include>
 
   <!--  ************** Additional sensors *************  -->
