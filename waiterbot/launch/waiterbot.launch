@@ -79,9 +79,4 @@
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
-
-  <!--  ***************** Visualisation *****************
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz" />
-  <node name="cpu_temperature" pkg="waiterbot" type="cpu_temp.sh"/>-->
-
 </launch>
