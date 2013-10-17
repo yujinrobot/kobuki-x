@@ -7,6 +7,8 @@
     version: master}
 - git: {local-name: yujin_ocs, uri: 'https://github.com/yujinrobot/yujin_ocs.git',
     version: hydro-devel}
+- git: {local-name: yujin_ocs, uri: 'https://github.com/corot/navigation.git',
+    version: hydro-devel}
 
 # Database
 - git: {local-name: spatial_world_model, uri: 'https://github.com/jihoonl/spatial_world_model.git',
