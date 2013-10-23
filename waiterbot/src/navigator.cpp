@@ -8,7 +8,6 @@
 #include <std_srvs/Empty.h>
 #include <std_msgs/Empty.h>
 #include <actionlib_msgs/GoalID.h>
-#include <move_base_msgs/MoveBaseAction.h>
 #include <dynamic_reconfigure/Reconfigure.h>
 
 #include <kobuki_msgs/MotorPower.h>

@@ -222,7 +222,7 @@ private:
   tf::TransformListener      tf_listener_;
   tf::TransformBroadcaster   tf_brcaster_;
   nav_msgs::Odometry         odometry_;
-  bool                      recovery_behavior_;    /**< Whether recovery_behavior is enabled or not */
+  bool                       recovery_behavior_;    /**< Whether recovery_behavior is enabled or not */
 
   ros::Subscriber odometry_sub_;
 
@@ -269,7 +269,7 @@ private:
       move_base_ac_.sendGoal(mb_goal);
       times_sent++;
     } while ((move_base_ac_.waitForResult(ros::Duration(0.1)) == true) &&
-              (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED));
+             (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED));
 
     if (times_sent > 1)
       ROS_DEBUG("Again the strange case of instantaneous goals... (goal sent %d times)", times_sent);
@@ -328,7 +328,7 @@ private:
   const char* acName(actionlib::SimpleActionClient<T> & action_client)
   {
     return (typeid(T) == typeid(move_base_msgs::MoveBaseAction)) ? "move base" :
-            (typeid(T) == typeid(kobuki_msgs::AutoDockingAction)) ? "auto-dock" : "ERROR";
+           (typeid(T) == typeid(kobuki_msgs::AutoDockingAction)) ? "auto-dock" : "ERROR";
   }
 };
 
