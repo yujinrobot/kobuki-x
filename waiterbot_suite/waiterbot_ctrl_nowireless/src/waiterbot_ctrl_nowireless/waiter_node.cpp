@@ -29,8 +29,8 @@ namespace waiterbot {
     ros::NodeHandle priv_n("~");
 
 
-    priv_n.param("loc_vm", loc_vm, DEFAULT_LOC_VM);
-    priv_n.param("loc_customer", loc_vm, DEFAULT_LOC_CUSTOMER);
+    priv_n.param("loc_vm", loc_vm_, DEFAULT_LOC_VM);
+    priv_n.param("loc_customer", loc_customer_, DEFAULT_LOC_CUSTOMER);
 
     // listen to green and red buttons
     sub_digital_input_ = nh_.subscribe("digital_input", 5, & WaiterIsolated::digitalInputCB, this);
@@ -60,7 +60,7 @@ namespace waiterbot {
     // wait until it finishes a delivery
     while(inDelivery_) { ros::Duration(1).sleep(); }
 
-    map_wp.clear();
+    map_wp_.clear();
     for(i = 0; i < msg->waypoints.size(); i++)
     {
       geometry_msgs::PoseStamped ps;
@@ -68,10 +68,10 @@ namespace waiterbot {
       ps.header = msg->waypoints[i].header;
       ps.pose = msg->waypoints[i].pose;
 
-      map_wp[msg->waypoints[i].name] = ps;
+      map_wp_[msg->waypoints[i].name] = ps;
     }
     
-    ROS_INFO("Received %lu waypoints", map_wp.size());
+    ROS_INFO("Received %lu waypoints", map_wp_.size());
     waypointsReceived_ = true;
   }
 

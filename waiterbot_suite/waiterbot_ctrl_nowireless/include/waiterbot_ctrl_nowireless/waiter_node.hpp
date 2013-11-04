@@ -56,8 +56,8 @@ namespace waiterbot {
       ros::Subscriber sub_drinkorder;
       actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac_autodock_;
 
-      std::string loc_vm;
-      std::string loc_customer;
+      std::string loc_vm_;
+      std::string loc_customer_;
 
       bool initialized_;
       bool waypointsReceived_;
@@ -65,7 +65,7 @@ namespace waiterbot {
 
       Navigator navigator_;
 
-      std::map<std::string, geometry_msgs::PoseStamped> map_wp;
+      std::map<std::string, geometry_msgs::PoseStamped> map_wp_;
 
       boost::thread order_process_thread_;
   };

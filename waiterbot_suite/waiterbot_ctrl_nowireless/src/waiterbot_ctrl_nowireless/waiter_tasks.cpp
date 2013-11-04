@@ -18,9 +18,9 @@ namespace waiterbot {
   bool WaiterIsolated::goToVendingMachine()
   {
     // go to in front of vending machine
-    ROS_INFO("go to %s",loc_vm.c_str());
+    ROS_INFO("go to %s",loc_vm_.c_str());
 
-    geometry_msgs::PoseStamped vm = map_wp[loc_vm];
+    geometry_msgs::PoseStamped vm = map_wp_[loc_vm_];
 
     vm.header.stamp = ros::Time::now();
 
@@ -54,14 +54,15 @@ namespace waiterbot {
   bool WaiterIsolated::servingDrink()
   {
     // go to in front of vending machine
-    geometry_msgs::PoseStamped vm = map_wp[loc_customer];
+    ROS_INFO("go to %s",loc_customer_.c_str());
+    geometry_msgs::PoseStamped vm = map_wp_[loc_customer_];
     vm.header.stamp = ros::Time::now();
 
     if(navigator_.moveTo(vm) == false) {
       ROS_ERROR("Failed to move");
       return false;
     }
-    return false;
+    return true;
   }
 
   bool WaiterIsolated::dockInBase() {

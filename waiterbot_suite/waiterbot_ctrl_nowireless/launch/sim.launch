@@ -3,8 +3,11 @@
   <arg name="waypoint_filename" default="$(find waiterbot_ctrl_nowireless)/param/waypoints.yaml"/>
   <arg name="loc_vm" default="vending_machine"/>
   <arg name="loc_customer" default="customer"/>
+  <arg name="is_elastic_planner" default="true"/>
 
-  <include file="$(find turtlebot_stage)/launch/turtlebot_in_stage.launch"/>
+  <include file="$(find turtlebot_stage)/launch/turtlebot_in_stage.launch">
+    <arg name="is_elastic_planner" value="$(arg is_elastic_planner)"/>
+  </include>
 
   <!--  ************* Waiterbot Master controller **************  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_master_ctrl.launch">
