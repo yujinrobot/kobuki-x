@@ -5,6 +5,8 @@
     version: hydro-devel}
 - git: {local-name: bosch_drivers, uri: 'https://github.com/corot/bosch_drivers.git',
     version: master}
+- git: {local-name: yocs_msgs, uri: 'https://github.com/yujinrobot/yocs_msgs.git',
+    version: hydro-devel}
 - git: {local-name: yujin_ocs, uri: 'https://github.com/yujinrobot/yujin_ocs.git',
     version: hydro-devel}
 - git: {local-name: yujin_ocs, uri: 'https://github.com/corot/navigation.git',
