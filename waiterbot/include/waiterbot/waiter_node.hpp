@@ -17,7 +17,7 @@
 #include <cafe_msgs/Status.h>
 #include <cafe_msgs/Order.h>
 #include <cafe_msgs/DeliverOrderAction.h>
-#include <semantic_region_handler/TablePoseList.h>
+#include <yocs_msgs/TableList.h>
 
 #include "waiterbot/ar_markers.hpp"
 #include "waiterbot/nav_watchdog.hpp"
@@ -53,7 +53,7 @@ public:
   void odometryCB(const nav_msgs::Odometry::ConstPtr& msg);
   void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
   void coreSensorsCB(const kobuki_msgs::SensorState::ConstPtr& msg);
-  void tablePosesCB(const semantic_region_handler::TablePoseList::ConstPtr& msg);
+  void tablePosesCB(const yocs_msgs::TableList::ConstPtr& msg);
 
   void deliverOrderCB();
   void preemptOrderCB();
@@ -91,11 +91,11 @@ protected:
   NavWatchdog nav_watchd_;
   Navigator   navigator_;
 
-  geometry_msgs::PoseStamped             pickup_pose_;
-  semantic_region_handler::TablePoseList table_poses_;
-  kobuki_msgs::SensorState core_sensors_;
-  cafe_msgs::Order order_;
-  std::string global_frame_;
+  geometry_msgs::PoseStamped pickup_pose_;
+  yocs_msgs::TableList       table_poses_;
+  kobuki_msgs::SensorState   core_sensors_;
+  cafe_msgs::Order           order_;
+  std::string                global_frame_;
 
   // LED blinking attributes; TODO make a separate HRI class
   double blink_frequency_;

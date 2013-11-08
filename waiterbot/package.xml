@@ -20,8 +20,8 @@
   <build_depend>kobuki_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>cafe_msgs</build_depend>
+  <build_depend>yocs_msgs</build_depend>
   <build_depend>ar_track_alvar</build_depend>
-  <build_depend>semantic_region_handler</build_depend>
   <build_depend>arduino_interface</build_depend>
   <build_depend>adc_driver</build_depend>
   <build_depend>yocs_math_toolkit</build_depend>
@@ -34,8 +34,8 @@
   <run_depend>kobuki_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>cafe_msgs</run_depend>
+  <run_depend>yocs_msgs</run_depend>
   <run_depend>ar_track_alvar</run_depend>
-  <run_depend>semantic_region_handler</run_depend>
   <run_depend>arduino_interface</run_depend>
   <run_depend>adc_driver</run_depend>
   <run_depend>yocs_math_toolkit</run_depend>

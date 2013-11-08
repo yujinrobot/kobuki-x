@@ -20,8 +20,6 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <kobuki_msgs/AutoDockingAction.h>
 
-#include <semantic_region_handler/TablePose.h>
-
 #include <yocs_math_toolkit/common.hpp>
 #include <yocs_math_toolkit/geometry.hpp>
 

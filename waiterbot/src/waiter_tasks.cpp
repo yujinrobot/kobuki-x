@@ -204,9 +204,9 @@ bool WaiterNode::gotoTable(int table_id)
     if (table_poses_.tables[i].name.find(mtk::nb2str(table_id), strlen("table")) != std::string::npos)
     {
       ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
-                mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
-      table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
-      table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+                mtk::pose2str(table_poses_.tables[i].pose.pose.pose));
+      table_pose.header = table_poses_.tables[i].pose.header;
+      table_pose.pose = table_poses_.tables[i].pose.pose.pose;
       radius = table_poses_.tables[i].radius;
       table_found = true;
       break;

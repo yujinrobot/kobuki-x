@@ -68,9 +68,8 @@
   <node name="map_server" pkg="map_server" type="map_server" args="$(find cafe_concert)/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
-  <include file="$(find semantic_region_handler)/launch/data_publisher_from_file.launch"/>
-<!-- 
-  <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
+  <include file="$(find waiterbot)/launch/includes/_annotations_pub.launch"/>
+<!-- <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
 
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">

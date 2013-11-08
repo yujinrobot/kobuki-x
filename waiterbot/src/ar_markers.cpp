@@ -105,6 +105,17 @@ void ARMarkers::broadcastMarkersTF()
       tf_brcaster_.sendTransform(tf);
     }
 
+
+    for (unsigned int i = 0; i <global_markers_mirrors.markers.size(); i++)
+    {
+      sprintf(child_frame, "%s_%d", i != docking_marker_.id?"MIRROR":"MIRROR docking", i);
+      mtk::pose2tf(global_markers_mirrors.markers[i].pose, tf);
+      tf.child_frame_id_ = child_frame;
+      tf.stamp_ = ros::Time::now();
+      tf_brcaster_.sendTransform(tf);
+    }
+
+
 // TODO remove definitively or recover id I finally decide not to include docking base on global markers
 // CHANGED  look below
     if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
@@ -129,6 +140,23 @@ void ARMarkers::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& ms
     ROS_INFO("%lu global marker pose(s) received", global_markers_.markers.size());
     for (unsigned int i = 0; i < global_markers_.markers.size(); i++)
     {
+
+
+      // Compensate the vertical alignment of markers and put at ground level to adopt navistack goals format
+      tf::Transform tf(tf::createQuaternionFromYaw(tf::getYaw(global_markers_.markers[i].pose.pose.orientation) - M_PI/2.0),
+                       tf::Vector3(global_markers_.markers[i].pose.pose.position.x, global_markers_.markers[i].pose.pose.position.y, 0.0));
+      tf::StampedTransform marker_gb(tf, ros::Time::now(), global_frame_, "KKKK");
+
+      // Half turn and translate to put goal at some distance in front of the marker
+      tf::Transform in_front(tf::createQuaternionFromYaw(M_PI),
+                             tf::Vector3(1.0, 0.0, 0.0));
+      marker_gb *= in_front;
+
+      ar_track_alvar::AlvarMarker kk;
+      mtk::tf2pose(marker_gb, kk.pose);
+      global_markers_mirrors.markers.push_back(kk);
+
+
       /*
       //TODO cheat for debuging;  remove
             if (global_markers_.markers[i].id >= 4)

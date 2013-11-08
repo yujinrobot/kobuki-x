@@ -1,0 +1,14 @@
+<launch>
+    <node pkg="waiterbot" type="alvar_ar_publisher.py" name="alvar_ar_publisher" output="screen">
+         <param name="filename" type="string" value="$(find waiterbot)/resources/annotations/ar_list.yaml" />
+    </node>
+    <node pkg="waiterbot" type="table_publisher.py" name="table_publisher" output="screen">
+         <param name="filename" type="string" value="$(find waiterbot)/resources/annotations/table_list.yaml" />
+    </node>
+    <node pkg="waiterbot" type="wall_publisher.py" name="wall_publisher" output="screen">
+         <param name="filename" type="string" value="$(find waiterbot)/resources/annotations/wall_list.yaml" />
+    </node>
+    <node pkg="waiterbot" type="column_publisher.py" name="column_publisher" output="screen">
+         <param name="filename" type="string" value="$(find waiterbot)/resources/annotations/column_list.yaml" />
+    </node>
+</launch>

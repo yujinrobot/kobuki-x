@@ -12,7 +12,7 @@
 namespace waiterbot
 {
 
-void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::ConstPtr& msg)
+void WaiterNode::tablePosesCB(const yocs_msgs::TableList::ConstPtr& msg)
 {
   // Just take first message; ignore the rest, as global markers list is not dynamic
   if ((table_poses_.tables.size() == 0) && (msg->tables.size() > 0))
@@ -34,7 +34,7 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
       marker.scale.x = table_poses_.tables[i].radius * 2.0;
       marker.scale.y = table_poses_.tables[i].radius * 2.0;
       marker.scale.z = 0.1;
-      marker.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+      marker.pose = table_poses_.tables[i].pose.pose.pose;
       marker.color.r = 0.0f;
       marker.color.g = 0.0f;
       marker.color.b = 1.0f;
@@ -44,14 +44,14 @@ void WaiterNode::tablePosesCB(const semantic_region_handler::TablePoseList::Cons
       // Look for the pickup point
       if (table_poses_.tables[i].name.find("pickup") != std::string::npos)
       {
-        ROS_DEBUG("Pickup point: %s", mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
-        pickup_pose_.header = table_poses_.tables[i].pose_cov_stamped.header;
-        pickup_pose_.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+        ROS_DEBUG("Pickup point: %s", mtk::pose2str(table_poses_.tables[i].pose.pose.pose));
+        pickup_pose_.header = table_poses_.tables[i].pose.header;
+        pickup_pose_.pose = table_poses_.tables[i].pose.pose.pose;
       }
       else
       {
         ROS_DEBUG("%s. rad: %f, pose: %s", table_poses_.tables[i].name.c_str(), table_poses_.tables[i].radius,
-                  mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+                  mtk::pose2str(table_poses_.tables[i].pose.pose.pose));
       }
     }
 
@@ -157,10 +157,10 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
       if (table_poses_.tables[i].name.find(mtk::nb2str(table_id), strlen("table")) != std::string::npos)
       {
         ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
-                  mtk::pose2str(table_poses_.tables[i].pose_cov_stamped.pose.pose));
+                  mtk::pose2str(table_poses_.tables[i].pose.pose.pose));
         geometry_msgs::PoseStamped table_pose;
-        table_pose.header = table_poses_.tables[i].pose_cov_stamped.header;
-        table_pose.pose = table_poses_.tables[i].pose_cov_stamped.pose.pose;
+        table_pose.header = table_poses_.tables[i].pose.header;
+        table_pose.pose = table_poses_.tables[i].pose.pose.pose;
 
         boost::thread pickUpThread(&Navigator::deliverOrder, &navigator_,
                                    table_pose, table_poses_.tables[i].radius);

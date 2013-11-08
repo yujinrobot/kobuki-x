@@ -85,7 +85,7 @@ private:
   double max_valid_d_inc_;    /**< Maximum valid distance increment per second to consider stable tracking */
   double max_valid_h_inc_;    /**< Maximum valid heading increment per second to consider stable tracking */
   double ar_tracker_freq_;    /**< AR tracker frequency; unless changed with setTrackerFreq, it must be the
-                                    same value configured on ar_track_alvar node */
+                                   same value configured on ar_track_alvar node */
 
   typedef std::list<geometry_msgs::PoseStamped> ObsList;
 
@@ -131,7 +131,7 @@ private:
   double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
 
   ar_track_alvar::AlvarMarker  docking_marker_;  /**< AR markers described in the semantic map */
-  ar_track_alvar::AlvarMarkers global_markers_;  /**< AR markers described in the semantic map */
+  ar_track_alvar::AlvarMarkers global_markers_,global_markers_mirrors;  /**< AR markers described in the semantic map */
   ar_track_alvar::AlvarMarkers spotted_markers_;
 
   bool               tracker_enabled_;
