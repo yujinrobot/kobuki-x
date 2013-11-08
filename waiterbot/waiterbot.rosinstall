@@ -9,13 +9,5 @@
     version: hydro-devel}
 - git: {local-name: yujin_ocs, uri: 'https://github.com/yujinrobot/yujin_ocs.git',
     version: hydro-devel}
-- git: {local-name: yujin_ocs, uri: 'https://github.com/corot/navigation.git',
-    version: hydro-devel}
-
-# Database
-- git: {local-name: spatial_world_model, uri: 'https://github.com/jihoonl/spatial_world_model.git',
-    version: groovy-devel}
-- git: {local-name: rocon_database, uri: 'https://github.com/robotics-in-concert/rocon_database.git',
-    version: hydro-devel}
-- git: {local-name: rocon_demos, uri: 'https://github.com/robotics-in-concert/rocon_demos.git',
+- git: {local-name: navigation, uri: 'https://github.com/corot/navigation.git',
     version: hydro-devel}
