@@ -11,3 +11,7 @@
     version: hydro-devel}
 - git: {local-name: navigation, uri: 'https://github.com/corot/navigation.git',
     version: hydro-devel}
+
+# Cafe dependencies
+- git: {local-name: rocon_demos, uri: 'https://github.com/robotics-in-concert/rocon_demos.git',
+    version: hydro-devel}
