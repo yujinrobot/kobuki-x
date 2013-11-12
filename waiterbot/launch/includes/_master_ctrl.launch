@@ -14,7 +14,7 @@
 
   <!-- Waiterbot main node -->
   <node name="waiterbot" pkg="waiterbot" type="waiterbot_node" output="screen">
-    <param name="global_frame" value="map"/>
+    <param name="global_frame" value="/map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
     <param name="resources_path" value="$(find waiterbot)/resources"/>
