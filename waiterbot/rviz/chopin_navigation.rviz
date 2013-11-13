@@ -6,11 +6,10 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Local Map1/Obstacles - Inflated1
-        - /Local Map1/Obstacles1
-        - /Local Map1/Unknown Space1
+        - /Local Map1/Costmap1
+        - /Global Map1/Costmap1
       Splitter Ratio: 0.5
-    Tree Height: 392
+    Tree Height: 809
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -55,16 +54,41 @@ Visualization Manager:
       Collision Enabled: false
       Enabled: true
       Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_depth_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_rgb_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_rgb_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         caster_back_link:
           Alpha: 1
           Show Axes: false
@@ -75,6 +99,22 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        cliff_sensor_front_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        cliff_sensor_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        cliff_sensor_right_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        gyro_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         plate_bottom_link:
           Alpha: 1
           Show Axes: false
@@ -190,173 +230,186 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        /ar_marker_0:
-          Value: true
-        /ar_marker_1:
-          Value: true
-        /base_footprint:
-          Value: true
-        /base_link:
-          Value: true
-        /camera_depth_frame:
-          Value: true
-        /camera_depth_optical_frame:
-          Value: true
-        /camera_link:
-          Value: true
-        /camera_rgb_frame:
-          Value: true
-        /camera_rgb_optical_frame:
-          Value: true
-        /caster_back_link:
-          Value: true
-        /caster_front_link:
-          Value: true
-        /cliff_sensor_front_link:
-          Value: true
-        /cliff_sensor_left_link:
-          Value: true
-        /cliff_sensor_right_link:
-          Value: true
-        /global_marker_0:
-          Value: true
-        /global_marker_1:
-          Value: true
-        /global_marker_3:
-          Value: true
-        /gyro_link:
-          Value: true
-        /ir_link:
-          Value: true
-        /map:
-          Value: true
-        /odom:
-          Value: true
-        /plate_bottom_link:
-          Value: true
-        /plate_middle_link:
-          Value: true
-        /plate_top_link:
-          Value: true
-        /pole_bottom_0_link:
-          Value: true
-        /pole_bottom_1_link:
-          Value: true
-        /pole_bottom_2_link:
-          Value: true
-        /pole_bottom_3_link:
-          Value: true
-        /pole_bottom_4_link:
-          Value: true
-        /pole_bottom_5_link:
-          Value: true
-        /pole_kinect_0_link:
-          Value: true
-        /pole_kinect_1_link:
-          Value: true
-        /pole_middle_0_link:
-          Value: true
-        /pole_middle_1_link:
-          Value: true
-        /pole_middle_2_link:
-          Value: true
-        /pole_middle_3_link:
-          Value: true
-        /pole_top_0_link:
-          Value: true
-        /pole_top_1_link:
-          Value: true
-        /pole_top_2_link:
-          Value: true
-        /pole_top_3_link:
-          Value: true
-        /wheel_left_link:
-          Value: true
-        /wheel_right_link:
-          Value: true
         All Enabled: false
+        MIRROR_0:
+          Value: true
+        MIRROR_1:
+          Value: true
+        MIRROR_2:
+          Value: true
+        MIRROR_3:
+          Value: true
+        base_footprint:
+          Value: true
+        base_laser_link:
+          Value: true
+        base_link:
+          Value: true
+        camera_depth_frame:
+          Value: true
+        camera_depth_optical_frame:
+          Value: true
+        camera_link:
+          Value: true
+        camera_rgb_frame:
+          Value: true
+        camera_rgb_optical_frame:
+          Value: true
+        caster_back_link:
+          Value: true
+        caster_front_link:
+          Value: true
+        cliff_sensor_front_link:
+          Value: true
+        cliff_sensor_left_link:
+          Value: true
+        cliff_sensor_right_link:
+          Value: true
+        global_marker_0:
+          Value: true
+        global_marker_1:
+          Value: true
+        global_marker_2:
+          Value: true
+        global_marker_3:
+          Value: true
+        gyro_link:
+          Value: true
+        map:
+          Value: true
+        odom:
+          Value: true
+        plate_bottom_link:
+          Value: true
+        plate_middle_link:
+          Value: true
+        plate_top_link:
+          Value: true
+        pole_bottom_0_link:
+          Value: true
+        pole_bottom_1_link:
+          Value: true
+        pole_bottom_2_link:
+          Value: true
+        pole_bottom_3_link:
+          Value: true
+        pole_bottom_4_link:
+          Value: true
+        pole_bottom_5_link:
+          Value: true
+        pole_kinect_0_link:
+          Value: true
+        pole_kinect_1_link:
+          Value: true
+        pole_middle_0_link:
+          Value: true
+        pole_middle_1_link:
+          Value: true
+        pole_middle_2_link:
+          Value: true
+        pole_middle_3_link:
+          Value: true
+        pole_top_0_link:
+          Value: true
+        pole_top_1_link:
+          Value: true
+        pole_top_2_link:
+          Value: true
+        pole_top_3_link:
+          Value: true
+        wheel_left_link:
+          Value: true
+        wheel_right_link:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        /map:
-          /global_marker_0:
+        map:
+          MIRROR_0:
             {}
-          /global_marker_1:
+          MIRROR_1:
             {}
-          /global_marker_3:
+          MIRROR_2:
             {}
-          /odom:
-            /base_footprint:
-              /base_link:
-                /camera_rgb_frame:
-                  /camera_depth_frame:
-                    /camera_depth_optical_frame:
+          MIRROR_3:
+            {}
+          global_marker_0:
+            {}
+          global_marker_1:
+            {}
+          global_marker_2:
+            {}
+          global_marker_3:
+            {}
+          odom:
+            base_footprint:
+              base_link:
+                base_laser_link:
+                  {}
+                camera_rgb_frame:
+                  camera_depth_frame:
+                    camera_depth_optical_frame:
                       {}
-                  /camera_link:
+                  camera_link:
                     {}
-                  /camera_rgb_optical_frame:
-                    /ar_marker_0:
-                      {}
-                    /ar_marker_1:
-                      {}
-                /caster_back_link:
+                  camera_rgb_optical_frame:
+                    {}
+                caster_back_link:
                   {}
-                /caster_front_link:
+                caster_front_link:
                   {}
-                /cliff_sensor_front_link:
+                cliff_sensor_front_link:
                   {}
-                /cliff_sensor_left_link:
+                cliff_sensor_left_link:
                   {}
-                /cliff_sensor_right_link:
+                cliff_sensor_right_link:
                   {}
-                /gyro_link:
+                gyro_link:
                   {}
-                /ir_link:
+                plate_bottom_link:
                   {}
-                /plate_bottom_link:
+                plate_middle_link:
                   {}
-                /plate_middle_link:
+                plate_top_link:
                   {}
-                /plate_top_link:
+                pole_bottom_0_link:
                   {}
-                /pole_bottom_0_link:
+                pole_bottom_1_link:
                   {}
-                /pole_bottom_1_link:
+                pole_bottom_2_link:
                   {}
-                /pole_bottom_2_link:
+                pole_bottom_3_link:
                   {}
-                /pole_bottom_3_link:
+                pole_bottom_4_link:
                   {}
-                /pole_bottom_4_link:
+                pole_bottom_5_link:
                   {}
-                /pole_bottom_5_link:
+                pole_kinect_0_link:
                   {}
-                /pole_kinect_0_link:
+                pole_kinect_1_link:
                   {}
-                /pole_kinect_1_link:
+                pole_middle_0_link:
                   {}
-                /pole_middle_0_link:
+                pole_middle_1_link:
                   {}
-                /pole_middle_1_link:
+                pole_middle_2_link:
                   {}
-                /pole_middle_2_link:
+                pole_middle_3_link:
                   {}
-                /pole_middle_3_link:
+                pole_top_0_link:
                   {}
-                /pole_top_0_link:
+                pole_top_1_link:
                   {}
-                /pole_top_1_link:
+                pole_top_2_link:
                   {}
-                /pole_top_2_link:
+                pole_top_3_link:
                   {}
-                /pole_top_3_link:
+                wheel_left_link:
                   {}
-                /wheel_left_link:
-                  {}
-                /wheel_right_link:
+                wheel_right_link:
                   {}
       Update Interval: 0
       Value: true
@@ -373,10 +426,11 @@ Visualization Manager:
       Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
+      Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
+      Max Intensity: 1
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 1
       Name: LaserScan (kinect)
       Position Transformer: XYZ
       Queue Size: 10
@@ -401,6 +455,7 @@ Visualization Manager:
       Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
+      Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 520
       Min Color: 0; 0; 0
@@ -424,11 +479,41 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
+      Class: rviz/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: LaserScan (virtual sensor)
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.01
+      Style: Flat Squares
+      Topic: /chopin/virtual_sensor_scan
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
+      Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
       Min Color: 0; 0; 0
@@ -446,6 +531,7 @@ Visualization Manager:
       Value: true
     - Alpha: 0.7
       Class: rviz/Map
+      Color Scheme: map
       Draw Behind: false
       Enabled: true
       Name: Map
@@ -453,26 +539,13 @@ Visualization Manager:
       Value: true
     - Class: rviz/Group
       Displays:
-        - Alpha: 1
-          Class: rviz/GridCells
-          Color: 0; 145; 255
+        - Alpha: 0.7
+          Class: rviz/Map
+          Color Scheme: costmap
+          Draw Behind: false
           Enabled: true
-          Name: Obstacles - Inflated
-          Topic: /chopin/move_base/local_costmap/inflated_obstacles
-          Value: true
-        - Alpha: 1
-          Class: rviz/GridCells
-          Color: 0; 29; 255
-          Enabled: true
-          Name: Obstacles
-          Topic: /chopin/move_base/local_costmap/obstacles
-          Value: true
-        - Alpha: 1
-          Class: rviz/GridCells
-          Color: 0; 243; 255
-          Enabled: true
-          Name: Unknown Space
-          Topic: /chopin/move_base/local_costmap/unknown_space
+          Name: Costmap
+          Topic: /chopin/move_base/local_costmap/costmap
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -484,28 +557,15 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Local Map
-    - Arrow Length: 0.2
-      Class: rviz/PoseArray
-      Color: 0; 192; 0
-      Enabled: false
-      Name: ParticleCloud
-      Topic: /chopin/particlecloud
-      Value: false
     - Class: rviz/Group
       Displays:
-        - Alpha: 1
-          Class: rviz/GridCells
-          Color: 181; 66; 0
+        - Alpha: 0.3
+          Class: rviz/Map
+          Color Scheme: costmap
+          Draw Behind: true
           Enabled: true
-          Name: Obstacles - Inflated
-          Topic: /move_base/global_costmap/inflated_obstacles
-          Value: true
-        - Alpha: 1
-          Class: rviz/GridCells
-          Color: 99; 0; 1
-          Enabled: true
-          Name: Obstacles
-          Topic: /move_base/global_costmap/obstacles
+          Name: Costmap
+          Topic: /chopin/move_base/global_costmap/costmap
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -525,7 +585,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.3
       Head Radius: 0.1
-      Name: Pose (chopin)
+      Name: Pose (waiterbot)
       Shaft Length: 1
       Shaft Radius: 0.05
       Shape: Axes
@@ -545,17 +605,13 @@ Visualization Manager:
       Shape: Arrow
       Topic: /chopin/move_base/current_goal
       Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /table_marker
-      Name: MarkerArray
-      Namespaces:
-        pickup: true
-        table1: true
-        table2: true
-        table3: true
-      Queue Size: 100
-      Value: true
+    - Arrow Length: 0.2
+      Class: rviz/PoseArray
+      Color: 0; 192; 0
+      Enabled: false
+      Name: ParticleCloud (amcl)
+      Topic: /chopin/particlecloud
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -572,10 +628,38 @@ Visualization Manager:
       Name: Path (local)
       Topic: /chopin/move_base/TrajectoryPlannerROS/local_plan
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /chopin/table_marker
+      Name: MarkerArray (tables)
+      Namespaces:
+        pickup: true
+        table1: true
+        table2: true
+        tables: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /chopin/column_marker
+      Name: MarkerArray (columns)
+      Namespaces:
+        column_obstacles: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /chopin/wall_marker
+      Name: MarkerArray (walls)
+      Namespaces:
+        wall_obstacles: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: /map
+    Fixed Frame: map
+    Frame Rate: 30
   Name: root
   Tools:
     - Class: rviz/MoveCamera
@@ -591,11 +675,11 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.79493
+      Distance: 8.68063
       Focal Point:
-        X: 1.59824
-        Y: 0.939706
-        Z: 0.34871
+        X: 2.44689
+        Y: 3.16153
+        Z: 0.350922
       Name: Current View
       Near Clip Distance: 0.01
       Pitch: 1.5698
@@ -606,10 +690,10 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 713
+  Height: 1025
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001b10000027dfc0200000005fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006901000005fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000031000000690000006901000005fb000000100044006900730070006c006100790073010000009d00000211000000d601000005000000010000010b0000027dfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000310000027d000000a701000005fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a00000022301000005fb0000000800540069006d00650100000000000004500000000000000000000003a20000027d00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001b1000003b3fc0200000005fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006901000005fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000001e0054006f006f006c002000500072006f007000650072007400690065007300000000320000009d0000006901000005fb000000100044006900730070006c0061007900730100000032000003b3000000d701000005000000010000010b0000027dfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000310000027d000000a901000005fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a00000024c01000005fb0000000800540069006d00650100000000000004500000000000000000000005cc000003b300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -618,6 +702,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1366
-  X: -2
-  Y: -3
+  Width: 1920
+  X: 1920
+  Y: 0
