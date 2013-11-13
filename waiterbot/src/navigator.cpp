@@ -114,7 +114,7 @@ bool Navigator::dockInBase()
 
 bool Navigator::dockInBase(const geometry_msgs::PoseStamped& base_marker_pose)
 {
-  if (base_marker_pose.header.frame_id != global_frame_)
+  if (mtk::sameFrame(base_marker_pose.header.frame_id, global_frame_) == false)
   {
     ROS_ERROR("Docking base pose not in global frame (%s != %s)",
               base_marker_pose.header.frame_id.c_str(), global_frame_.c_str());
@@ -365,7 +365,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
   // Enable safety controller on normal navigation
  // enableSafety();
 
-  if (pickup_pose.header.frame_id != global_frame_)
+  if (mtk::sameFrame(pickup_pose.header.frame_id, global_frame_) == false)
   {
     ROS_ERROR("Pickup pose not in global frame (%s != %s)",
               pickup_pose.header.frame_id.c_str(), global_frame_.c_str());
@@ -512,7 +512,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
   // Enable safety controller on normal navigation
  // enableSafety();
 
-  if (table_pose.header.frame_id != global_frame_)
+  if (mtk::sameFrame(table_pose.header.frame_id, global_frame_) == false)
   {
     ROS_ERROR("Table pose not in global frame (%s != %s)",
               table_pose.header.frame_id.c_str(), global_frame_.c_str());
