@@ -878,7 +878,6 @@ ROS_DEBUG("disableRecovery ended on %f", (ros::Time::now() - t0).toSec());
 
 bool Navigator::clearCostmaps()
 {
-return true; // Horrible!  cannot reset maps, cause flipped map topic is not accessible after the first time
   ros::Time t0 = ros::Time::now();
 
   ros::NodeHandle nh;
