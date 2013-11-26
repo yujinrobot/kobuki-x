@@ -15,7 +15,7 @@
   <arg name="3d_sensor"  value="$(optenv TURTLEBOT_3D_SENSOR kinect)"/>  <!-- kinect, asus_xtion_pro -->
 
   <!-- Name of the map to use (without path nor extension) and initial position -->
-  <arg name="map_name"       default="robopark_plan"/>
+  <arg name="map_name"       default="maze"/> <!-- robopark_plan -->
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
@@ -83,7 +83,7 @@
   
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
-    <arg name="scan_topic" value="/scan"/>
+    <arg name="scan_topic" value="scan"/>
     <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>

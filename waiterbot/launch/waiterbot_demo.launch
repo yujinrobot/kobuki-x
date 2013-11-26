@@ -62,7 +62,7 @@
 
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot)/launch/includes/_amcl.launch">
-    <arg name="scan_topic" value="/scan"/>
+    <arg name="scan_topic" value="scan"/>
     <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
