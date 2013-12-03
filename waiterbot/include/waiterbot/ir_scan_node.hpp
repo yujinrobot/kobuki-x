@@ -40,6 +40,7 @@ public:
   bool init(ros::NodeHandle& nh);
 
 private:
+  int      wrong_readings;
   int      rangers_count;
   double   range_variance;
   double   maximum_range;

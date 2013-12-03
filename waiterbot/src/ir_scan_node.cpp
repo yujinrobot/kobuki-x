@@ -19,17 +19,42 @@ IrScanNode::IrScanNode()
 IrScanNode::~IrScanNode()
 {
 }
-
+/**
+ * Reads, linearizes and filters (KF) the full array of rangers.
+ * @return False if we must stop nod after many wrong readings. True otherwise.
+ */
 bool IrScanNode::readRanges()
 {
   for (unsigned int i = 0; i < rangers.size(); i++)
   {
+    // Read ranger i digitized voltage
     uint32_t reading = rangers[i].adc_driver->read();
     if (reading == 0)
     {
-      // TODO stop reading when fails a couple of times to avoid spaming the log
-    }
+      if ((++wrong_readings % 100) == 99)
+      {
+        // Retry reinitializing Arduino interface up to three times
+        ROS_WARN("Arduino interface: %d consecutive wrong readings; trying to reinitialize...", wrong_readings);
+        wrong_readings = 0;
+        arduino_iface.reset(new ArduinoInterface(arduino_port));
+        if (arduino_iface->initialize() == false)
+        {
+          ROS_ERROR("Arduino interface reinitialization failed on port %s", arduino_port.c_str());
+          return false;
+        }
+      }
+      if (wrong_readings > 300)
+      {
+        // Too many wrong readings; let it be...
+        ROS_ERROR("Arduino interface: %d consecutive wrong readings; shutdown ir_scan node", wrong_readings);
+        return false;
+      }
 
+      continue;
+    }
+    wrong_readings = 0;
+
+    // Linearize voltage and convert to range
     double v = reading/5000.0;
     double r = 1.06545479706866e-15*pow(v, 6) - 2.59219822235705e-12*pow(v, 5) + 2.52095247302813e-09*pow(v, 4)
              - 1.25091335895759e-06*pow(v, 3) + 0.000334991560873548*pow(v, 2) - 0.0469975280676629*v + 3.01895762047759;
@@ -70,7 +95,10 @@ bool IrScanNode::spin()
   {
     scan.header.seq = i++;
     scan.header.stamp = ros::Time::now();
-    readRanges();
+
+    if (readRanges() == false)
+      return false;
+
     ir_scan_pub.publish(scan);
 
     ros::spinOnce();
@@ -103,6 +131,8 @@ bool IrScanNode::init(ros::NodeHandle& nh)
   scan.scan_time = 1.0 / read_frequency;
   scan.range_min = 0.10 + ir_ring_radius;
   scan.range_max = 11.00 + ir_ring_radius;
+
+  wrong_readings = 0;
 
   // Open an interface with the arduino board and create an ADC driver for every ranger
   arduino_iface.reset(new ArduinoInterface(arduino_port));
