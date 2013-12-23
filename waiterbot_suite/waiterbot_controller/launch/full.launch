@@ -1,0 +1,5 @@
+
+<launch>
+  <include file="$(find waiterbot_bringup)/launch/minimal.launch"/>
+  <include file="$(find waiterbot_controller)/launch/controller.launch"/>
+</launch>
