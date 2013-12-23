@@ -1,7 +1,7 @@
 /*
  * ir_scan.cpp
  *
- *  LICENSE : BSD - 
+ *  LICENSE : BSD - https://raw.github.com/yujinrobot/kobuki-x/license/LICENSE
  *
  *  Created on: May 31, 2012
  *      Author: jorge
