@@ -1,0 +1,64 @@
+<!--
+  Waiterbot local navigation just with IR and bumber sensors:
+  - turtlebot
+  - move_base
+  - fake localization
+ -->
+
+<launch>
+
+  <!--  *********** Turtlebot and 3d sensor ***********  -->
+  <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+
+  <!--  ************* Kobuki IR half ring *************  -->
+  <include file="$(find waiterbot)/launch/includes/_ir_sensors.launch"/>
+
+  <!--  ********** Kobuki mobile base extras **********  -->
+  <include file="$(find waiterbot)/launch/includes/_safety_ctrl.launch"/>
+  <param name="cmd_vel_mux/yaml_cfg_file" value="$(find waiterbot)/param/vel_multiplexer.yaml"/>
+
+  <!--  ******** Kobuki auto-docking controller *******  -->
+  <include file="$(find kobuki_auto_docking)/launch/minimal.launch"/>
+
+  <!--  ********** Alvar AR markers tracker ***********  -->
+  <include file="$(find waiterbot)/launch/includes/_ar_tracker.launch">
+    <arg name="max_frequency" value="4.0"/>  <!-- This is a CPU-hungry bastard; reduce its rate --> 
+  </include>
+
+  <!--  ************* Navigation manager **************  -->
+  <include file="$(find waiterbot)/launch/includes/_master_ctrl.launch"/>
+
+  <!--  ************** Rosnav move base ***************  -->
+  <include file="$(find waiterbot)/launch/includes/_move_base.launch"/>
+  
+  <!--
+    Tweaks to adapt the move base node to local navigation:
+     - global costmap is also a rolling window, non-static map
+     - so it's referenced to odom, as the local costmap
+     - and it must be updated, dislike a static map
+     - we use a bigger costmap than that of the local planner
+     - replan each 2 seconds, as global costmap changes
+  -->
+  <param name="move_base/global_costmap/global_frame" value="odom"/>
+  <param name="move_base/global_costmap/update_frequency" value="1.0"/>
+  <param name="move_base/global_costmap/publish_frequency" value="1.0"/>
+  <param name="move_base/global_costmap/static_map" value="false"/>
+  <param name="move_base/global_costmap/rolling_window" value="true"/>
+  <param name="move_base/global_costmap/width" value="10.0"/>
+  <param name="move_base/global_costmap/height" value="10.0"/>
+  <param name="move_base/global_costmap/resolution" value="0.1"/>
+  <param name="move_base/global_costmap/origin_x" value="0.0"/>
+  <param name="move_base/global_costmap/origin_y" value="0.0"/>
+  <param name="move_base/global_costmap/obstacle_range" value="5.0"/>
+  <param name="move_base/global_costmap/raytrace_range" value="5.5"/>
+  <param name="move_base/global_costmap/observation_sources" value="ir_scan bumpers"/>
+  <param name="move_base/local_costmap/observation_sources" value="ir_scan bumpers"/>
+  <param name="move_base/planner_frequency" value="0.5"/>
+
+  <!--  ************** Fake Localization *************  -->
+  <node name="fake_localization" pkg="fake_localization" type="fake_localization">
+    <param name="odom_frame_id" value="/odom"/>
+    <param name="global_frame_id" value="/map"/>
+    <param name="base_frame_id" value="/base_footprint"/>
+  </node>
+</launch>
