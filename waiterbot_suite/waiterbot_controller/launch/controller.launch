@@ -1,0 +1,55 @@
+<!--
+  Waiterbot global navigation:
+  - turtlebot
+  - 3d sensor
+  - ir half ring
+  - virtual sensor (throat-cutting tables)
+  - safety controller
+  - auto-docking
+  - ar marker tracker
+  - navigation manager
+  - move_base
+  - geometric map
+  - semantic map
+  - amcl localization
+  - rviz view (optional)
+ -->
+
+<launch>
+  <!-- Name of the map to use (without path nor extension) and initial position -->
+  <arg name="map_name"       default="edu_room_cropped"/>
+  <arg name="initial_pose_x" value="2.0"/>
+  <arg name="initial_pose_y" value="2.0"/>
+  <arg name="initial_pose_a" value="0.0"/>
+
+  <!-- Waiterbot -->
+  <include file="$(find waiterbot_bringup)/launch/minimal.launch"/>
+
+  <!--  ********** Alvar AR markers tracker ***********  -->
+  <include file="$(find waiterbot_controller)/launch/includes/_ar_tracker.launch">
+    <arg name="max_frequency" value="4.0"/>  <!-- This is a CPU-hungry bastard; reduce its rate --> 
+  </include>
+
+  <!--  ************* Navigation manager **************  -->
+  <include file="$(find waiterbot_controller)/launch/includes/_master_ctrl.launch">
+    <arg name="debug_mode" value="true"/>
+  </include>
+
+  <!--  ************** Rosnav move base ***************  -->
+  <include file="$(find waiterbot_controller)/launch/includes/_move_base.launch"/>
+
+  <!--  ****** Geometric and semantic map servers *****  -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_controller)/resources/maps/$(arg map_name).yaml">
+    <param name="frame_id" value="/map"/>
+  </node>
+  <include file="$(find waiterbot_controller)/launch/includes/_annotations_pub.launch"/>
+<!-- <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
+
+  <!--  ******************** Amcl *********************  -->
+  <include file="$(find waiterbot_controller)/launch/includes/_amcl.launch">
+    <arg name="scan_topic" value="scan"/>
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+  </include>
+</launch>
