@@ -1,0 +1,8 @@
+navigator:
+  relay_on_beacon_distance :   0.7     # At which distance from the base we start relaying on ir beacons
+  relay_on_marker_distance :   1.0     # At which distance from the base we start relaying on ar markers
+  close_to_pickup_distance :   1.5     # At which distance from pickup point switch off recovery behavior  
+  tables_serving_distance  :   0.4     # At which distance from the table we try to serve our orders
+  wait_for_pickup_point    :   4.0     # How long to wait before retrying if the pickup point is busy
+  auto_docking_timeout     : 120.0     # How long to wait before retrying auto-docking operation
+  go_to_pose_timeout       : 300.0     # How long to wait before assuming we failed to reach a goal

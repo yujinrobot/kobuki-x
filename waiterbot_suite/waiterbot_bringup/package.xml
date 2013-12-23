@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+  <name>waiterbot_bringup</name>
+  <version>0.0.0</version>
+  <description>The waiterbot_bringup package</description>
+  <maintainer email="jihoonl@yujinrobot.com">Jihoon Lee</maintainer>
+  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
+
+  <license>BSD</license>
+
+  <!-- <url type="website">http://wiki.ros.org/waiterbot_bringup</url> -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>waiterbot_sensors</run_depend>
+</package>

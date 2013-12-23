@@ -1,0 +1,3 @@
+nav_watchdog:
+  check_localized : true
+  amcl_max_error  : 1.0
