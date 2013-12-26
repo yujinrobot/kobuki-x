@@ -28,6 +28,8 @@ namespace waiterbot {
       void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
       void waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg);
       void drinkOrderCB(const waiterbot_msgs::DrinkOrder::ConstPtr& msg);
+
+      void processOrder(const int drink);
     private: // variables
       ros::NodeHandle nh_;
       ros::Subscriber sub_digital_input_;
@@ -40,6 +42,8 @@ namespace waiterbot {
       Navigator navigator_;
 
       yocs_msgs::WaypointList waypoints_;
+
+      boost::thread order_process_thread_;
 
   };
 }

@@ -27,7 +27,9 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
-add_library(waiterbot_ctrl_nowireless_lib  src/waiterbot_ctrl_nowireless/waiter_node.cpp)
+add_library(waiterbot_ctrl_nowireless_lib  src/waiterbot_ctrl_nowireless/waiter_node.cpp
+                                           src/waiterbot_ctrl_nowireless/waiterbot_delivery_handles.cpp  
+           )
 add_dependencies(waiterbot_ctrl_nowireless_lib waiterbot_msgs_gencpp kobuki_msgs_gencpp yocs_msgs_gencpp waiterbot_navigator)
 target_link_libraries(waiterbot_ctrl_nowireless_lib waiterbot_navigator ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 

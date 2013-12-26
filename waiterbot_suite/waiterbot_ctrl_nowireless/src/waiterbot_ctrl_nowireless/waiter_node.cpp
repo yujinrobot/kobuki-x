@@ -21,6 +21,9 @@ namespace waiterbot {
 
   void WaiterIsolated::init()
   {
+    // parameters 
+
+
     // listen to green and red buttons
     sub_digital_input_ = nh_.subscribe("digital_input", 5, & WaiterIsolated::digitalInputCB, this);
 
@@ -52,6 +55,9 @@ namespace waiterbot {
   void WaiterIsolated::drinkOrderCB(const waiterbot_msgs::DrinkOrder::ConstPtr& msg)
   {
     ROS_INFO("Drink Order : %d", msg->drink);
+
+    // starts to serve.
+    order_process_thread_ = boost::thread(&WaiterIsolated::processOrder, this, msg->drink);
   }
 
   void WaiterIsolated::spin() {
