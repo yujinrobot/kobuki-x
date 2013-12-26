@@ -16,6 +16,8 @@
 #include <waiterbot_msgs/DrinkOrder.h>
 #include "waiterbot_ctrl_nowireless/navigator.hpp"
 
+#include <map>
+
 namespace waiterbot {
   class WaiterIsolated {
     public: // open to everyone
@@ -28,8 +30,13 @@ namespace waiterbot {
       void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
       void waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg);
       void drinkOrderCB(const waiterbot_msgs::DrinkOrder::ConstPtr& msg);
+      void endDelivery(bool success);
 
       void processOrder(const int drink);
+        bool goToVendingMachine();
+        bool callVendingMachine();
+        bool waitForDrink();
+        bool servingDrink();
     private: // variables
       ros::NodeHandle nh_;
       ros::Subscriber sub_digital_input_;
@@ -38,13 +45,13 @@ namespace waiterbot {
 
       bool initialized_;
       bool waypointsReceived_;
+      bool inDelivery_;
 
       Navigator navigator_;
 
-      yocs_msgs::WaypointList waypoints_;
+      std::map<std::string, geometry_msgs::PoseStamped> waypoints;
 
       boost::thread order_process_thread_;
-
   };
 }
 

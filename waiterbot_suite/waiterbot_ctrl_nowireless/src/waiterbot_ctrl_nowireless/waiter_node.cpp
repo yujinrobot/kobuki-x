@@ -14,6 +14,7 @@ namespace waiterbot {
   {  
     initialized_ = false;
     waypointsReceived_ = false;
+    inDelivery_ = false;
     init();
   }
 
@@ -48,7 +49,7 @@ namespace waiterbot {
 
   void WaiterIsolated::waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg)
   {
-    waypoints_ = *msg;
+    unsigned int i;
     waypointsReceived_ = true;
   }
 
@@ -56,8 +57,28 @@ namespace waiterbot {
   {
     ROS_INFO("Drink Order : %d", msg->drink);
 
+    if(inDelivery_)
+    {
+      ROS_WARN("Waiter : It is serving drink already. rejecting...");
+    }
+
+    inDelivery_ = true;
+
     // starts to serve.
-    order_process_thread_ = boost::thread(&WaiterIsolated::processOrder, this, msg->drink);
+//    order_process_thread_ = boost::thread(&WaiterIsolated::processOrder, this, msg->drink);
+  }
+
+  void WaiterIsolated::endDelivery(bool success)
+  {
+    if(success)
+    {
+      ROS_INFO("Delivery Success");
+    }
+    else 
+    {
+      ROS_WARN("Delivery Failed!");
+    }
+    inDelivery_ = false;
   }
 
   void WaiterIsolated::spin() {
