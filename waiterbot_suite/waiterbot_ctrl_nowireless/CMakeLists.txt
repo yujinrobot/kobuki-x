@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(waiterbot_ctrl_nowireless)
 
 find_package(catkin REQUIRED COMPONENTS
-  waiterbot_bringup roscpp waiterbot_msgs yocs_msgs kobuki_msgs
+  waiterbot_bringup roscpp waiterbot_msgs yocs_msgs kobuki_msgs yocs_math_toolkit
 )
 
 ## System dependencies are found with CMake's conventions
@@ -14,7 +14,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot_ctrl_nowireless
-  CATKIN_DEPENDS waiterbot_bringup roscpp yocs_msgs kobuki_msgs
+  CATKIN_DEPENDS waiterbot_bringup roscpp yocs_msgs kobuki_msgs yocs_math_toolkit
   DEPENDS Boost
 )
 
@@ -27,9 +27,15 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
-add_library(waiterbot_ctrl_nowireless_lib  src/${PROJECT_NAME}/waiter_node.cpp)
-add_dependencies(waiterbot_ctrl_nowireless_lib waiterbot_msgs_gencpp kobuki_msgs_gencpp yocs_msgs_gencpp)
-target_link_libraries(waiterbot_ctrl_nowireless_lib ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_library(waiterbot_ctrl_nowireless_lib  src/waiterbot_ctrl_nowireless/waiter_node.cpp)
+add_dependencies(waiterbot_ctrl_nowireless_lib waiterbot_msgs_gencpp kobuki_msgs_gencpp yocs_msgs_gencpp waiterbot_navigator)
+target_link_libraries(waiterbot_ctrl_nowireless_lib waiterbot_navigator ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_library(waiterbot_navigator src/navigator/navigator.cpp
+                                src/navigator/basic_moves.cpp)
+add_dependencies(waiterbot_navigator move_base_msgs_gencpp yocs_msgs_gencpp geometry_msgs_gencpp )
+target_link_libraries(waiterbot_navigator ${catkin_LIBRARIES})
+
 
 ## Declare a cpp executable
 add_executable(waiter_node src/main.cpp)

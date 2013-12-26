@@ -13,6 +13,8 @@
 #include <ros/ros.h>
 #include <kobuki_msgs/DigitalInputEvent.h>
 #include <yocs_msgs/WaypointList.h>
+#include <waiterbot_msgs/DrinkOrder.h>
+#include "waiterbot_ctrl_nowireless/navigator.hpp"
 
 namespace waiterbot {
   class WaiterIsolated {
@@ -22,15 +24,22 @@ namespace waiterbot {
       void spin();
     protected:  // internal functions
       void init();
+      bool isInit();  // check if it has received waypoints 
       void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
       void waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg);
+      void drinkOrderCB(const waiterbot_msgs::DrinkOrder::ConstPtr& msg);
     private: // variables
       ros::NodeHandle nh_;
       ros::Subscriber sub_digital_input_;
       ros::Subscriber sub_waypoints_;
+      ros::Subscriber sub_drinkorder;
 
       bool initialized_;
       bool waypointsReceived_;
+
+      Navigator navigator_;
+
+      yocs_msgs::WaypointList waypoints_;
 
   };
 }

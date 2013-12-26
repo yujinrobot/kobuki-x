@@ -22,6 +22,17 @@
 
 #include <yocs_math_toolkit/common.hpp>
 #include <yocs_math_toolkit/geometry.hpp>
+/*
+  ActionClient
+    move_base
+    dock_drive_action
+  Publisher
+    velocity : geometry_msgs/Twist
+
+  Suscriber
+    odometry : nav_msgs/Odometry
+
+ */
 
 namespace waiterbot
 {
