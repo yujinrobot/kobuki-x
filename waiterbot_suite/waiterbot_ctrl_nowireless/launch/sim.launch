@@ -1,0 +1,19 @@
+<!-- Simulation -->
+<launch>
+  <arg name="waypoint_filename" default="$(find waiterbot_ctrl_nowireless)/param/waypoints.yaml"/>
+  <arg name="loc_vm" default="vending_machine"/>
+  <arg name="loc_customer" default="customer"/>
+
+  <include file="$(find turtlebot_stage)/launch/turtlebot_in_stage.launch"/>
+
+  <!--  ************* Waiterbot Master controller **************  -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_master_ctrl.launch">
+    <arg name="loc_vm" value ="$(arg loc_vm)"/>
+    <arg name="loc_customer" value="$(arg loc_customer)"/>
+  </include>
+
+  <!-- ************* Waypoint Manager *********** --> 
+  <node pkg="yocs_waypoint_manager" name="waypoint_manager" type="waypoint_manager" output="screen">
+    <param name="filename" value="$(arg waypoint_filename)"/>
+  </node>
+</launch>
