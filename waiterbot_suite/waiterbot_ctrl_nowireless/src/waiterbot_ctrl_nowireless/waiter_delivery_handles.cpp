@@ -11,14 +11,23 @@
 
 namespace waiterbot {
 
-  void WaiterIsolated::processOrder(const int drink)
+  bool WaiterIsolated::processOrder(const int drink)
   {
+    /*
+    if(recordOrderOrigin() == false)
+    {
+      return endDelivery(false);
+    }
+    */
+
+    ROS_INFO("Go to vending machine");
     // go to vending machine
     if(goToVendingMachine() == false)
     {
       return endDelivery(false);
     }
 
+    /*
     // call vending machine to get a drink 
     if(callVendingMachine() == false)
     {
@@ -30,37 +39,16 @@ namespace waiterbot {
     {
       return endDelivery(false);
     }
+    */
 
     // go back to the location where it got drink order
+    ROS_INFO("Go to Customer");
     if(servingDrink() == false)
     {
       return endDelivery(false);
     }
 
     return endDelivery(true);
-  }
-
-  bool WaiterIsolated::goToVendingMachine()
-  {
-    // go to in front of vending machine
-
-    // maybe local navi to located on better place..?
-    // run autodock algorithm
-  }
-
-  bool WaiterIsolated::callVendingMachine()
-  {
-    return false;
-  }
-
-  bool WaiterIsolated::waitForDrink()
-  {
-    return false;
-  }
-
-  bool WaiterIsolated::servingDrink()
-  {
-    return false;
   }
 
 }

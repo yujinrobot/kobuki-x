@@ -10,7 +10,10 @@
 #include "waiterbot_ctrl_nowireless/waiter_node.hpp"
 
 namespace waiterbot {
-  WaiterIsolated::WaiterIsolated(ros::NodeHandle& n) : nh_(n), navigator_(n)
+  WaiterIsolated::WaiterIsolated(ros::NodeHandle& n) : 
+    nh_(n), 
+    navigator_(n),
+    ac_autodock_("dock_drive_action", true)
   {  
     initialized_ = false;
     waypointsReceived_ = false;
@@ -23,7 +26,11 @@ namespace waiterbot {
   void WaiterIsolated::init()
   {
     // parameters 
+    ros::NodeHandle priv_n("~");
 
+
+    priv_n.param("loc_vm", loc_vm, DEFAULT_LOC_VM);
+    priv_n.param("loc_customer", loc_vm, DEFAULT_LOC_CUSTOMER);
 
     // listen to green and red buttons
     sub_digital_input_ = nh_.subscribe("digital_input", 5, & WaiterIsolated::digitalInputCB, this);
@@ -32,7 +39,6 @@ namespace waiterbot {
     sub_waypoints_ = nh_.subscribe("waypoints", 5, &WaiterIsolated::waypointsCB, this);
     // listen to drink order message
     sub_drinkorder = nh_.subscribe("drink_order", 1, &WaiterIsolated::drinkOrderCB, this);
-
   }
 
   bool WaiterIsolated::isInit() {
@@ -50,6 +56,22 @@ namespace waiterbot {
   void WaiterIsolated::waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg)
   {
     unsigned int i;
+
+    // wait until it finishes a delivery
+    while(inDelivery_) { ros::Duration(1).sleep(); }
+
+    map_wp.clear();
+    for(i = 0; i < msg->waypoints.size(); i++)
+    {
+      geometry_msgs::PoseStamped ps;
+
+      ps.header = msg->waypoints[i].header;
+      ps.pose = msg->waypoints[i].pose;
+
+      map_wp[msg->waypoints[i].name] = ps;
+    }
+    
+    ROS_INFO("Received %lu waypoints", map_wp.size());
     waypointsReceived_ = true;
   }
 
@@ -65,10 +87,12 @@ namespace waiterbot {
     inDelivery_ = true;
 
     // starts to serve.
-//    order_process_thread_ = boost::thread(&WaiterIsolated::processOrder, this, msg->drink);
+    ROS_INFO("Starting the delivery...");
+    order_process_thread_ = boost::thread(&WaiterIsolated::processOrder, this, msg->drink);
+   // processOrder(msg->drink);
   }
 
-  void WaiterIsolated::endDelivery(bool success)
+  bool WaiterIsolated::endDelivery(bool success)
   {
     if(success)
     {
@@ -79,6 +103,7 @@ namespace waiterbot {
       ROS_WARN("Delivery Failed!");
     }
     inDelivery_ = false;
+    return true;
   }
 
   void WaiterIsolated::spin() {
