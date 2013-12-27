@@ -11,44 +11,65 @@
 
 namespace waiterbot {
 
-  bool WaiterIsolated::processOrder(const int drink)
+  bool WaiterIsolated::processCommand(const int command)
   {
-    /*
-    if(recordOrderOrigin() == false)
-    {
-      return endDelivery(false);
-    }
-    */
+    int feedback;
+    std::string message; 
 
-    ROS_INFO("Go to vending machine");
-    // go to vending machine
-    if(goToVendingMachine() == false)
-    {
-      return endDelivery(false);
-    }
-
-    /*
-    // call vending machine to get a drink 
-    if(callVendingMachine() == false)
-    {
-      return endDelivery(false);
+    switch(command) {
+      case waiterbot_msgs::DrinkOrder::GO_TO_VM:
+        goToVMCommand(feedback, message);
+        break;
+      case waiterbot_msgs::DrinkOrder::GO_TO_ORIGIN:
+        goToOriginCommand(feedback, message);
+        break;
+      default:
+        std::stringstream sstm;
+        sstm <<  "Unknown Command!!!!!! [" <<  feedback << "]";
+        message = sstm.str();
+        feedback = -1;
     }
 
-    // wait for response from vending machine
-    if(waitForDrink() == false)
-    {
-      return endDelivery(false);
-    }
-    */
-
-    // go back to the location where it got drink order
-    ROS_INFO("Go to Customer");
-    if(servingDrink() == false)
-    {
-      return endDelivery(false);
-    }
-
-    return endDelivery(true);
+    return endCommand(feedback, message);
   }
 
+  void WaiterIsolated::goToVMCommand(int& feedback, std::string& message)
+  {
+    std::string local_message = "";
+    // record the robot location
+    if(recordOrderOrigin(local_message) == false)
+    {
+      message = "Error while recording origin. Reason : " + local_message;
+      feedback = waiterbot_msgs::DrinkOrderFeedback::ERROR;
+      return;
+    }
+
+    if(goToVendingMachine(message) == false) 
+    {
+      message = "Error while going to VM. Reason : " + local_message;
+      feedback = waiterbot_msgs::DrinkOrderFeedback::ERROR;
+      return;
+    }
+
+    // go to vm with navigation
+    feedback = waiterbot_msgs::DrinkOrderFeedback::VM_ARRIVAL;
+    message = "";
+  }
+
+  void WaiterIsolated::goToOriginCommand(int& feedback, std::string& message)
+  {
+    std::string local_message;
+    // TODO:  check if robot location is recorded, if not spit error
+
+    // go to origin of order
+    if(goToOrigin(local_message) == false) 
+    {
+      message = "Error while going to origin. Reason : " + local_message;
+      feedback = waiterbot_msgs::DrinkOrderFeedback::ERROR;
+      return;
+    }
+
+    feedback = waiterbot_msgs::DrinkOrderFeedback::ORIGIN_ARRIVAL;
+    message = "";
+  }
 }

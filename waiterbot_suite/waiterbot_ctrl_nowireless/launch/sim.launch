@@ -19,4 +19,7 @@
   <node pkg="yocs_waypoint_manager" name="waypoint_manager" type="waypoint_manager" output="screen">
     <param name="filename" value="$(arg waypoint_filename)"/>
   </node>
+
+  <!-- ************* Joystick Manager *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_xbox360_joystick.launch" />
 </launch>

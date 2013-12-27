@@ -109,8 +109,8 @@ namespace waiterbot {
 
   bool Navigator::moveTo(const geometry_msgs::PoseStamped& goal_pose)
   {
-
     // TODO :check if goal_pose is in global frame 
+
     ROS_INFO("Global navigation to point %.2f %.2f %.2f", goal_pose.pose.position.x, goal_pose.pose.position.y,tf::getYaw(goal_pose.pose.orientation));
     move_base_msgs::MoveBaseGoal goal;
     goal.target_pose = goal_pose;

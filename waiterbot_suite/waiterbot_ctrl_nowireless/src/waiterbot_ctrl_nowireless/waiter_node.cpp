@@ -17,7 +17,7 @@ namespace waiterbot {
   {  
     initialized_ = false;
     waypointsReceived_ = false;
-    inDelivery_ = false;
+    inCommand_= false;
     init();
   }
 
@@ -28,9 +28,11 @@ namespace waiterbot {
     // parameters 
     ros::NodeHandle priv_n("~");
 
-
-    priv_n.param("loc_vm", loc_vm_, DEFAULT_LOC_VM);
-    priv_n.param("loc_customer", loc_customer_, DEFAULT_LOC_CUSTOMER);
+    priv_n.param("loc_vm",        loc_vm_,       DEFAULT_LOC_VM);
+    priv_n.param("loc_customer",  loc_customer_, DEFAULT_LOC_CUSTOMER);
+    priv_n.param("base_frame",    base_frame_,   DEFAULT_BASE_FRAME);
+    priv_n.param("odom_frame",    odom_frame_,   DEFAULT_ODOM_FRAME);
+    priv_n.param("global_frame",  global_frame_, DEFAULT_GLOBAL_FRAME);
 
     // listen to green and red buttons
     sub_digital_input_ = nh_.subscribe("digital_input", 5, & WaiterIsolated::digitalInputCB, this);
@@ -38,7 +40,10 @@ namespace waiterbot {
     // listen to waypoints
     sub_waypoints_ = nh_.subscribe("waypoints", 5, &WaiterIsolated::waypointsCB, this);
     // listen to drink order message
-    sub_drinkorder = nh_.subscribe("drink_order", 1, &WaiterIsolated::drinkOrderCB, this);
+    sub_drinkorder_ = nh_.subscribe("drink_order", 1, &WaiterIsolated::drinkOrderCB, this);
+
+    // feedback to tablet 
+    pub_drinkorder_feedback_ = nh_.advertise<waiterbot_msgs::DrinkOrderFeedback>("drink_order_feedback", 1);
   }
 
   bool WaiterIsolated::isInit() {
@@ -58,7 +63,7 @@ namespace waiterbot {
     unsigned int i;
 
     // wait until it finishes a delivery
-    while(inDelivery_) { ros::Duration(1).sleep(); }
+    while(inCommand_) { ros::Duration(1).sleep(); }
 
     map_wp_.clear();
     for(i = 0; i < msg->waypoints.size(); i++)
@@ -77,37 +82,43 @@ namespace waiterbot {
 
   void WaiterIsolated::drinkOrderCB(const waiterbot_msgs::DrinkOrder::ConstPtr& msg)
   {
-    ROS_INFO("Drink Order : %d", msg->drink);
+    ROS_INFO("Waiter : Command Received %d",msg->command);
 
-    if(inDelivery_)
+    if(inCommand_)
     {
-      ROS_WARN("Waiter : It is serving drink already. rejecting...");
+      ROS_WARN("Waiter : It is serving a command already. rejecting...");
+      sendFeedback(waiterbot_msgs::DrinkOrderFeedback::ERROR, std::string("It is serving a command already. rejecting..."));
       return;
     }
-
-    inDelivery_ = true;
+    else {
+      sendFeedback(waiterbot_msgs::DrinkOrderFeedback::ACCEPTED, std::string(""));
+      inCommand_= true;
+    }
 
     // starts to serve.
-    ROS_INFO("Starting the delivery...");
-    order_process_thread_ = boost::thread(&WaiterIsolated::processOrder, this, msg->drink);
-   // processOrder(msg->drink);
+    ROS_INFO("Starting work...");
+    command_process_thread_ = boost::thread(&WaiterIsolated::processCommand, this, msg->command);
   }
 
-  bool WaiterIsolated::endDelivery(bool success)
+  bool WaiterIsolated::endCommand(const int feedback, const std::string message)
   {
-    if(success)
-    {
-      ROS_INFO("Delivery Success");
-    }
-    else 
-    {
-      ROS_WARN("Delivery Failed!");
-    }
-    inDelivery_ = false;
+    sendFeedback(feedback, message);
+    inCommand_ = false;
     return true;
   }
 
-  void WaiterIsolated::spin() {
+  void WaiterIsolated::sendFeedback(const int feedback, const std::string message)
+  {
+    waiterbot_msgs::DrinkOrderFeedback fd;
+
+    fd.feedback = feedback;
+    fd.message = message;
+
+    pub_drinkorder_feedback_.publish(fd);
+  }
+
+  void WaiterIsolated::spin() 
+  {
     ros::spin();
   }
 }
