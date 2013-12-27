@@ -15,12 +15,10 @@ int main(int argc, char **argv)
 
   ros::NodeHandle nh;
 
-  waiterbot::IrScanNode node;
-  if (node.init(nh) == false)
-    return -1;
+  waiterbot::IrScanNode node(nh);
 
-  if (node.spin() == false)
-    return -1;
+  ROS_INFO("IR Scan node : initialized");
+  node.spin(); 
 
   return 0;
 }

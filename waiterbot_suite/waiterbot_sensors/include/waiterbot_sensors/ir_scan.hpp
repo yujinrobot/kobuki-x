@@ -5,6 +5,8 @@
  * 
  *  Created on: Apr 17, 2013
  *      Author: jorge
+ *  Modified on: Dec, 2013 
+ *      Jihoon Lee
  */
 
 #ifndef IR_SCAN_HPP_
@@ -19,50 +21,58 @@
 namespace waiterbot
 {
 
-class IrScanNode
-{
-public:
-
-  /**
-   * Inner class describing an individual ranger
-   */
-  class Ranger
+  class IrScanNode
   {
-  public:
-    double Q, R, P;    // KF
-    double last_range; /**< Internal buffer to store the latest readings    */
-    boost::shared_ptr<AdcDriver> adc_driver;
+    public:
+
+      /**
+       * Inner class describing an individual ranger
+       */
+      class Ranger
+      {
+        public:
+          double Q, R, P;    // KF
+          double last_range; /**< Internal buffer to store the latest readings    */
+          boost::shared_ptr<AdcDriver> adc_driver;
+      };
+
+      /*********************
+      ** Initialization
+      **********************/
+      IrScanNode(ros::NodeHandle& n);
+      ~IrScanNode();
+      void init();
+
+      bool spin();
+    protected:
+      bool connect();
+      bool readRanges();
+      void computeRangesAndIntensity(unsigned int i, uint32_t reading);
+
+    private:
+      ros::NodeHandle nh;
+
+      int      wrong_readings;
+      int      rangers_count;
+      double   range_variance;
+      double   maximum_range;
+      double   infinity_range;
+      double   read_frequency;
+      double   ir_ring_radius;
+      std::string ir_frame_id;   /**< Frame id for the output laser scan */
+      std::string arduino_port;
+
+      sensor_msgs::LaserScan scan;
+
+      std::vector<Ranger> rangers;
+
+      ros::Publisher  ir_scan_pub;
+
+      boost::shared_ptr<ArduinoInterface> arduino_iface;
+
+      bool is_connected;
+
   };
-
-  /*********************
-  ** Initialization
-  **********************/
-  IrScanNode();
-  ~IrScanNode();
-  bool spin();
-  bool init(ros::NodeHandle& nh);
-
-private:
-  int      wrong_readings;
-  int      rangers_count;
-  double   range_variance;
-  double   maximum_range;
-  double   infinity_range;
-  double   read_frequency;
-  double   ir_ring_radius;
-  std::string ir_frame_id;   /**< Frame id for the output laser scan */
-  std::string arduino_port;
-
-  sensor_msgs::LaserScan scan;
-
-  std::vector<Ranger> rangers;
-
-  ros::Publisher  ir_scan_pub;
-
-  boost::shared_ptr<ArduinoInterface> arduino_iface;
-
-  bool readRanges();
-};
 
 } // namespace waiterbot
 
