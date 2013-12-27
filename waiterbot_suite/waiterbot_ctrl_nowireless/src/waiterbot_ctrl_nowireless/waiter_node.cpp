@@ -82,6 +82,7 @@ namespace waiterbot {
     if(inDelivery_)
     {
       ROS_WARN("Waiter : It is serving drink already. rejecting...");
+      return;
     }
 
     inDelivery_ = true;
