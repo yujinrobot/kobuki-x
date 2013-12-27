@@ -13,7 +13,7 @@
 
  You must install the Arduino udev rule to make the board available on the default port "/dev/arduino":
 
-  $ roscd waiterbot
+  $ roscd waiterbot_sensors
   $ sudo cp resources/ir_scan/58-arduino.rules /etc/udev/rules.d
  
  and then replug the USB cable.
