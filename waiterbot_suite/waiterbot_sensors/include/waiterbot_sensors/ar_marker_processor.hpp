@@ -90,8 +90,8 @@ namespace waiterbot
       bool init();
       void spin();
 
-      bool spotted(double younger_than, const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarkers& spotted_markers);
-      bool closest(const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarker& closest_marker);
+
+
 
       /**
        * Return spotted markers satisfying the constraints specified by the parameters
@@ -111,10 +111,17 @@ namespace waiterbot
 
       // raw list of ar markers from ar_alvar_track pkg 
       void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
+        void maintainTrackedMarker(TrackedMarker& marker,const ar_track_alvar::AlvarMarker& msgMarker, const int obs_list_max_size, const double max_valid_d_inc, const double max_valid_h_inc);
+        void processGlobalMarker(const TrackedMarker& marker, const ar_track_alvar::AlvarMarker& msgMarker,const ar_track_alvar::AlvarMarker& global_marker);
 
-      // tf related
+      //////////////////// tf related
       void broadcastMarkersTF();
       bool getMarkerTf(const std::string& ref_frame, uint32_t marker_id, const ros::Time& timestamp, tf::StampedTransform& tf);
+
+
+      /////////////////// utility functions
+      bool spotted(double younger_than, const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarkers& spotted_markers);
+      bool closest(const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarker& closest_marker);
 
       // check if the given id ar_marker is in the list. If yes, return the full ar marker data
       bool included(const uint32_t id, const ar_track_alvar::AlvarMarkers& v, ar_track_alvar::AlvarMarker* e = NULL);
@@ -123,8 +130,8 @@ namespace waiterbot
       bool excluded(const uint32_t id, const ar_track_alvar::AlvarMarkers& v);
 
     private:
-
       std::string global_marker_filename_;
+
       // Confidence evaluation attributes
       double global_pose_conf_;
       double docking_base_conf_;

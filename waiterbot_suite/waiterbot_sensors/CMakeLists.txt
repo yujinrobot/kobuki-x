@@ -47,6 +47,7 @@ target_link_libraries(ir_scan_node ir_scan_lib)
 add_library(ar_marker_processor_lib src/ar_marker_processor/ar_marker_processor.cpp
                                     src/ar_marker_processor/tf_handlers.cpp
                                     src/ar_marker_processor/yaml_parser.cpp
+                                    src/ar_marker_processor/utils.cpp
            )
 add_dependencies(ar_marker_processor_lib ar_track_alvar_gencpp)
 target_link_libraries(ar_marker_processor_lib yaml-cpp ${catkin_LIBRARIES})
