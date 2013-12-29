@@ -65,11 +65,11 @@ namespace waiterbot {
     while ((action_client.waitForServer(ros::Duration(1.0)) == false) && (ros::ok() == true))
     {
       if ((ros::Time::now() - t0).toSec() > timeout/2.0)
-        ROS_WARN_THROTTLE(3, "Waiting for %s action server to come up...", ac_name.c_str());
+        ROS_WARN_THROTTLE(3, "Navigator : Waiting for %s action server to come up...", ac_name.c_str());
     
       if ((ros::Time::now() - t0).toSec() > timeout)
       {
-        ROS_ERROR("Timeout while waiting for %s action server to come up", ac_name.c_str());
+        ROS_ERROR("Navigator : Timeout while waiting for %s action server to come up", ac_name.c_str());
         return false;
       }
     } 

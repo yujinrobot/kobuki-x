@@ -19,6 +19,7 @@ namespace waiterbot {
     initialized_ = false;
     waypointsReceived_ = false;
     inCommand_= false;
+    digital_input_first_time_ = false;
     init();
   }
 
@@ -56,7 +57,34 @@ namespace waiterbot {
 
   void WaiterIsolated::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
   {
-    ROS_INFO("In digital input Call back");
+    if(digital_input_first_time_ == false)
+    {
+      prev_digital_input = *msg;
+      digital_input_first_time_ = true;
+    }
+    else {
+
+      // only case whn the red button is pressed while delivery
+      if(prev_digital_input.values[1] == false && msg->values[1] == true && inCommand_ == true) 
+      {
+        ROS_WARN("Cancel button pressed. Canceling delivery....");
+        navigator_.cancelMoveTo();
+        sendFeedback(waiterbot_msgs::DrinkOrderFeedback::ERROR, std::string("Cancel button pressed. Canceling all commands."));
+      }
+
+      if(prev_digital_input.values[1] == false && msg->values[1] == true)
+      {
+        ROS_INFO("Waiter : Red button pressed");
+      }
+
+      if(prev_digital_input.values[0] == false && msg->values[0] == true)
+      {
+        ROS_INFO("Waiter : Green button pressed");
+      }
+
+      // ignore any other cases
+      prev_digital_input = *msg;
+    }
   }
 
   void WaiterIsolated::waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg)

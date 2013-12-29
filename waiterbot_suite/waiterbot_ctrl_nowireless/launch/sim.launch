@@ -25,4 +25,7 @@
 
   <!-- ************* Joystick Manager *********** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_xbox360_joystick.launch" />
+
+  <!-- ************ Dummy order sender ********** -->
+  <node pkg="dummy_ces_tablet" name="dummy_ces_tablet" type="dummy_ces_tablet_node.py" /> 
 </launch>

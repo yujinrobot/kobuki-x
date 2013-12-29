@@ -38,6 +38,8 @@ namespace waiterbot {
 
       // basic movements 
       bool moveTo(const geometry_msgs::PoseStamped& pose);
+      bool cancelMoveTo();
+
       void moveAt(double v, double w, double t);
 
       void slowForward();

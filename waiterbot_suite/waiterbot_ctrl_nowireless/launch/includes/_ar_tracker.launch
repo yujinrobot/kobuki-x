@@ -1,7 +1,7 @@
 <launch>
-  <arg name="common_param"/>
-  <arg name="global_marker_filename"/>
-  <arg name="ar_marker_processor_param"/>
+  <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
+  <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
+  <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
   <arg name="marker_size"          default="6.9" />
   <arg name="max_new_marker_error" default="0.08" />
   <arg name="max_track_error"      default="0.2" />
@@ -22,7 +22,7 @@
   <node name="ar_marker_processor" pkg="waiterbot_sensors" type="ar_marker_processor" respawn="false" output="screen">
     <rosparam file="$(arg common_param)" command="load"/>
     <rosparam file="$(arg ar_marker_processor_param)" command="load"/>
-    <param name="global_marker_filename" value="$(arg global_markers_filename)"/>
+    <param name="global_marker_filename" value="$(arg global_marker_filename)"/>
   </node>
 
 </launch>

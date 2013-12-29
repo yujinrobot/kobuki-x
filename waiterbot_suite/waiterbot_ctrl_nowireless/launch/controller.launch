@@ -25,7 +25,7 @@
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch">
     <arg name="common_param" value="$(arg common_param)"/>
     <arg name="global_marker_filename" value="$(arg global_marker_filename)"/>
-    <arg name="ar_marker_processor_param" value="$(arg ar_marker_processor_param"/>
+    <arg name="ar_marker_processor_param" value="$(arg ar_marker_processor_param)"/>
 
     <arg name="max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
   </include>
@@ -43,7 +43,7 @@
   </node>
 
   <!--  ****** Geometric and semantic map servers *****  -->
-  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_ctrl_nowireless)/resources/maps/$(arg map_name).yaml">
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_controller)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
 

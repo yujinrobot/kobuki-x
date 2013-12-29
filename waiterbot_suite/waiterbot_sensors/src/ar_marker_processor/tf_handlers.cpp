@@ -42,6 +42,7 @@ namespace waiterbot {
 
     // TODO remove definitively or recover id I finally decide not to include docking base on global markers
     // CHANGED  look below
+    /*
     if (docking_marker_.id != std::numeric_limits<uint32_t>::max())
     {
       sprintf(child_frame, "docking_base_%d", docking_marker_.id);
@@ -49,7 +50,7 @@ namespace waiterbot {
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
       tf_brcaster_.sendTransform(tf);
-    }
+    }*/
   }
 
   bool ARMarkerProcessor::getMarkerTf(const std::string& ref_frame, uint32_t marker_id, const ros::Time& timestamp, tf::StampedTransform& tf)

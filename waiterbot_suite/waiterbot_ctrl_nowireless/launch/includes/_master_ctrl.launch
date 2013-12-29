@@ -21,6 +21,25 @@
     <param name="loc_vm" value ="$(arg loc_vm)"/>
     <param name="loc_customer" value="$(arg loc_customer)"/>
 
+    <!-- Remaps -->
+    <!-- Nav Watchdog -->
     <param name="nav_watchdog/amc_max_error" value="1.0"/>
-  </node>
-</launch>
+    <remap from="nav_watchdog/amcl_init"     to="initialpose"/>
+    <remap from="nav_watchdog/amcl_pose"     to="amcl_pose"/>
+    <remap from="nav_watchdog/reset_pose"    to="initialpose"/>
+    <remap from="nav_watchdog/robot_pose_ar"    to="robot_pose_ar"/>
+
+    <!-- Navigator -->
+    <remap from="odometry"      to="/odom"/>
+    <remap from="velocity"      to="special_tasks_velocity_smoother/raw_cmd_vel"/>
+
+    <!-- WaiterIsolated -->
+    <remap from="digital_input" to="/mobile_base/events/digital_input"/>
+
+          <!--  Yet to use these
+            <remap from="issue_goal"    to="move_base_simple/goal"/>
+            <remap from="cancel_goal"   to="move_base/cancel"/> 
+            -->
+
+   </node> 
+ </launch>

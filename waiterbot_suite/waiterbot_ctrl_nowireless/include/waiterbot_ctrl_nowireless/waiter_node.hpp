@@ -79,6 +79,9 @@ namespace waiterbot {
       std::map<std::string, geometry_msgs::PoseStamped> map_wp_;
       geometry_msgs::PoseStamped robot_origin_;
 
+      bool digital_input_first_time_;
+      kobuki_msgs::DigitalInputEvent prev_digital_input;
+
       boost::thread command_process_thread_;
   };
 }

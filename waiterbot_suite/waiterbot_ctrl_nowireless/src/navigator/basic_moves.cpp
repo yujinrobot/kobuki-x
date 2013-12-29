@@ -131,6 +131,21 @@ namespace waiterbot {
     return false;
   }
 
+  bool Navigator::cancelMoveTo()
+  {
+    ROS_WARN("Navigator : Canceling goal with %s state...", ac_move_base_.getState().toString().c_str());
+    ac_move_base_.cancelGoal();
+
+    while(ac_move_base_.waitForResult(ros::Duration(0.1)) && ros::ok())
+    {
+      ROS_INFO("Navigator : Waiting move base to be canceled...");
+      ros::Duration(1.0).sleep();
+    }
+
+    ROS_INFO("Navigator : Move base canceled..");
+    return true;
+  }
+
   bool Navigator::clearCostMaps() {
     ros::Time t0 = ros::Time::now();                                                           
     std_srvs::Empty srv;                                                                       
@@ -145,7 +160,7 @@ namespace waiterbot {
       ROS_ERROR("Failed to clear costmaps (%f seconds)", (ros::Time::now() - t0).toSec());     
       return false;                                                                            
     }                                                                                          
-  }                                                                                            
+  }
 }
 
 

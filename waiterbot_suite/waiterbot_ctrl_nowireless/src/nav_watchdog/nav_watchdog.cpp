@@ -16,7 +16,10 @@
 #include "waiterbot_ctrl_nowireless/nav_watchdog.hpp"
 
 namespace waiterbot {
-  NavWatchdog::NavWatchdog(ros::NodeHandle& n) : nh_(n) {}
+  NavWatchdog::NavWatchdog(ros::NodeHandle& n) : nh_(n) 
+  {
+    init();
+  }
   NavWatchdog::~NavWatchdog() {}
 
   bool NavWatchdog::init() 
@@ -30,7 +33,7 @@ namespace waiterbot {
     sub_robot_pose_ar_ = nh_.subscribe(NavWatchdogDefaultParam::SUB_ROBOT_POSE_AR, 1, &NavWatchdog::robotPoseARCB, this); 
     sub_init_pose_     = nh_.subscribe(NavWatchdogDefaultParam::SUB_INIT_POSE, 1, &NavWatchdog::initPoseMsgCB, this);
     sub_amcl_pose_     = nh_.subscribe(NavWatchdogDefaultParam::SUB_AMCL_POSE, 1, &NavWatchdog::amclPoseMsgCB, this);
-  
+
     return true;
   }
 

@@ -30,19 +30,19 @@ namespace waiterbot {
   }
 
   namespace NavWatchdogDefaultParam {
-    const std::string PUB_INIT_POSE     = "reset_pose";
-    const std::string SUB_ROBOT_POSE_AR = "robot_pose_ar";
-    const std::string SUB_INIT_POSE     = "amcl_init";
-    const std::string SUB_AMCL_POSE     = "amcl_pose";
+    const std::string PUB_INIT_POSE             = "nav_watchdog/reset_pose";
+    const std::string SUB_ROBOT_POSE_AR         = "nav_watchdog/robot_pose_ar";
+    const std::string SUB_INIT_POSE             = "nav_watchdog/amcl_init";
+    const std::string SUB_AMCL_POSE             = "nav_watchdog/amcl_pose";
     
-    const double AMCL_MAX_ERROR         = 2.0;
+    const double AMCL_MAX_ERROR                 = 2.0;
   }
 
   namespace NavigatorDefaultParam {
-    const std::string AC_MOVE_BASE = "move_base";
-    const std::string PUB_CMD_VEL  = "velocity";
-    const std::string SUB_ODOM     = "odometry";
-    const std::string SRV_CLEAR_COSTMAP = "move_base/clear_costmaps";
+    const std::string AC_MOVE_BASE              = "move_base";
+    const std::string PUB_CMD_VEL               = "velocity";
+    const std::string SUB_ODOM                  = "odometry";
+    const std::string SRV_CLEAR_COSTMAP         = "move_base/clear_costmaps";
   }
 }
 
