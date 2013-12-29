@@ -69,7 +69,7 @@ namespace waiterbot {
       {
         ROS_WARN("Cancel button pressed. Canceling delivery....");
         navigator_.cancelMoveTo();
-        sendFeedback(waiterbot_msgs::DrinkOrderFeedback::ERROR, std::string("Cancel button pressed. Canceling all commands."));
+        sendFeedback(waiterbot_msgs::DrinkOrderFeedback::CANCEL, std::string("Cancel button pressed. Canceling all commands."));
       }
 
       if(prev_digital_input.values[1] == false && msg->values[1] == true)
