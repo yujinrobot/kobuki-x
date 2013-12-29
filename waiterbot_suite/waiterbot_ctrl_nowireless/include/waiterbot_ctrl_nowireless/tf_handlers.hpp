@@ -15,6 +15,8 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 
+#include "default_params.hpp"
+
 namespace waiterbot {
   class TFHandlers {
     public:

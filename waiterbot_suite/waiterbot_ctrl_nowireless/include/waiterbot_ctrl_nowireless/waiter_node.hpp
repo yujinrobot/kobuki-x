@@ -10,29 +10,26 @@
 #ifndef _WAITER_NODE_NO_WIRELESS_HPP_
 #define _WAITER_NODE_NO_WIRELESS_HPP_
 
+#include <map>
+
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
-
-#include <kobuki_msgs/DigitalInputEvent.h>
-#include <yocs_msgs/WaypointList.h>
-#include <waiterbot_msgs/DrinkOrder.h>
-#include <waiterbot_msgs/DrinkOrderFeedback.h>
+#include <yocs_math_toolkit/common.hpp>
 
 #include "waiterbot_ctrl_nowireless/navigator.hpp"
 #include "waiterbot_ctrl_nowireless/tf_handlers.hpp"
-#include <kobuki_msgs/AutoDockingAction.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <yocs_math_toolkit/common.hpp>
+#include "waiterbot_ctrl_nowireless/nav_watchdog.hpp"
 
-#include <map>
+#include <geometry_msgs/PoseStamped.h>
+#include <kobuki_msgs/AutoDockingAction.h>
+#include <kobuki_msgs/DigitalInputEvent.h>
+#include <waiterbot_msgs/DrinkOrder.h>
+#include <waiterbot_msgs/DrinkOrderFeedback.h>
+#include <yocs_msgs/WaypointList.h>
+
+#include "default_params.hpp"
 
 namespace waiterbot {
-
-  const std::string DEFAULT_LOC_VM= "loc_vm";
-  const std::string DEFAULT_LOC_CUSTOMER = "loc_customer";
-  const std::string DEFAULT_BASE_FRAME= "base_footprint";
-  const std::string DEFAULT_ODOM_FRAME= "odom";
-  const std::string DEFAULT_GLOBAL_FRAME= "map";
 
   class WaiterIsolated {
     public: // open to everyone
@@ -76,6 +73,7 @@ namespace waiterbot {
       bool inCommand_;
 
       Navigator navigator_;
+      NavWatchdog watchdog_;
       TFHandlers tf_handlers_;
 
       std::map<std::string, geometry_msgs::PoseStamped> map_wp_;

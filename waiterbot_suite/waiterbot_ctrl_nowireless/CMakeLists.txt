@@ -36,13 +36,17 @@ add_library(waiterbot_navigator src/navigator/navigator.cpp
 add_dependencies(waiterbot_navigator move_base_msgs_gencpp yocs_msgs_gencpp geometry_msgs_gencpp )
 target_link_libraries(waiterbot_navigator ${catkin_LIBRARIES})
 
+add_library(waiterbot_nav_watchdog src/nav_watchdog/nav_watchdog.cpp)
+add_dependencies(waiterbot_nav_watchdog geometry_msgs_gencpp)
+target_link_libraries(waiterbot_nav_watchdog ${catkin_LIBRARIES})
+
 
 add_library(waiterbot_ctrl_nowireless_lib  src/waiterbot_ctrl_nowireless/waiter_node.cpp
                                            src/waiterbot_ctrl_nowireless/waiter_delivery_handles.cpp  
                                            src/waiterbot_ctrl_nowireless/waiter_tasks.cpp
            )
 add_dependencies(waiterbot_ctrl_nowireless_lib waiterbot_msgs_gencpp kobuki_msgs_gencpp yocs_msgs_gencpp waiterbot_navigator)
-target_link_libraries(waiterbot_ctrl_nowireless_lib waiterbot_navigator waiterbot_tf_handlers ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(waiterbot_ctrl_nowireless_lib waiterbot_navigator waiterbot_tf_handlers waiterbot_nav_watchdog ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
 

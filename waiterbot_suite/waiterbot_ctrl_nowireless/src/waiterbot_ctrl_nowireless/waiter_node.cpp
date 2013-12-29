@@ -13,7 +13,8 @@ namespace waiterbot {
   WaiterIsolated::WaiterIsolated(ros::NodeHandle& n) : 
     nh_(n), 
     navigator_(n),
-    ac_autodock_("dock_drive_action", true)
+    watchdog_(n),
+    ac_autodock_(WaiterIsolatedDefaultParam::AC_AUTODOCK, true)
   {  
     initialized_ = false;
     waypointsReceived_ = false;
@@ -28,22 +29,22 @@ namespace waiterbot {
     // parameters 
     ros::NodeHandle priv_n("~");
 
-    priv_n.param("loc_vm",        loc_vm_,       DEFAULT_LOC_VM);
-    priv_n.param("loc_customer",  loc_customer_, DEFAULT_LOC_CUSTOMER);
-    priv_n.param("base_frame",    base_frame_,   DEFAULT_BASE_FRAME);
-    priv_n.param("odom_frame",    odom_frame_,   DEFAULT_ODOM_FRAME);
-    priv_n.param("global_frame",  global_frame_, DEFAULT_GLOBAL_FRAME);
+    priv_n.param("loc_vm",        loc_vm_,       WaiterIsolatedDefaultParam::LOC_VM);
+    priv_n.param("loc_customer",  loc_customer_, WaiterIsolatedDefaultParam::LOC_CUSTOMER);
+    priv_n.param("base_frame",    base_frame_,   WaiterIsolatedDefaultParam::BASE_FRAME);
+    priv_n.param("odom_frame",    odom_frame_,   WaiterIsolatedDefaultParam::ODOM_FRAME);
+    priv_n.param("global_frame",  global_frame_, WaiterIsolatedDefaultParam::GLOBAL_FRAME);
 
     // listen to green and red buttons
-    sub_digital_input_ = nh_.subscribe("digital_input", 5, & WaiterIsolated::digitalInputCB, this);
+    sub_digital_input_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_DIGITAL_INPUT, 5, & WaiterIsolated::digitalInputCB, this);
 
     // listen to waypoints
-    sub_waypoints_ = nh_.subscribe("waypoints", 5, &WaiterIsolated::waypointsCB, this);
+    sub_waypoints_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_WAYPOINTS, 5, &WaiterIsolated::waypointsCB, this);
     // listen to drink order message
-    sub_drinkorder_ = nh_.subscribe("drink_order", 1, &WaiterIsolated::drinkOrderCB, this);
+    sub_drinkorder_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_DRINK_ORDER, 1, &WaiterIsolated::drinkOrderCB, this);
 
     // feedback to tablet 
-    pub_drinkorder_feedback_ = nh_.advertise<waiterbot_msgs::DrinkOrderFeedback>("drink_order_feedback", 1);
+    pub_drinkorder_feedback_ = nh_.advertise<waiterbot_msgs::DrinkOrderFeedback>(WaiterIsolatedDefaultParam::PUB_DRINK_ORDER_FEEDBACK, 1);
   }
 
   bool WaiterIsolated::isInit() {

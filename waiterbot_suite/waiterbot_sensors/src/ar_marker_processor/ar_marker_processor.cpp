@@ -53,6 +53,8 @@ namespace waiterbot
 
     sub_ar_markers_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkerProcessor::arPoseMarkersCB, this);
 
+    pub_robot_pose_ar_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(ARMarkerProcessorDefaultParams::PUB_ROBOT_POSE_AR, 1);
+
     // There are 18 different markers
     tracked_markers_.resize(ARMarkerProcessorDefaultParams::MARKERS_COUNT);
 
@@ -88,6 +90,8 @@ namespace waiterbot
 
       ROS_DEBUG("Marker %d: %s", global_markers_.markers[i].id, mtk::pose2str(global_markers_.markers[i].pose.pose));
     }
+
+    global_marker_localization_ = true;
   }
 
   void ARMarkerProcessor::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
@@ -227,6 +231,9 @@ namespace waiterbot
 
      pwcs->header.stamp = msgMarker.header.stamp;
      pwcs->header.frame_id = global_frame_;
+
+     // publish robot pose to nav watch dog
+     pub_robot_pose_ar_.publish(pwcs);
   }
 
   void ARMarkerProcessor::spin()

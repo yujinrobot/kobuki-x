@@ -20,5 +20,7 @@
 
     <param name="loc_vm" value ="$(arg loc_vm)"/>
     <param name="loc_customer" value="$(arg loc_customer)"/>
+
+    <param name="nav_watchdog/amc_max_error" value="1.0"/>
   </node>
 </launch>

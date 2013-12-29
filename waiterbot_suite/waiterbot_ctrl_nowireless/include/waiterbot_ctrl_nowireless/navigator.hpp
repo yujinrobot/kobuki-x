@@ -24,6 +24,8 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <std_srvs/Empty.h>
 
+#include "default_params.hpp"
+
 namespace waiterbot {
   class Navigator {
     public:
@@ -33,7 +35,6 @@ namespace waiterbot {
       bool isInit();
 
       bool clearCostMaps();
-
 
       // basic movements 
       bool moveTo(const geometry_msgs::PoseStamped& pose);

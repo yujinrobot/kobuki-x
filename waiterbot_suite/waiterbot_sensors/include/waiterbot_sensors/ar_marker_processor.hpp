@@ -49,6 +49,9 @@ namespace waiterbot
     const double      AR_TRACKER_FREQ        = 10.0;
 
     const uint32_t    MARKERS_COUNT          = 32;
+
+    const std::string SUB_AR_MARKERS = "ar_track_alvar/ar_pose_marker"; 
+    const std::string PUB_ROBOT_POSE_AR = "robot_pose_ar";
   }
 
   class TrackedMarker
@@ -159,6 +162,7 @@ namespace waiterbot
       ar_track_alvar::AlvarMarkers spotted_markers_;
 
       ros::Subscriber    sub_ar_markers_;
+      ros::Publisher     pub_robot_pose_ar_;
 
       tf::TransformListener    tf_listener_;
       tf::TransformBroadcaster tf_brcaster_;

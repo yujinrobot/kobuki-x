@@ -14,7 +14,7 @@
 namespace waiterbot {
   Navigator::Navigator(ros::NodeHandle& n) : 
     nh_(n),
-    ac_move_base_("move_base",true)
+    ac_move_base_(NavigatorDefaultParam::AC_MOVE_BASE,true)
   {
     if(init())
       initialized_ = true;
@@ -27,16 +27,16 @@ namespace waiterbot {
 
   bool Navigator::init() {
     // publisher
-    pub_cmd_vel_ = nh_.advertise<geometry_msgs::Twist>("velocity", 1);
+    pub_cmd_vel_ = nh_.advertise<geometry_msgs::Twist>(NavigatorDefaultParam::PUB_CMD_VEL, 1);
 
     // subscriber
-    sub_odometry_ = nh_.subscribe("odometry", 5, &Navigator::odometryCB, this);
+    sub_odometry_ = nh_.subscribe(NavigatorDefaultParam::SUB_ODOM, 5, &Navigator::odometryCB, this);
 
     // clear cost map service
-    srv_clear_costmaps = nh_.serviceClient<std_srvs::Empty>("move_base/clear_costmaps");
+    srv_clear_costmaps = nh_.serviceClient<std_srvs::Empty>(NavigatorDefaultParam::SRV_CLEAR_COSTMAP);
 
     // Wait for base_move 
-    if(waitForServer(ac_move_base_, "base_move", 15.0) == false)
+    if(waitForServer(ac_move_base_, NavigatorDefaultParam::AC_MOVE_BASE, 15.0) == false)
     {
       ROS_ERROR("Waiter : Move-base action server not available...");
       return false;
