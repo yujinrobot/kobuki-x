@@ -2,24 +2,38 @@
   Waiterbot controller No wireless version
   -->
 <launch>
+  <!-- configuration file-->
+  <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
+  <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
+  <arg name="master_ctrl_param" default="$(find waiterbot_ctrl_nowireless)/param/master_ctrl.yaml"/>
+
+  <!-- data file -->
+  <arg name="waypoint_filename" default="$(find waiterbot_ctrl_nowireless)/data/waypoints.yaml"/>
+  <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
+
+  <!-- Navigation related -->
   <arg name="map_name" default="edu_room_cropped"/>
   <arg name="initial_pose_x" default="2.0"/>
   <arg name="initial_pose_y" default="2.0"/>
   <arg name="initial_pose_a" default="0.0"/>
-  <arg name="waypoint_filename" default="$(find waiterbot_ctrl_nowireless)/param/waypoints.yaml"/>
+
+  <!-- Master controller related-->
   <arg name="loc_vm" default="vending_machine"/>
   <arg name="loc_customer" default="customer"/>
 
-  <!--  ********** Alvar AR markers tracker ***********  -->
-  <!--
+  <!--  ********** Alvar AR markers tracker && AR marker Processor ***********  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch">
-    <arg name="max_frequency" value="4.0"/>  This is a CPU-hungry bastard; reduce its rate  
+    <arg name="common_param" value="$(arg common_param)"/>
+    <arg name="global_marker_filename" value="$(arg global_marker_filename)"/>
+    <arg name="ar_marker_processor_param" value="$(arg ar_marker_processor_param"/>
+
+    <arg name="max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
   </include>
-  -->
 
   <!--  ************* Waiterbot Master controller **************  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_master_ctrl.launch">
-    <arg name="loc_vm" value ="$(arg loc_vm)"/>
+    <arg name="common_param" value="$(arg common_param)"/>
+    <arg name="loc_vm"       value ="$(arg loc_vm)"/>
     <arg name="loc_customer" value="$(arg loc_customer)"/>
   </include>
 

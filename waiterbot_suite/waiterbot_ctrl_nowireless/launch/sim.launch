@@ -1,6 +1,8 @@
 <!-- Simulation -->
 <launch>
-  <arg name="waypoint_filename" default="$(find waiterbot_ctrl_nowireless)/param/waypoints.yaml"/>
+  <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
+
+  <arg name="waypoint_filename" default="$(find waiterbot_ctrl_nowireless)/data/waypoints.yaml"/>
   <arg name="loc_vm" default="vending_machine"/>
   <arg name="loc_customer" default="customer"/>
   <arg name="is_elastic_planner" default="true"/>
@@ -11,6 +13,7 @@
 
   <!--  ************* Waiterbot Master controller **************  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_master_ctrl.launch">
+    <arg name="common_param" value="$(arg common_param)"/>
     <arg name="loc_vm" value ="$(arg loc_vm)"/>
     <arg name="loc_customer" value="$(arg loc_customer)"/>
   </include>
