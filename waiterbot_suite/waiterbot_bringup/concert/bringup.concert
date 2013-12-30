@@ -1,0 +1,4 @@
+<concert>
+    <launch package="waiterbot_bringup" name="paired_public.launch" port="11311"/>
+    <launch package="waiterbot_bringup" name="minimal_with_appmanager.launch" port="11312"/>
+</concert>

@@ -1,0 +1,8 @@
+
+<launch>
+  <include file="$(find turtlebot_bringup)/launch/minimal_with_appmanager.launch">
+    <arg name="robot_name" value="whoola"/>
+    <arg name="robot_type" value="waiterbot"/>
+    <arg name="rapp_lists" value="ces_rapps/ces.rapps"/>
+  </include>
+</launch>

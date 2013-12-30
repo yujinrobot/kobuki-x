@@ -1,0 +1,46 @@
+
+<!--
+  Waiterbot Controller  No Wireless version Rapp
+  - ir half ring
+  - safety controller
+  - auto dock
+  - master controller
+
+  it assumes 3d sensor has started already
+  -->
+<launch>
+  <arg name="start_3dsensor" default="true"/>
+
+  <include if="$(arg start_3dsensor)" file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <!-- We only need RGB images and pseudo laser scan -->
+    <arg name="depth_registration"              value="false"/>
+	  <arg name="rgb_processing"                  value="true" />
+	  <arg name="ir_processing"                   value="false"/>
+	  <arg name="depth_processing"                value="false"/>
+	  <arg name="depth_registered_processing"     value="false"/>
+	  <arg name="disparity_processing"            value="false"/>
+	  <arg name="disparity_registered_processing" value="false"/>
+	  <arg name="scan_processing"                 value="true" />
+  </include>
+
+  <!--  ***** Kobuki mobile base safety controller ****  -->
+  <include file="$(find waiterbot_bringup)/launch/includes/_safety_ctrl.launch"/>
+
+  <!--  ************** Additional sensors *************  -->
+  <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/>
+
+  <!-- Reconfigure command velocity multiplexer to fit waiterbot needs. Just set the parameter doesn't work
+       if we start the waiterbot rapp with app manager; we must explicitly call the reconfigure service -->
+  <node pkg="rosservice" type="rosservice" name="reconfig_vel_mux" args="call --wait /cmd_vel_mux/set_parameters
+            '{config:{strs:[[yaml_cfg_file,$(find waiterbot_bringup)/param/vel_multiplexer.yaml]]}}'"/>
+
+  <!--  ******** Kobuki auto-docking controller *******  -->
+  <include file="$(find waiterbot_bringup)/launch/includes/_autodock.launch"/>
+
+  <!--  ******* Waiterbot controller ****** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/controller.launch"/>
+
+  <!-- ************* Joystick Manager *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_xbox360_joystick.launch" />
+
+</launch>
