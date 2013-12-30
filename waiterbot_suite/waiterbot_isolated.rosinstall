@@ -1,0 +1,44 @@
+### Deb dependency
+### ros-hydro-unique-identifier ros-hydro-rocon ros-hydro-turtlebot ros-hydro-turtlebot-apps ros-hydro-ar-track-alvar ros-hydro-stage-ros ros-hydro-yujin-maps
+### ros-hydro-joy
+
+# Turtlebot
+- git: {local-name: kobuki, uri: 'https://github.com/yujinrobot/kobuki.git',
+    version: hydro-devel}
+- git: {local-name: kobuki_core, uri: 'https://github.com/yujinrobot/kobuki_core.git',
+    version: hydro-devel}
+- git: {local-name: turtlebot, uri: 'https://github.com/turtlebot/turtlebot.git',
+    version: hydro-devel}
+- git: {local-name: turtlebot_apps, uri: 'https://github.com/turtlebot/turtlebot_apps.git',
+    version: hydro-devel}
+- git: {local-name: turtlebot_simulator, uri: 'https://github.com/turtlebot/turtlebot_simulator.git',
+    version: hydro-devel}
+
+# WaiterbotIsolated
+- git: {local-name: kobuki-x, uri: 'https://github.com/yujinrobot/kobuki-x.git',
+    version: hydro-devel}
+- git: {local-name: bosch_drivers, uri: 'https://github.com/corot/bosch_drivers.git',
+    version: master}
+- git: {local-name: yocs_msgs, uri: 'https://github.com/yujinrobot/yocs_msgs.git',
+    version: hydro-devel}
+- git: {local-name: yujin_ocs, uri: 'https://github.com/yujinrobot/yujin_ocs.git',
+    version: hydro-devel}
+- git: {local-name: navigation, uri: 'https://github.com/yujinrobot/navigation.git',
+    version: hydro-devel}
+- git: {local-name: eband_local_planner, uri: 'https://github.com/utexas-bwi/eband_local_planner.git',
+    version: devel}
+- git: {local-name: rocon_demo_msgs, uri: 'https://github.com/robotics-in-concert/rocon_demo_msgs.git',
+    version: hydro-devel}
+
+## Rocon dependency
+
+- git: {local-name: rocon_concert, uri: 'https://github.com/robotics-in-concert/rocon_concert.git',
+    version: hydro-devel}
+- git: {local-name: rocon_app_platform, uri: 'https://github.com/robotics-in-concert/rocon_app_platform.git',
+    version: hydro-devel}
+- git: {local-name: rocon_msgs, uri: 'https://github.com/robotics-in-concert/rocon_msgs.git',
+    version: hydro-devel}
+- git: {local-name: rocon_multimaster, uri: 'https://github.com/robotics-in-concert/rocon_multimaster.git',
+    version: hydro-devel}
+- git: {local-name: rocon_rqt_plugins, uri: 'https://github.com/robotics-in-concert/rocon_rqt_plugins.git',
+    version: hydro-devel}
