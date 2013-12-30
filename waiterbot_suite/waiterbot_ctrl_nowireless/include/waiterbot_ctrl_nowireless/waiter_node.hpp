@@ -23,8 +23,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <kobuki_msgs/AutoDockingAction.h>
 #include <kobuki_msgs/DigitalInputEvent.h>
-#include <waiterbot_msgs/DrinkOrder.h>
-#include <waiterbot_msgs/DrinkOrderFeedback.h>
+#include <waiterbot_msgs/NavCtrlGoTo.h>
+#include <waiterbot_msgs/NavCtrlStatus.h>
 #include <yocs_msgs/WaypointList.h>
 
 #include "default_params.hpp"
@@ -41,7 +41,7 @@ namespace waiterbot {
       bool isInit();  // check if it has received waypoints 
       void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
       void waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg);
-      void drinkOrderCB(const waiterbot_msgs::DrinkOrder::ConstPtr& msg);
+      void commandCB(const waiterbot_msgs::NavCtrlGoTo::ConstPtr& msg);
       bool endCommand(const int feedback, const std::string message);
       void sendFeedback(const int feedback, const std::string message);
 
@@ -56,10 +56,10 @@ namespace waiterbot {
       bool dockInBase();
     private: // variables
       ros::NodeHandle nh_;
-      ros::Publisher  pub_drinkorder_feedback_;
+      ros::Publisher  pub_navctrl_feedback_;
       ros::Subscriber sub_digital_input_;
       ros::Subscriber sub_waypoints_;
-      ros::Subscriber sub_drinkorder_;
+      ros::Subscriber sub_navctrl_;
       actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac_autodock_;
 
       std::string loc_vm_;

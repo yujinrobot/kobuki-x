@@ -21,9 +21,9 @@ namespace waiterbot {
     const std::string ODOM_FRAME                = "odom";
     const std::string GLOBAL_FRAME              = "map";  
 
-    const std::string PUB_DRINK_ORDER_FEEDBACK  = "drink_order_feedback";
+    const std::string PUB_DRINK_ORDER_FEEDBACK  = "status";
+    const std::string SUB_DRINK_ORDER           = "goto";
 
-    const std::string SUB_DRINK_ORDER           = "drink_order";
     const std::string SUB_WAYPOINTS             = "waypoints";
     const std::string SUB_DIGITAL_INPUT         = "digital_input";
     const std::string AC_AUTODOCK               = "dock_drive_action";

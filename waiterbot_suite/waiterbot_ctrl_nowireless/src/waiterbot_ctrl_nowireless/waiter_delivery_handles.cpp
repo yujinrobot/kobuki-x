@@ -17,10 +17,10 @@ namespace waiterbot {
     std::string message; 
 
     switch(command) {
-      case waiterbot_msgs::DrinkOrder::GO_TO_VM:
+      case waiterbot_msgs::NavCtrlGoTo::GO_TO_VM:
         goToVMCommand(feedback, message);
         break;
-      case waiterbot_msgs::DrinkOrder::GO_TO_ORIGIN:
+      case waiterbot_msgs::NavCtrlGoTo::GO_TO_ORIGIN:
         goToOriginCommand(feedback, message);
         break;
       default:
@@ -40,19 +40,19 @@ namespace waiterbot {
     if(recordOrderOrigin(local_message) == false)
     {
       message = "Error while recording origin. Reason : " + local_message;
-      feedback = waiterbot_msgs::DrinkOrderFeedback::ERROR;
+      feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
       return;
     }
 
     if(goToVendingMachine(message) == false) 
     {
       message = "Error while going to VM. Reason : " + local_message;
-      feedback = waiterbot_msgs::DrinkOrderFeedback::ERROR;
+      feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
       return;
     }
 
     // go to vm with navigation
-    feedback = waiterbot_msgs::DrinkOrderFeedback::VM_ARRIVAL;
+    feedback = waiterbot_msgs::NavCtrlStatus::VM_ARRIVAL;
     message = "";
   }
 
@@ -65,11 +65,11 @@ namespace waiterbot {
     if(goToOrigin(local_message) == false) 
     {
       message = "Error while going to origin. Reason : " + local_message;
-      feedback = waiterbot_msgs::DrinkOrderFeedback::ERROR;
+      feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
       return;
     }
 
-    feedback = waiterbot_msgs::DrinkOrderFeedback::ORIGIN_ARRIVAL;
+    feedback = waiterbot_msgs::NavCtrlStatus::ORIGIN_ARRIVAL;
     message = "";
   }
 }
