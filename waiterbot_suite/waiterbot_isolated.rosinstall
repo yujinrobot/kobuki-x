@@ -45,3 +45,7 @@
     version: hydro-devel}
 - git: {local-name: rocon_rqt_plugins, uri: 'https://github.com/robotics-in-concert/rocon_rqt_plugins.git',
     version: hydro-devel}
+- git: {local-name: capabilities, uri: 'https://github.com/robotics-in-concert/capabilities.git',
+    version: master}
+- git: {local-name: std_capabilities, uri: 'https://github.com/robotics-in-concert/std_capabilities.git',
+    version: initial_specs}
