@@ -54,6 +54,8 @@ namespace waiterbot {
         bool goToOrigin(std::string& message);
 
       bool dockInBase();
+
+      void playSound(const std::string& wav_file);
     private: // variables
       ros::NodeHandle nh_;
       ros::Publisher  pub_navctrl_feedback_;
@@ -62,6 +64,7 @@ namespace waiterbot {
       ros::Subscriber sub_navctrl_;
       actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac_autodock_;
 
+      std::string resources_path_;
       std::string loc_vm_;
       std::string loc_customer_;
       std::string base_frame_;

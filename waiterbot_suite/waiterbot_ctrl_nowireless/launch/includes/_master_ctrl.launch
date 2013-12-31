@@ -17,6 +17,7 @@
   <!-- Waiterbot main node -->
   <node name="waiterbot_ctrl_nowireless" pkg="waiterbot_ctrl_nowireless" type="waiter_node" output="screen">
     <rosparam file="$(arg common_param)" command="load"/>
+    <param name="resources_path" value="$(find waiterbot_bringup)/resources/"/>
 
     <param name="loc_vm" value ="$(arg loc_vm)"/>
     <param name="loc_customer" value="$(arg loc_customer)"/>

@@ -41,21 +41,26 @@ namespace waiterbot {
       return false;
     }
 
+    navigator_.clearCostMaps();
+
     // maybe local navi to located on better place..?
     // run autodock algorithm
-    /*
     if(dockInBase() == false)
     {
       ROS_ERROR("Failed to dock");
+      message = "docking failed....";
       return false;
     }
-    */
+
+    playSound("pab.wav");
 
     return true;
   }
 
   bool WaiterIsolated::goToOrigin(std::string& message)
   {
+    navigator_.backward(0.6);
+    navigator_.clearCostMaps();
     // go to in front of vending machine
     geometry_msgs::PoseStamped vm = robot_origin_;
     vm.header.stamp = ros::Time::now();
@@ -65,6 +70,8 @@ namespace waiterbot {
       message = "navigation failed...";
       return false;
     }
+
+    playSound("kaku.wav");
     return true;
   }
 
@@ -74,7 +81,7 @@ namespace waiterbot {
 
     while (ac_autodock_.waitForResult(ros::Duration(3.0)) == false)
     {
-      ROS_INFO("Waiting...");
+      ROS_INFO("Waiter : Waiting for docking...");
     }
 
 
@@ -87,5 +94,11 @@ namespace waiterbot {
       ROS_ERROR("Failed to dock...");
       return false;
     }
+  }
+
+  void WaiterIsolated::playSound(const std::string& wav_file) {
+    if ((wav_file.length() > 0))
+      system(("rosrun waiterbot play_sound.bash " + resources_path_ + wav_file).c_str());
+
   }
 }

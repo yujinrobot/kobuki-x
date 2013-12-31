@@ -30,6 +30,7 @@ namespace waiterbot {
     // parameters 
     ros::NodeHandle priv_n("~");
 
+    priv_n.param("resources_path", resources_path_, std::string("")); 
     priv_n.param("loc_vm",        loc_vm_,       WaiterIsolatedDefaultParam::LOC_VM);
     priv_n.param("loc_customer",  loc_customer_, WaiterIsolatedDefaultParam::LOC_CUSTOMER);
     priv_n.param("base_frame",    base_frame_,   WaiterIsolatedDefaultParam::BASE_FRAME);

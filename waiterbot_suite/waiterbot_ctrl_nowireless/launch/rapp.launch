@@ -24,7 +24,9 @@
   </include>
 
   <!--  ***** Kobuki mobile base safety controller ****  -->
+  <!--
   <include file="$(find waiterbot_bringup)/launch/includes/_safety_ctrl.launch"/>
+  -->
 
   <!--  ************** Additional sensors *************  -->
   <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/>
