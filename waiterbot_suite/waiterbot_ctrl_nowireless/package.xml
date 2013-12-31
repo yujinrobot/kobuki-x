@@ -30,6 +30,4 @@
   <run_depend>yocs_msgs</run_depend>
   <run_depend>yocs_math_toolkit</run_depend>
   <run_depend>tf</run_depend>
-  <run_depend>dummy_ces_tablet</run_depend>
-
 </package>
