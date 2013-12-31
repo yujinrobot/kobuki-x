@@ -12,7 +12,7 @@
   <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
 
   <!-- Navigation related -->
-  <arg name="map_name" default="edu_room_cropped"/>
+  <arg name="map_name" default="yujin"/>
   <arg name="initial_pose_x" default="2.0"/>
   <arg name="initial_pose_y" default="2.0"/>
   <arg name="initial_pose_a" default="0.0"/>
@@ -43,7 +43,7 @@
   </node>
 
   <!--  ****** Geometric and semantic map servers *****  -->
-  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_controller)/resources/maps/$(arg map_name).yaml">
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_ctrl_nowireless)/data/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
 
