@@ -27,6 +27,9 @@ namespace waiterbot {
     const std::string SUB_WAYPOINTS             = "waypoints";
     const std::string SUB_DIGITAL_INPUT         = "digital_input";
     const std::string AC_AUTODOCK               = "dock_drive_action";
+
+    const std::string SUB_ORDER_CANCELLED       = "order_cancelled";
+    const std::string SUB_TRAY_EMPTY            = "tray_empty";
   }
 
   namespace NavWatchdogDefaultParam {

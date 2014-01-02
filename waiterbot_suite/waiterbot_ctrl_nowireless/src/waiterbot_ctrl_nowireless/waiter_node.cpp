@@ -45,6 +45,12 @@ namespace waiterbot {
     // listen to drink order message
     sub_navctrl_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_DRINK_ORDER, 1, &WaiterIsolated::commandCB, this);
 
+    // listen to tray empty message
+    sub_tray_empty_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_TRAY_EMPTY, 1, &WaiterIsolated::trayEmptyCB, this);
+
+    // listen to order cancel
+    sub_order_cancelled_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_ORDER_CANCELLED, 1, &WaiterIsolated::orderCancelledCB, this);
+
     // feedback to tablet 
     pub_navctrl_feedback_= nh_.advertise<waiterbot_msgs::NavCtrlStatus>(WaiterIsolatedDefaultParam::PUB_DRINK_ORDER_FEEDBACK, 1);
   }
@@ -128,6 +134,18 @@ namespace waiterbot {
     // starts to serve.
     ROS_INFO("Starting work...");
     command_process_thread_ = boost::thread(&WaiterIsolated::processCommand, this, msg->goal);
+  }
+
+  void WaiterIsolated::trayEmptyCB(const std_msgs::Empty::ConstPtr& msg)
+  {
+    // cancel navigation
+    // send feedback success
+  }
+
+  void WaiterIsolated::orderCancelledCB(const std_msgs::Empty::ConstPtr& msg)
+  {
+    // cancel navigation
+    // send feedback canceled
   }
 
   bool WaiterIsolated::endCommand(const int feedback, const std::string message)

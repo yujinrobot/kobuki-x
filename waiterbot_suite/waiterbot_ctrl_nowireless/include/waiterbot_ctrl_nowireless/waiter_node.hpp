@@ -42,6 +42,8 @@ namespace waiterbot {
       void digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg);
       void waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg);
       void commandCB(const waiterbot_msgs::NavCtrlGoTo::ConstPtr& msg);
+      void trayEmptyCB(const std_msgs::Empty::ConstPtr& msg);
+      void orderCancelledCB(const std_msgs::Empty::ConstPtr& msg);
       bool endCommand(const int feedback, const std::string message);
       void sendFeedback(const int feedback, const std::string message);
 
@@ -62,6 +64,8 @@ namespace waiterbot {
       ros::Subscriber sub_digital_input_;
       ros::Subscriber sub_waypoints_;
       ros::Subscriber sub_navctrl_;
+      ros::Subscriber sub_order_cancelled_;
+      ros::Subscriber sub_tray_empty_;
       actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac_autodock_;
 
       std::string resources_path_;
