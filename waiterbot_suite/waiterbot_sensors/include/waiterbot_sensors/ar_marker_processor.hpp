@@ -52,6 +52,7 @@ namespace waiterbot
 
     const std::string SUB_AR_MARKERS = "ar_track_alvar/ar_pose_marker"; 
     const std::string PUB_ROBOT_POSE_AR = "robot_pose_ar";
+    const std::string PUB_DOCK_POSE_AR = "dock_pose_ar";
 
     const int DOCKING_MARKER_ID     = 10;
   }
@@ -163,6 +164,7 @@ namespace waiterbot
 
       ros::Subscriber    sub_ar_markers_;
       ros::Publisher     pub_robot_pose_ar_;
+      ros::Publisher     pub_dock_pose_ar_;
 
       tf::TransformListener    tf_listener_;
       tf::TransformBroadcaster tf_brcaster_;

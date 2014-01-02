@@ -55,6 +55,7 @@ namespace waiterbot
     sub_ar_markers_ = nh.subscribe("ar_track_alvar/ar_pose_marker", 1, &ARMarkerProcessor::arPoseMarkersCB, this);
 
     pub_robot_pose_ar_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(ARMarkerProcessorDefaultParams::PUB_ROBOT_POSE_AR, 1);
+    pub_dock_pose_ar_  = nh.advertise<geometry_msgs::PoseStamped>(ARMarkerProcessorDefaultParams::PUB_DOCK_POSE_AR, 1);
 
     // There are 18 different markers
     tracked_markers_.resize(ARMarkerProcessorDefaultParams::MARKERS_COUNT);
@@ -129,11 +130,11 @@ namespace waiterbot
           continue;
         }
 
-        /*
         boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
         *ps = msg->markers[i].pose;
         ps->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
-        base_spotted_cb_(ps, msg->markers[i].id);*/
+        pub_dock_pose_ar_.publish(ps);
+//        base_spotted_cb_(ps, msg->markers[i].id);
       }
 
       
