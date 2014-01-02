@@ -60,6 +60,7 @@ namespace waiterbot {
       double amcl_max_error_;
       uint16_t localized_;
       bool check_localized_;
+      bool amcl_pose_received_;
   };
 }
 

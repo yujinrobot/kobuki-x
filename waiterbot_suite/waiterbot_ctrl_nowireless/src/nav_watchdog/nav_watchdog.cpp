@@ -34,12 +34,15 @@ namespace waiterbot {
     sub_init_pose_     = nh_.subscribe(NavWatchdogDefaultParam::SUB_INIT_POSE, 1, &NavWatchdog::initPoseMsgCB, this);
     sub_amcl_pose_     = nh_.subscribe(NavWatchdogDefaultParam::SUB_AMCL_POSE, 1, &NavWatchdog::amclPoseMsgCB, this);
     localized_ = 0;
+    amcl_pose_received_ = false;
 
     return true;
   }
 
   void NavWatchdog::robotPoseARCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
   {
+    if(!amcl_pose_received_) // it has not received any amcl pose yet.. should do nothing
+      return;
     ROS_INFO("Received robot pose");
     tf::Pose amcl_pose, armk_pose;
     tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
@@ -128,6 +131,8 @@ namespace waiterbot {
         //  - look for MK, wonder....
       }
     }
+
+    amcl_pose_received_ = true;
   }
 
   void NavWatchdog::initPoseMsgCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)

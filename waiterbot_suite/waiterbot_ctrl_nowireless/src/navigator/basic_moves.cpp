@@ -117,7 +117,7 @@ namespace waiterbot {
 
     ac_move_base_.sendGoal(goal);
 
-    while(ac_move_base_.waitForResult(ros::Duration(0.5)) == false) {}
+    while(ac_move_base_.waitForResult(ros::Duration(0.5)) == false && ros::ok()) {}
 
     if(ac_move_base_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
