@@ -98,7 +98,7 @@ namespace waiterbot {
 
   void WaiterIsolated::playSound(const std::string& wav_file) {
     if ((wav_file.length() > 0))
-      system(("rosrun waiterbot_bringup play_sound.bash " + resources_path_ + wav_file).c_str());
+      bool return_unused = system(("rosrun waiterbot_bringup play_sound.bash " + resources_path_ + wav_file).c_str());
 
   }
 }
