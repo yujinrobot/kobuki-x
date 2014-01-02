@@ -37,6 +37,7 @@ namespace waiterbot
     pnh.param("max_reliable_dist",  max_reliable_dist_,      ARMarkerProcessorDefaultParams::MAX_RELIABLE_DIST);
     pnh.param("min_penalized_head", min_penalized_head_,     ARMarkerProcessorDefaultParams::MIN_PENALIZED_HEAD);
     pnh.param("max_reliable_head",  max_reliable_head_,      ARMarkerProcessorDefaultParams::MAX_RELIABLE_HEAD);
+    pnh.param("docking_marker_id",  docking_marker_id_ ,     ARMarkerProcessorDefaultParams::DOCKING_MARKER_ID);
 
     global_marker_localization_ = false;
     if(pnh.getParam("global_marker_filename",        global_marker_filename_) == false)
@@ -119,8 +120,7 @@ namespace waiterbot
       
 
       // Check if the marker is docking marker
-      /*
-      if (msg->markers[i].id == docking_marker_.id)
+      if (msg->markers[i].id == docking_marker_id_)
       {
         // This is the docking base marker! call the registered callbacks if it's reliable enough
         if (marker.confidence <= docking_base_conf_)
@@ -130,11 +130,12 @@ namespace waiterbot
           continue;
         }
 
+        /*
         boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
         *ps = msg->markers[i].pose;
         ps->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
-        base_spotted_cb_(ps, msg->markers[i].id);
-      }*/
+        base_spotted_cb_(ps, msg->markers[i].id);*/
+      }
 
       
       ar_track_alvar::AlvarMarker global_marker;

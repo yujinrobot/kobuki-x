@@ -52,6 +52,8 @@ namespace waiterbot
 
     const std::string SUB_AR_MARKERS = "ar_track_alvar/ar_pose_marker"; 
     const std::string PUB_ROBOT_POSE_AR = "robot_pose_ar";
+
+    const unsigned int DOCKING_MARKER_ID     = 10;
   }
 
   class TrackedMarker
@@ -167,6 +169,8 @@ namespace waiterbot
       tf::TransformListener    tf_listener_;
       tf::TransformBroadcaster tf_brcaster_;
       double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
+
+      unsigned int             docking_marker_id_;
 
 
   };
