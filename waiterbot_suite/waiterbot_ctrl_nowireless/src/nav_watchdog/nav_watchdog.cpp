@@ -33,13 +33,14 @@ namespace waiterbot {
     sub_robot_pose_ar_ = nh_.subscribe(NavWatchdogDefaultParam::SUB_ROBOT_POSE_AR, 1, &NavWatchdog::robotPoseARCB, this); 
     sub_init_pose_     = nh_.subscribe(NavWatchdogDefaultParam::SUB_INIT_POSE, 1, &NavWatchdog::initPoseMsgCB, this);
     sub_amcl_pose_     = nh_.subscribe(NavWatchdogDefaultParam::SUB_AMCL_POSE, 1, &NavWatchdog::amclPoseMsgCB, this);
+    localized_ = 0;
 
     return true;
   }
 
   void NavWatchdog::robotPoseARCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
   {
-
+    ROS_INFO("Received robot pose");
     tf::Pose amcl_pose, armk_pose;
     tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
     tf::poseMsgToTF(msg->pose.pose,       armk_pose);
@@ -48,6 +49,14 @@ namespace waiterbot {
     {
       ROS_DEBUG_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f", msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
     }
+
+
+    /*
+    ROS_INFO("LOCAL     : %d", (! (localized_ & LOCALIZED_AMCL)));
+    ROS_INFO("AMCL POSE : %d", (std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 1.0));
+    ROS_INFO("AMCL INIT : %d", (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  < 1.0));
+    ROS_INFO("Distance  : %d", (mtk::distance2D(amcl_pose, armk_pose) > 1.0) || (mtk::minAngle(amcl_pose, armk_pose) > 0.5));
+    */
   
     if ((! (localized_ & LOCALIZED_AMCL)) ||
         ((std::abs((last_amcl_pose_.header.stamp - msg->header.stamp).toSec())  < 1.0) &&

@@ -93,7 +93,7 @@ namespace waiterbot {
     unsigned int i;
 
     // wait until it finishes a delivery
-    while(inCommand_) { ros::Duration(1).sleep(); }
+    while(inCommand_) { ros::Duration(1).sleep(); ros::spinOnce(); }
 
     map_wp_.clear();
     for(i = 0; i < msg->waypoints.size(); i++)
@@ -149,6 +149,9 @@ namespace waiterbot {
 
   void WaiterIsolated::spin() 
   {
-    ros::spin();
+    while(ros::ok())
+    {
+      ros::spinOnce();
+    }
   }
 }

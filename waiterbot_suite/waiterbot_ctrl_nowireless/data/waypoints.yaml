@@ -3,14 +3,14 @@ waypoints:
     frame_id: map
     pose:
       position:
-        x: 0.4895
-        y: 1.0185
+        x: 0.4466
+        y: 0.4462
         z: 0
       orientation:
         x: 0
         y: 0
-        z: 0.3889
-        w: 0.9212
+        z: 0.344
+        w: 0.9389
   - name: customer
     frame_id: map
     pose:
