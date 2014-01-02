@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="robot_pose_publisher" name="ar_pose_tracker" type="robot_pose_publisher">
+    <param name="map_frame" value="/map" />
+    <param name="base_frame" value="/ar_marker_11"/>
+    <remap from="robot_pose" to="ararar"/>
+  </node>
+</launch>

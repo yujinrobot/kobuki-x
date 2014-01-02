@@ -107,6 +107,7 @@ namespace waiterbot
 
     for (unsigned int i = 0; i < msg->markers.size(); i++)
     {
+
       if (msg->markers[i].id >= tracked_markers_.size())
       {
         // A recognition error from Alvar markers tracker
@@ -240,6 +241,7 @@ namespace waiterbot
   void ARMarkerProcessor::spin()
   {
     loadGlobalMarkers();
+    ROS_INFO("AR Marker Processer initialized");
 
     // Broadcasts the spotted ar markers tf
 
@@ -251,10 +253,15 @@ namespace waiterbot
       {
         broadcastMarkersTF();
         rate.sleep();
+        ros::spinOnce();
       }
     }                                                                 
     else {
-      ros::spin();
+      while(ros::ok())
+      {
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
+      }
     }
   }
 
