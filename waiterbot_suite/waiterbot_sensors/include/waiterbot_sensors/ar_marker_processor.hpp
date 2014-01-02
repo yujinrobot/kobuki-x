@@ -53,7 +53,7 @@ namespace waiterbot
     const std::string SUB_AR_MARKERS = "ar_track_alvar/ar_pose_marker"; 
     const std::string PUB_ROBOT_POSE_AR = "robot_pose_ar";
 
-    const unsigned int DOCKING_MARKER_ID     = 10;
+    const int DOCKING_MARKER_ID     = 10;
   }
 
   class TrackedMarker
@@ -95,9 +95,7 @@ namespace waiterbot
       bool init();
       void spin();
 
-
-
-
+  
       /**
        * Return spotted markers satisfying the constraints specified by the parameters
        * @param younger_than    Elapsed time between now and markers timestamp must be below this limit.
@@ -170,9 +168,7 @@ namespace waiterbot
       tf::TransformBroadcaster tf_brcaster_;
       double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
 
-      unsigned int             docking_marker_id_;
-
-
+      int                      docking_marker_id_;
   };
 
 } /* namespace waiterbot */

@@ -22,7 +22,7 @@ namespace waiterbot
   bool ARMarkerProcessor::init()
   {
     ros::NodeHandle nh, pnh("~");
-
+    
     // Parameters
     pnh.param("global_frame",       global_frame_,           ARMarkerProcessorDefaultParams::GLOBAL_FRAME);
     pnh.param("odom_frame",         odom_frame_,             ARMarkerProcessorDefaultParams::ODOM_FRAME); 
@@ -37,7 +37,7 @@ namespace waiterbot
     pnh.param("max_reliable_dist",  max_reliable_dist_,      ARMarkerProcessorDefaultParams::MAX_RELIABLE_DIST);
     pnh.param("min_penalized_head", min_penalized_head_,     ARMarkerProcessorDefaultParams::MIN_PENALIZED_HEAD);
     pnh.param("max_reliable_head",  max_reliable_head_,      ARMarkerProcessorDefaultParams::MAX_RELIABLE_HEAD);
-    pnh.param("docking_marker_id",  docking_marker_id_ ,     ARMarkerProcessorDefaultParams::DOCKING_MARKER_ID);
+    pnh.param("docking_marker_id",  docking_marker_id_,      ARMarkerProcessorDefaultParams::DOCKING_MARKER_ID);
 
     global_marker_localization_ = false;
     if(pnh.getParam("global_marker_filename",        global_marker_filename_) == false)
@@ -118,9 +118,8 @@ namespace waiterbot
       // Confidence evaluation
       maintainTrackedMarker(marker, msg->markers[i], obs_list_max_size, max_valid_d_inc, max_valid_h_inc);
       
-
       // Check if the marker is docking marker
-      if (msg->markers[i].id == docking_marker_id_)
+      if ((unsigned int)(msg->markers[i].id) == (unsigned int)docking_marker_id_)
       {
         // This is the docking base marker! call the registered callbacks if it's reliable enough
         if (marker.confidence <= docking_base_conf_)
