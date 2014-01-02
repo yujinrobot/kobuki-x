@@ -90,6 +90,10 @@ namespace waiterbot {
       kobuki_msgs::DigitalInputEvent prev_digital_input;
 
       boost::thread command_process_thread_;
+
+      bool cancel_order_;
+      bool tray_empty_;
+      bool in_docking_;
   };
 }
 

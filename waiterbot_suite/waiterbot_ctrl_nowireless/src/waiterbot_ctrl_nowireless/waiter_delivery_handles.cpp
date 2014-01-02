@@ -46,8 +46,17 @@ namespace waiterbot {
 
     if(goToVendingMachine(message) == false) 
     {
-      message = "Error while going to VM. Reason : " + local_message;
-      feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
+      if(cancel_order_) 
+      {
+        message = "Order has been cancelled";
+        feedback = waiterbot_msgs::NavCtrlStatus::CANCEL;
+
+      }
+      else 
+      {
+        message = "Error while going to VM. Reason : " + local_message;
+        feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
+      }
       return;
     }
 
@@ -64,8 +73,21 @@ namespace waiterbot {
     // go to origin of order
     if(goToOrigin(local_message) == false) 
     {
-      message = "Error while going to origin. Reason : " + local_message;
-      feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
+      if(cancel_order_) 
+      {
+        message = "Order has been cancelled";
+        feedback = waiterbot_msgs::NavCtrlStatus::CANCEL;
+      }
+      else if(tray_empty_) 
+      {
+        message = "Drink has been picked up while delivery...";
+        feedback = waiterbot_msgs::NavCtrlStatus::ORIGIN_ARRIVAL;
+      }
+      else 
+      {
+        message = "Error while going to origin. Reason : " + local_message;
+        feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
+      }
       return;
     }
 
