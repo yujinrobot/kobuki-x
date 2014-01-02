@@ -1,6 +1,6 @@
 ### Deb dependency
 ### ros-hydro-unique-identifier ros-hydro-rocon ros-hydro-turtlebot ros-hydro-turtlebot-apps ros-hydro-ar-track-alvar ros-hydro-stage-ros ros-hydro-yujin-maps
-### ros-hydro-joy 
+### ros-hydro-joy ros-hydro-roslint
 
 ## eband_local_planner dependency
 # ros-hydro-control-toolbox
