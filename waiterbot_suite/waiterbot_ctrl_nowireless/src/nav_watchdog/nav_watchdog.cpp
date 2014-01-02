@@ -66,6 +66,7 @@ namespace waiterbot {
          (std::abs((last_amcl_init_.header.stamp - msg->header.stamp).toSec())  > 4.0) &&
          ((mtk::distance2D(amcl_pose, armk_pose) > 1.0) || (mtk::minAngle(amcl_pose, armk_pose) > 0.5))))
     {
+      ROS_INFO("Re localizing");
       // If amcl has not received an initial pose from the user, or it's reporting a pose
       // far away from the one reported by the AR marker, initialize it with this message.
       // Note that we check timings to ensure we are not comparing with an old amcl pose

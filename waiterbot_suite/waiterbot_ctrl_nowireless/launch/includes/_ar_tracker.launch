@@ -2,7 +2,8 @@
   <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
   <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
   <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
-  <arg name="marker_size"          default="6.9" />
+  <arg name="marker_size"          default="16.1" />
+  <!--<arg name="marker_size"          default="6.9 />-->
   <arg name="max_new_marker_error" default="0.08" />
   <arg name="max_track_error"      default="0.2" />
   <arg name="max_frequency"        default="5.0" />
