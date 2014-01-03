@@ -38,6 +38,9 @@ namespace waiterbot
     pnh.param("min_penalized_head", min_penalized_head_,     ARMarkerProcessorDefaultParams::MIN_PENALIZED_HEAD);
     pnh.param("max_reliable_head",  max_reliable_head_,      ARMarkerProcessorDefaultParams::MAX_RELIABLE_HEAD);
     pnh.param("docking_marker_id",  docking_marker_id_,      ARMarkerProcessorDefaultParams::DOCKING_MARKER_ID);
+    pnh.param("global_marker_left_id", global_marker_left_id_,   ARMarkerProcessorDefaultParams::GLOBAL_MARKER_LEFT_ID); 
+    pnh.param("global_marker_right_id", global_marker_right_id_, ARMarkerProcessorDefaultParams::GLOBAL_MARKER_RIGHT_ID); 
+    pnh.param("global_marker_dist", global_marker_dist_,       ARMarkerProcessorDefaultParams::GLOBAL_MARKER_DIST); 
 
     global_marker_localization_ = false;
     if(pnh.getParam("global_marker_filename",        global_marker_filename_) == false)
@@ -103,7 +106,7 @@ namespace waiterbot
     // Maintain markers
     maintainTrackedMarkers(msg, tracked_markers_);
 
-    processDockingMarkers(msg, tracked_markers_);
+//    processDockingMarkers(msg, tracked_markers_);
     processGlobalMarkers(msg, tracked_markers_);
       
     spotted_markers_ = *msg;
@@ -210,6 +213,7 @@ namespace waiterbot
 
   void ARMarkerProcessor::processGlobalMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers)
   {
+
     for (unsigned int i = 0; i < msg->markers.size(); i++)
     {
       ar_track_alvar::AlvarMarker global_marker;
