@@ -115,7 +115,12 @@ namespace waiterbot
 
       // raw list of ar markers from ar_alvar_track pkg 
       void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
+        void maintainTrackedMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers);
         void maintainTrackedMarker(TrackedMarker& marker,const ar_track_alvar::AlvarMarker& msgMarker, const int obs_list_max_size, const double max_valid_d_inc, const double max_valid_h_inc);
+
+        void processDockingMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers);
+
+        void processGlobalMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers);
         void processGlobalMarker(const TrackedMarker& marker, const ar_track_alvar::AlvarMarker& msgMarker,const ar_track_alvar::AlvarMarker& global_marker);
 
       //////////////////// tf related

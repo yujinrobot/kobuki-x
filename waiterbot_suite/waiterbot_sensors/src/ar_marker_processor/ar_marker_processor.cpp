@@ -100,6 +100,17 @@ namespace waiterbot
   {
     // TODO: use confidence to incorporate covariance to global poses
 
+    // Maintain markers
+    maintainTrackedMarkers(msg, tracked_markers_);
+
+    processDockingMarkers(msg, tracked_markers_);
+    processGlobalMarkers(msg, tracked_markers_);
+      
+    spotted_markers_ = *msg;
+  }
+
+  void ARMarkerProcessor::maintainTrackedMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers)
+  {
     // Make thresholds relative to the tracking frequency (as it can be dynamically changed)
     int obs_list_max_size  = (int)round(max_tracking_time_*ar_tracker_freq_);
     double max_valid_d_inc = max_valid_d_inc_ / ar_tracker_freq_;
@@ -107,55 +118,20 @@ namespace waiterbot
 
     for (unsigned int i = 0; i < msg->markers.size(); i++)
     {
-
-      if (msg->markers[i].id >= tracked_markers_.size())
+      if (msg->markers[i].id >= tracked_markers.size())
       {
         // A recognition error from Alvar markers tracker
         ROS_WARN("Discarding AR marker with unrecognized id (%d)", msg->markers[i].id);
         continue;
       }
 
-      TrackedMarker& marker = tracked_markers_[msg->markers[i].id];
+      TrackedMarker& marker = tracked_markers[msg->markers[i].id];
 
       // Confidence evaluation
       maintainTrackedMarker(marker, msg->markers[i], obs_list_max_size, max_valid_d_inc, max_valid_h_inc);
-      
-      // Check if the marker is docking marker
-      if ((unsigned int)(msg->markers[i].id) == (unsigned int)docking_marker_id_)
-      {
-        // This is the docking base marker! call the registered callbacks if it's reliable enough
-        if (marker.confidence <= docking_base_conf_)
-        {
-          ROS_WARN_THROTTLE(1, "Ignoring docking base marker at it is not reliable enough (%f < %f)",
-                                marker.confidence, docking_base_conf_);
-          continue;
-        }
-
-        boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
-        *ps = msg->markers[i].pose;
-        ps->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
-        pub_dock_pose_ar_.publish(ps);
-//        base_spotted_cb_(ps, msg->markers[i].id);
-      }
-
-      
-      ar_track_alvar::AlvarMarker global_marker;
-      if (included(msg->markers[i].id, global_markers_, &global_marker) == true) // if it is global marker
-      {
-        // This is a global marker! infer robot's global pose and call registered callbacks if it's reliable enough
-        if (marker.confidence <= global_pose_conf_)
-        {
-          //if (msg->markers[i].id == 1)
-          ROS_DEBUG_THROTTLE(1, "Discarding global marker at it is not reliable enough (%f < %f)", marker.confidence, global_pose_conf_);
-        }
-        else 
-        {
-          processGlobalMarker(marker, msg->markers[i], global_marker);
-        }
-      }
     }
-    spotted_markers_ = *msg;
   }
+
 
   void ARMarkerProcessor::maintainTrackedMarker(TrackedMarker& marker,const ar_track_alvar::AlvarMarker& msgMarker, const int obs_list_max_size, const double max_valid_d_inc, const double max_valid_h_inc)
   {
@@ -203,11 +179,58 @@ namespace waiterbot
     if (marker.obs_list_.size() > obs_list_max_size)
       marker.obs_list_.pop_back();
 
-    //    ROS_DEBUG_STREAM(msg->markers[i].id << ":  "
-    //                 << marker.distance << "   " << marker.heading << "  " << marker.confidence << "      "
-    //                  << marker.conf_distance << "   " << marker.conf_heading << "   "
-    //                  << marker.stability << "   "<< marker.persistence << position << "   " << "   " << marker.obs_list_.size());
+        ROS_INFO_STREAM(msgMarker.id << ":  Dist : "
+                     << marker.distance << " Heading : [" << marker.heading << "] Confidence : [" << marker.confidence << "]   "
+                      << marker.conf_distance << "   " << marker.conf_heading << " Stability : ["
+                      << marker.stability << "]   ["<< marker.persistence << "]   [" << position << "]   " << marker.obs_list_.size());
   }
+
+  void ARMarkerProcessor::processDockingMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers)
+  {
+    /*
+      // Check if the marker is docking marker
+      if ((unsigned int)(msg->markers[i].id) == (unsigned int)docking_marker_id_)
+      {
+        // This is the docking base marker! call the registered callbacks if it's reliable enough
+        if (marker.confidence <= docking_base_conf_)
+        {
+          ROS_WARN_THROTTLE(1, "Ignoring docking base marker at it is not reliable enough (%f < %f)",
+                                marker.confidence, docking_base_conf_);
+          continue;
+        }
+
+        boost::shared_ptr<geometry_msgs::PoseStamped> ps(new geometry_msgs::PoseStamped());
+        *ps = msg->markers[i].pose;
+        ps->header = msg->markers[i].header;  // bloody alvar tracker doesn't fill pose's header
+        pub_dock_pose_ar_.publish(ps);
+        base_spotted_cb_(ps, msg->markers[i].id);
+      }
+      */
+  }
+
+  void ARMarkerProcessor::processGlobalMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers)
+  {
+    for (unsigned int i = 0; i < msg->markers.size(); i++)
+    {
+      ar_track_alvar::AlvarMarker global_marker;
+      TrackedMarker& marker = tracked_markers[msg->markers[i].id];
+
+      if (included(msg->markers[i].id, global_markers_, &global_marker) == true) // if it is global marker
+      {
+        // This is a global marker! infer robot's global pose and call registered callbacks if it's reliable enough
+        if (marker.confidence <= global_pose_conf_)
+        {
+          //if (msg->markers[i].id == 1)
+          ROS_DEBUG_THROTTLE(1, "Discarding global marker at it is not reliable enough (%f < %f)", marker.confidence, global_pose_conf_);
+        }
+        else 
+        {
+          processGlobalMarker(marker, msg->markers[i], global_marker);
+        }
+      }
+    }
+  }
+
 
   void ARMarkerProcessor::processGlobalMarker(const TrackedMarker& marker, const ar_track_alvar::AlvarMarker& msgMarker,const ar_track_alvar::AlvarMarker& global_marker)
   {
