@@ -43,7 +43,7 @@ namespace waiterbot {
   {
     if(!amcl_pose_received_) // it has not received any amcl pose yet.. should do nothing
       return;
-    ROS_INFO("Received robot pose");
+//    ROS_INFO("Received robot pose");
     tf::Pose amcl_pose, armk_pose;
     tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
     tf::poseMsgToTF(msg->pose.pose,       armk_pose);
