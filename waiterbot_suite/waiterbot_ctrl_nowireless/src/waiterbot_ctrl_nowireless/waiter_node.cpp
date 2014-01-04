@@ -87,6 +87,7 @@ void WaiterIsolated::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstP
     if(prev_digital_input.values[1] == false && msg->values[1] == true)
     {
       ROS_INFO("Waiter : Red button pressed");
+      navigator_.clearCostMaps();
     }
 
     if(prev_digital_input.values[0] == false && msg->values[0] == true)
