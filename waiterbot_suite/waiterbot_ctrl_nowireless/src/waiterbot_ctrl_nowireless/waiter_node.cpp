@@ -146,7 +146,10 @@ void WaiterIsolated::trayEmptyCB(const std_msgs::Empty::ConstPtr& msg)
   // cancel navigation
   // send feedback success
   if(inCommand_)
+  {
     tray_empty_ = true;
+    navigator_.cancelMoveTo();
+  }
 }
 
 void WaiterIsolated::orderCancelledCB(const std_msgs::Empty::ConstPtr& msg)

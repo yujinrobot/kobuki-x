@@ -68,10 +68,12 @@ bool WaiterIsolated::goToOrigin(std::string& message)
   geometry_msgs::PoseStamped vm = robot_origin_;
   vm.header.stamp = ros::Time::now();
 
-  if(navigator_.moveTo(vm) == false) {
-    ROS_ERROR("Failed to move");
-    message = "navigation failed...";
-    return false;
+  if(tray_empty_ == false) {
+    if(navigator_.moveTo(vm) == false) {
+      ROS_ERROR("Failed to move");
+      message = "navigation failed...";
+      return false;
+    }
   }
 
   playSound("kaku.wav");
