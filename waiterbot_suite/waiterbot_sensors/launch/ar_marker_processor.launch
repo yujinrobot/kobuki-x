@@ -1,13 +1,17 @@
 <launch>
   <arg name="global_marker_filename" default="$(find waiterbot_sensors)/resources/example_global_markers.yaml"/>
-  <arg name="global_marker_left_id" default="3"/>
-  <arg name="global_marker_right_id" default="0"/>
-  <arg name="global_marker_dist"    default="0.26"/>
+  <arg name="vending_marker_left_id" default="3"/>
+  <arg name="vending_marker_right_id" default="0"/>
+  <arg name="vending_marker_dist"    default="0.26"/>
+
+<!--  <node pkg="tf" type="static_transform_publisher" name="ar_link_publisher" args="0.0 0.0 0.0 0.0 0.0 0.0 $(arg base_link) /ar_link 100"/>-->
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 /ar_link /ar_3 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 /ar_link /ar_0 100"/>
 
   <node name="ar_marker_processor" pkg="waiterbot_sensors" type="ar_marker_processor" respawn="false" output="screen">
     <param name="global_marker_filename" value="$(arg global_marker_filename)"/>
-    <param name="global_marker_left_id" value="$(arg global_marker_left_id)"/>
-    <param name="global_marker_right_id" value="$(arg global_marker_right_id)"/>
-    <param name="global_marker_dist" value="$(arg global_marker_dist)"/>
+    <param name="vending_marker_left_id" value="$(arg vending_marker_left_id)"/>
+    <param name="vending_marker_right_id" value="$(arg vending_marker_right_id)"/>
+    <param name="vending_marker_dist" value="$(arg vending_marker_dist)"/>
   </node>
 </launch>

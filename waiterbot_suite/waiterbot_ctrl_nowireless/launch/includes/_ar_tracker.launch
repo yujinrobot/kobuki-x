@@ -10,7 +10,7 @@
   
   <arg name="cam_image_topic"      default="camera/rgb/image_raw" />
   <arg name="cam_info_topic"       default="camera/rgb/camera_info" />    
-  <arg name="output_frame"         default="base_footprint" />
+  <arg name="output_frame"         default="camera_rgb_obtical_frame" />
 
   <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg max_frequency)">
     <param name="max_frequency" value="$(arg max_frequency)"/>  <!-- Must be be set as a parameter so other nodes can read it (e.g. ar_markers) -->
@@ -20,10 +20,18 @@
     <remap from="visualization_marker"  to="ar_track_alvar/visualization_marker"/>
   </node>
 
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 /ar_link /ar_3 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 /ar_link /ar_0 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 0.0 /ar_link /target_pose 100"/>
+
   <node name="ar_marker_processor" pkg="waiterbot_sensors" type="ar_marker_processor" respawn="false" output="screen">
     <rosparam file="$(arg common_param)" command="load"/>
     <rosparam file="$(arg ar_marker_processor_param)" command="load"/>
     <param name="global_marker_filename" value="$(arg global_marker_filename)"/>
+    <param name="vending_marker_left_id" value="3"/>
+    <param name="vending_marker_right_id" value="0"/>
+    <param name="vending_marker_dist"    value="0.26"/>
+
   </node>
 
 </launch>

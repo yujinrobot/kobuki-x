@@ -1,0 +1,7 @@
+<launch>
+  <node name="fake_localization" pkg="fake_localization" type="fake_localization">
+    <param name="odom_frame_id" value="/odom"/>
+    <param name="global_frame_id" value="/ar_link"/>
+    <param name="base_frame_id" value="/base_footprint"/>
+  </node>
+</launch>

@@ -49,13 +49,16 @@
 
   <!--  ************** Rosnav move base ***************  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_move_base_eband.launch"/>
-  <!--<include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_move_base_eband.launch"/>-->
+  <!--<include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_move_base.launch"/>-->
 
   <!--  ******************** Amcl *********************  -->
+  <!--
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_amcl.launch">
     <arg name="scan_topic" value="scan"/>
     <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
+  -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_fake_local.launch"/>
 </launch>

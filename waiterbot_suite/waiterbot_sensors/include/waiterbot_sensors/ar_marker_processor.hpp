@@ -55,9 +55,9 @@ namespace ARMarkerProcessorDefaultParams {
   const std::string PUB_DOCK_POSE_AR = "dock_pose_ar";
 
   const int    DOCKING_MARKER_ID        = 10;
-  const int    GLOBAL_MARKER_LEFT_ID    = 3;
-  const int    GLOBAL_MARKER_RIGHT_ID   = 0;
-  const double GLOBAL_MARKER_DIST       = 0.26;
+  const int    VENDING_MARKER_LEFT_ID    = 3;
+  const int    VENDING_MARKER_RIGHT_ID   = 0;
+  const double VENDING_MARKER_DIST       = 0.26;
 }
 
 class TrackedMarker
@@ -66,6 +66,7 @@ class TrackedMarker
     TrackedMarker()
     {
       distance      = 0.0;
+      distance2d    = 0.0;
       heading       = 0.0;
       confidence    = 0.0;
       conf_distance = 0.0;
@@ -81,6 +82,7 @@ class TrackedMarker
                            
     ObsList obs_list_;
     double distance;
+    double distance2d;
     double heading;
     double confidence;
     double conf_distance;
@@ -125,6 +127,8 @@ class ARMarkerProcessor
 
       void processGlobalMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers);
       void processGlobalMarker(const TrackedMarker& marker, const ar_track_alvar::AlvarMarker& msgMarker,const ar_track_alvar::AlvarMarker& global_marker);
+      
+      void computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers);
 
     //////////////////// tf related
     void broadcastMarkersTF();
@@ -179,9 +183,9 @@ class ARMarkerProcessor
     double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
 
     int                      docking_marker_id_;
-    int                      global_marker_left_id_;
-    int                      global_marker_right_id_;
-    double                   global_marker_dist_;
+    int                      vending_marker_left_id_;
+    int                      vending_marker_right_id_;
+    double                   vending_marker_dist_;
 };
 
 } /* namespace waiterbot */
