@@ -16,6 +16,7 @@ namespace waiterbot {
 void ARMarkerProcessor::broadcastMarkersTF()
 {
    // TODO semantic map is not broadcasting this already?  only docking base no
+  /*
   char child_frame[32];
   tf::StampedTransform tf;
   tf.stamp_ = ros::Time::now();
@@ -39,7 +40,7 @@ void ARMarkerProcessor::broadcastMarkersTF()
     tf_brcaster_.sendTransform(tf);
   }
 
-
+*/
   // TODO remove definitively or recover id I finally decide not to include docking base on global markers
   // CHANGED  look below
   /*

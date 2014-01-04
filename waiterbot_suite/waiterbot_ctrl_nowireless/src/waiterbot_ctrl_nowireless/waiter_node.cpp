@@ -159,10 +159,7 @@ void WaiterIsolated::orderCancelledCB(const std_msgs::Empty::ConstPtr& msg)
   if(inCommand_)
   {
     cancel_order_ = true;
-    if(in_docking_)
-      ac_autodock_.cancelGoal();
-    else
-      navigator_.cancelMoveTo();
+    navigator_.cancelMoveTo();
   }
 
 }

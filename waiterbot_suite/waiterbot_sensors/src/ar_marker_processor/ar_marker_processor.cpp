@@ -103,7 +103,7 @@ void ARMarkerProcessor::loadGlobalMarkers()
 void ARMarkerProcessor::arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
 {
   // TODO: use confidence to incorporate covariance to global poses
-  ROS_INFO("Received msg");
+  //ROS_INFO("Received msg");
 
   // Maintain markers
   maintainTrackedMarkers(msg, tracked_markers_);
@@ -131,7 +131,7 @@ void ARMarkerProcessor::maintainTrackedMarkers(const ar_track_alvar::AlvarMarker
       ROS_WARN("Discarding AR marker with unrecognized id (%d)", msg->markers[i].id);
       continue;
     }
-    ROS_INFO("Maintaining marker id = %d",msg->markers[i].id);
+    //ROS_INFO("Maintaining marker id = %d",msg->markers[i].id);
 
     TrackedMarker& marker = tracked_markers[msg->markers[i].id];
 
@@ -147,8 +147,8 @@ void ARMarkerProcessor::maintainTrackedMarker(TrackedMarker& marker,const ar_tra
   marker.distance2d = mtk::distance2D(msgMarker.pose.pose.position.x, msgMarker.pose.pose.position.z, 0,0);
   marker.heading  = tf::getYaw(msgMarker.pose.pose.orientation) + M_PI/2.0;
   // WARN: note that heading evaluation also assumes vertically aligned markers
-  ROS_INFO("Marker dist = %.4f",marker.distance2d);
-  ROS_INFO("Marer  head = %.4f",marker.heading);
+  //ROS_INFO("Marker dist = %.4f",marker.distance2d);
+  //ROS_INFO("Marer  head = %.4f",marker.heading);
 
   int position = 0;
   ros::Time now = ros::Time::now();
@@ -190,10 +190,12 @@ void ARMarkerProcessor::maintainTrackedMarker(TrackedMarker& marker,const ar_tra
   if (marker.obs_list_.size() > obs_list_max_size)
     marker.obs_list_.pop_back();
 
+  /*
       ROS_INFO_STREAM(msgMarker.id << ":  Dist : "
                    << marker.distance2d << " Heading : [" << marker.heading << "] Confidence : [" << marker.confidence << "]   "
                     << marker.conf_distance << "   " << marker.conf_heading << " Stability : ["
                     << marker.stability << "]   ["<< marker.persistence << "]   [" << position << "]   " << marker.obs_list_.size());
+                    */
 }
 
 void ARMarkerProcessor::processDockingMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers)
@@ -320,29 +322,12 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
     double target_heading = atan2(target_x, target_z);
     double target_heading_degrees = target_heading * 180.0 / M_PI;
 
+    /*
     ROS_INFO("Alpha = %.3f",alpha_degrees);
     ROS_INFO("Beta  = %.3f",beta_degrees);
     ROS_INFO("Theta = %.3f",theta_degrees);
-    ROS_INFO("Target (x = %.3f, z = %.3f, heading = %.3f)", target_x, target_z, target_heading_degrees);
-
-
-    /*
-    // vending_marker_dist_ must not be 0
-    double robot_x_from_left_marker = (pow(left_side,2) + pow(vending_marker_dist_,2) - pow(right_side, 2)) / ( 2 * vending_marker_dist_);
-    double dist_from_baseline_sq    = pow(left_side,2) - pow(robot_x_from_left_marker, 2);
-    double dist_from_baseline       = sqrt(dist_from_baseline_sq);
-    double x_from_ar                = robot_x_from_left_marker - vending_marker_dist_;
-
-//    ROS_INFO("Pure dist = %.3f",tracked_markers[vending_marker_left_id_].distance);
-    ROS_INFO("Y = %.3f",left_side);
-    ROS_INFO("Z = %.3f",right_side);
-    ROS_INFO("X = %.3f",vending_marker_dist_);
-
-    ROS_INFO("B1   = %.3f %.3f %.3f %.3f",pow(left_side,2), pow(vending_marker_dist_,2), right_side * right_side, 2 * vending_marker_dist_);
-    ROS_INFO("B    = %.3f",robot_x_from_left_marker);
-    ROS_INFO("SQ A = %.3f",dist_from_baseline_sq);
-    ROS_INFO("A    = %.3f",dist_from_baseline);
     */
+    //ROS_INFO("Target (x = %.3f, z = %.3f, heading = %.3f)", target_x, target_z, target_heading_degrees);
 
     // target_pose -> robot
     std::string frame = "robot";
@@ -367,6 +352,7 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
 
     tf_brcaster_.sendTransform(tf);
 
+    /*
     boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
 
     pwcs->header.stamp = ros::Time::now();
@@ -375,6 +361,7 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
 
     // publish robot pose to nav watch dog
     pub_robot_pose_ar_.publish(pwcs);
+    */
   }
 }
 

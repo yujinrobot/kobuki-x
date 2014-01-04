@@ -35,6 +35,7 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
   geometry_msgs::PoseStamped vm = map_wp_[loc_vm_];
 
   vm.header.stamp = ros::Time::now();
+  navigator_.clearCostMaps();
 
   if(navigator_.moveTo(vm) == false) {
     ROS_ERROR("Navigation Failed while going to vending machine");
@@ -42,19 +43,9 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
     return false;
   }
 
-  navigator_.clearCostMaps();
 
   // maybe local navi to located on better place..?
   // run autodock algorithm
-  if(!cancel_order_) {
-    if(dockInBase() == false)
-    {
-      ROS_ERROR("Failed to dock");
-      message = "docking failed....";
-      return false;
-    }
-  }
-
   playSound("pab.wav");
 
   return true;
@@ -62,7 +53,7 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
 
 bool WaiterIsolated::goToOrigin(std::string& message)
 {
-  navigator_.backward(0.6);
+  navigator_.backward(0.3);
   navigator_.clearCostMaps();
   // go to in front of vending machine
   geometry_msgs::PoseStamped vm = robot_origin_;
