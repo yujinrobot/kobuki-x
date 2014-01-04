@@ -330,7 +330,8 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
     //ROS_INFO("Target (x = %.3f, z = %.3f, heading = %.3f)", target_x, target_z, target_heading_degrees);
 
     // target_pose -> robot
-    std::string frame = "robot";
+//    std::string frame = "robot";
+    std::string frame = "camera_rgb_optical_frame";
     geometry_msgs::PoseStamped pose;
     pose.header.frame_id = "target_pose";
     pose.pose.position.x = -target_x;  
@@ -367,7 +368,7 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
       mtk::pose2tf(pose, tf_ar_camera);
       tf_ar_camera.stamp_ = ros::Time::now();
       tf_internal_.setTransform(tf_ar_camera);
-      ROS_INFO_STREAM("target_pose -> camera: x = " << tf_ar_camera.getOrigin().x()
+      ROS_INFO_STREAM("target_pose -> camera_rgb_optical_frame: x = " << tf_ar_camera.getOrigin().x()
                      << ", y = " << tf_ar_camera.getOrigin().y()
                      << ", z = " << tf_ar_camera.getOrigin().z());
 
