@@ -1,12 +1,47 @@
-
 <launch>
-  <include file="$(find turtlebot_bringup)/launch/minimal_with_appmanager.launch">
-    <arg name="robot_name" value="whoola"/>
-    <arg name="robot_type" value="waiterbot"/>
-    <arg name="rapp_lists" value="ces_rapps/ces.rapps"/>
+  <!-- App manager -->
+  <arg name="robot_name" value="whoola"/>
+  <arg name="robot_type" value="waiterbot"/>
+  <arg name="hub_whitelist" default="$(optenv ROBOT_HUB_WHITELIST Internal Hub)"/>
+  <arg name="rapp_lists" value="ces_rapps/ces.rapps"/>
+  <arg name="robot_icon" default="turtlebot_bringup/turtlebot2.png"/>
+  <arg name="gateway_watch_loop_period" default="10"/>
+  
+  <include file="$(find rocon_app_manager)/launch/paired_private.launch">
+    <arg name="robot_name" value="$(arg robot_name)"/>
+    <arg name="robot_type" value="$(arg robot_type)"/>
+    <arg name="robot_icon" value="$(arg robot_icon)"/>
+    <arg name="rapp_lists" value="$(arg rapp_lists)"/>
+    <arg name="gateway_watch_loop_period" value="$(arg gateway_watch_loop_period)"/>
+    <arg name="disable_uuids" value="true"/>
+    <arg name="hub_whitelist" value="$(arg hub_whitelist)"/>
   </include>
+  
+  <arg name="base"       value="kobuki"/>
+  <arg name="battery"    value="/sys/class/power_supply/BAT0"/>
+  <arg name="simulation" value="false"/>
+  <param name="/use_sim_time" value="$(arg simulation)"/>
   
   <!-- Waiterbot URDF model -->
   <arg name="urdf_file" default="$(find waiterbot_bringup)/urdf/waiterbot_v2.urdf" />
   <param name="robot_description" textfile="$(arg urdf_file)" />
+
+  <param name="robot/name" value="$(optenv ROBOT turtlebot)"/>
+  <param name="robot/type" value="turtlebot"/>
+  
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="5.0" />
+  </node>
+  
+  <node pkg="diagnostic_aggregator" type="aggregator_node" name="diagnostic_aggregator" >
+    <rosparam command="load" file="$(find turtlebot_bringup)/param/$(arg base)/diagnostics.yaml" />
+  </node>
+  
+  <include file="$(find turtlebot_bringup)/launch/includes/mobile_base.launch.xml">
+    <arg name="base" value="$(arg base)" />
+  </include>
+  
+  <include file="$(find turtlebot_bringup)/launch/includes/netbook.launch.xml">
+    <arg name="battery" value="$(arg battery)" />
+  </include>
 </launch>
