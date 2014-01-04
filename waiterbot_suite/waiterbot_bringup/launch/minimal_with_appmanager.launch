@@ -5,4 +5,8 @@
     <arg name="robot_type" value="waiterbot"/>
     <arg name="rapp_lists" value="ces_rapps/ces.rapps"/>
   </include>
+  
+  <!-- Waiterbot URDF model -->
+  <arg name="urdf_file" default="$(find waiterbot_bringup)/urdf/waiterbot_v2.urdf" />
+  <param name="robot_description" textfile="$(arg urdf_file)" />
 </launch>
