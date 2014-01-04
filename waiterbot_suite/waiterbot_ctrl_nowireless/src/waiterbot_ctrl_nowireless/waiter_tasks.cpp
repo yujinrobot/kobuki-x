@@ -32,7 +32,17 @@ bool WaiterIsolated::recordOrderOrigin(std::string& message)
 bool WaiterIsolated::goToVendingMachine(std::string& message)
 {
   // go to in front of vending machine
-  geometry_msgs::PoseStamped vm = map_wp_[loc_vm_];
+  geometry_msgs::PoseStamped vm;// = map_wp_[loc_vm_];
+  tf::StampedTransform vm_tf;
+  // get target pose frame transform tree
+  if(tf_handlers_.getTf(global_frame_,"target_pose",vm_tf) == false)
+  {
+    std::stringstream sstm;
+    sstm << "Failed to get transform between " << global_frame_ << " and " << base_frame_;
+    message = sstm.str();
+    return false;
+  }
+  mtk::tf2pose(vm_tf, vm);
 
   vm.header.stamp = ros::Time::now();
   navigator_.clearCostMaps();

@@ -41,13 +41,13 @@ namespace waiterbot {
 
   void NavWatchdog::robotPoseARCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
   {
-    if(!amcl_pose_received_) // it has not received any amcl pose yet.. should do nothing
-      return;
+    //if(!amcl_pose_received_) // it has not received any amcl pose yet.. should do nothing
+      //return;
 //    ROS_INFO("Received robot pose");
     tf::Pose amcl_pose, armk_pose;
     tf::poseMsgToTF(last_amcl_pose_.pose, amcl_pose);
     tf::poseMsgToTF(msg->pose.pose,       armk_pose);
-  
+
     if (! localized_)
     {
       ROS_DEBUG_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f", msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));
@@ -83,7 +83,7 @@ namespace waiterbot {
       }
   
       geometry_msgs::PoseWithCovarianceStamped pose = *msg;
-      pose.header.stamp = ros::Time::now() + ros::Duration(0.1);
+      //pose.header.stamp = ros::Time::now() - ros::Duration(0.3);
       pub_init_pose_.publish(pose);
       last_amcl_init_.header = msg->header;
       last_amcl_init_.pose = msg->pose.pose;

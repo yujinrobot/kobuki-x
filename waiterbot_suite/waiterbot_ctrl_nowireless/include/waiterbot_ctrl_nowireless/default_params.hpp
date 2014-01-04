@@ -19,7 +19,7 @@ namespace waiterbot {
     const std::string LOC_CUSTOMER              = "loc_customer";
     const std::string BASE_FRAME                = "base_footprint";
     const std::string ODOM_FRAME                = "odom";
-    const std::string GLOBAL_FRAME              = "odom";  
+    const std::string GLOBAL_FRAME              = "ar_global";  
 
     const std::string PUB_DRINK_ORDER_FEEDBACK  = "nav_ctrl_status";
     const std::string SUB_DRINK_ORDER           = "nav_ctrl_goto";

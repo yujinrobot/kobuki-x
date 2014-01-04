@@ -3,7 +3,6 @@
   <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
   <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
   <arg name="marker_size"          default="7.2" />
-  <!--<arg name="marker_size"          default="6.9 />-->
   <arg name="max_new_marker_error" default="0.08" />
   <arg name="max_track_error"      default="0.2" />
   <arg name="max_frequency"        default="5.0" />
@@ -20,9 +19,10 @@
     <remap from="visualization_marker"  to="ar_track_alvar/visualization_marker"/>
   </node>
 
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 /ar_link /ar_3 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 /ar_link /ar_0 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 0.0 /ar_link /target_pose 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_3 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_0 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 0.0 ar_link target_pose 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_global_publisher" args="0.0 0.0 0.36 1.57 0.0 1.57 ar_global ar_link 100"/>
 
   <node name="ar_marker_processor" pkg="waiterbot_sensors" type="ar_marker_processor" respawn="false" output="screen">
     <rosparam file="$(arg common_param)" command="load"/>

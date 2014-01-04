@@ -356,11 +356,13 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
     {
       // get and set ar_link -> target_pose
       tf::StampedTransform tf_ar_target_pose;
-      tf_listener_.lookupTransform("target_pose", "ar_link", ros::Time(0), tf_ar_target_pose);
+      tf_listener_.lookupTransform("ar_global", "target_pose", ros::Time(0), tf_ar_target_pose);
       tf_internal_.setTransform(tf_ar_target_pose);
+      /*
       ROS_INFO_STREAM("ar_link -> target_position: x = " << tf_ar_target_pose.getOrigin().x()
                      << ", y = " << tf_ar_target_pose.getOrigin().y()
                      << ", z = " << tf_ar_target_pose.getOrigin().z());
+                     */
 
       // set target_pose -> camera
       tf::StampedTransform tf_ar_camera;
@@ -368,41 +370,60 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
       mtk::pose2tf(pose, tf_ar_camera);
       tf_ar_camera.stamp_ = ros::Time::now();
       tf_internal_.setTransform(tf_ar_camera);
+      /*
       ROS_INFO_STREAM("target_pose -> camera_rgb_optical_frame: x = " << tf_ar_camera.getOrigin().x()
                      << ", y = " << tf_ar_camera.getOrigin().y()
                      << ", z = " << tf_ar_camera.getOrigin().z());
+                     */
 
-      // get and set camera -> odom
-      tf::StampedTransform tf_camera_odom;
-      tf_listener_.lookupTransform("odom", "camera_rgb_optical_frame", ros::Time(0), tf_camera_odom);
-      tf_internal_.setTransform(tf_camera_odom);
+      // get and set camera -> base_footprint 
+      tf::StampedTransform tf_camera_base_footprint;
+      tf_listener_.lookupTransform("camera_rgb_optical_frame", "base_footprint", ros::Time(0), tf_camera_base_footprint);
+      tf_internal_.setTransform(tf_camera_base_footprint);
+      /*
       ROS_INFO_STREAM("camera_rgb_optical_frame -> odom: x = " << tf_camera_odom.getOrigin().x()
                      << ", y = " << tf_camera_odom.getOrigin().y()
                      << ", z = " << tf_camera_odom.getOrigin().z());
+                     */
 
-      // get and publish ar_link -> odom
-      tf::StampedTransform tf_ar_odom;
-      tf_internal_.lookupTransform("ar_link", "odom", ros::Time(0), tf_ar_odom);
-      tf_brcaster_.sendTransform(tf_ar_odom);
+      // get and publish ar_link -> base_footprint
+      tf::StampedTransform tf_ar_base_footprint;
+      tf_internal_.lookupTransform("base_footprint", "ar_global", ros::Time(0), tf_ar_base_footprint);
+      boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
+
+      pwcs->header.stamp = tf_ar_base_footprint.stamp_;
+      pwcs->header.frame_id = "ar_global";
+
+      geometry_msgs::PoseStamped ps;
+      mtk::tf2pose(tf_ar_base_footprint, ps);
+      pwcs->pose.pose = ps.pose;
+
+      // publish robot pose to nav watch dog
+      pub_robot_pose_ar_.publish(pwcs);
+
+
+
+      //tf_brcaster_.sendTransform(tf_ar_odom);
+      /*
       ROS_INFO_STREAM("ar_link -> odom: x = " << tf_ar_odom.getOrigin().x()
                      << ", y = " << tf_ar_odom.getOrigin().y()
                      << ", z = " << tf_ar_odom.getOrigin().z());
+                     */
     }
     catch (tf::TransformException const &ex)
     {
       ROS_WARN_STREAM("TF error: " << ex.what());
+      ROS_INFO_STREAM("All known frames: " << tf_internal_.allFramesAsString());      
     }
 
-    /*
-    boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
 
-    pwcs->header.stamp = ros::Time::now();
-    pwcs->header.frame_id = "target_pose";
-    pwcs->pose.pose = pose.pose;
 
-    // publish robot pose to nav watch dog
-    pub_robot_pose_ar_.publish(pwcs);
-    */
+
+
+
+
+
+
   }
 }
 
