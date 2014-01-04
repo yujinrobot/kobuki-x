@@ -345,12 +345,37 @@ void ARMarkerProcessor::computeRelativeRobotPose(const ar_track_alvar::AlvarMark
     pose.pose.orientation.z = quat.getZ(); 
     pose.pose.orientation.w = quat.getW(); 
 
-    tf::StampedTransform tf;
-    tf.child_frame_id_ = frame;
-    mtk::pose2tf(pose, tf);
-    tf.stamp_ = ros::Time::now();
+//    tf::StampedTransform tf;
+//    tf.child_frame_id_ = frame;
+//    mtk::pose2tf(pose, tf);
+//    tf.stamp_ = ros::Time::now();
+//    tf_brcaster_.sendTransform(tf);
 
-    tf_brcaster_.sendTransform(tf);
+    // get and set ar_link -> target_pose
+    tf::StampedTransform tf_ar_target_pose;
+    tf_listener_.lookupTransform("target_pose", "ar_link", ros::Time(0), tf_ar_target_pose);
+    tf_internal_.setTransform(tf_ar_target_pose);
+    ROS_INFO_STREAM("ar_link -> target_pose: " << tf_ar_target_pose.getOrigin());
+
+    // set target_pose -> camera
+    tf::StampedTransform tf_ar_camera;
+    tf_ar_camera.child_frame_id_ = frame;
+    mtk::pose2tf(pose, tf_ar_camera);
+    tf_ar_camera.stamp_ = ros::Time::now();
+    tf_internal_.setTransform(tf_ar_camera);
+    ROS_INFO_STREAM("target_pose -> camera: " << tf_ar_camera.getOrigin());
+
+    // get and set camera -> odom
+    tf::StampedTransform tf_camera_odom;
+    tf_listener_.lookupTransform("odom", "camera_rgb_optical_frame", ros::Time(0), tf_camera_odom);
+    tf_internal_.setTransform(tf_camera_odom);
+    ROS_INFO_STREAM("camera_rgb_optical_frame -> odom: " << tf_camera_odom.getOrigin());
+
+    // get and publish ar_link -> odom
+    tf::StampedTransform tf_ar_odom;
+    tf_internal_.lookupTransform("ar_link", "odom", ros::Time(0), tf_ar_odom);
+    tf_brcaster_.sendTransform(tf_ar_odom);
+    ROS_INFO_STREAM("ar_link -> odom: " << tf_ar_odom.getOrigin());
 
     /*
     boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);

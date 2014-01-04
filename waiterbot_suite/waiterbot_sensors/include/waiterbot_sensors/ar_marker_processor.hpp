@@ -178,6 +178,7 @@ class ARMarkerProcessor
     ros::Publisher     pub_robot_pose_ar_;
     ros::Publisher     pub_dock_pose_ar_;
 
+    tf::Transformer          tf_internal_;
     tf::TransformListener    tf_listener_;
     tf::TransformBroadcaster tf_brcaster_;
     double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
