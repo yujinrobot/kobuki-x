@@ -1,0 +1,11 @@
+<launch>
+  <node pkg="waiterbot_ctrl_nowireless" type="init_pose_manager.py" name="init_pose_manager" >
+    <param name="spin_freq"                     value="10"/>
+    <param name="simulation"                    value="true"/>
+    <param name="pose_tracker"                  value="/whoola/ar_track_alvar"/>
+    <remap from="pose_tracker/poses"            to="ar_pose_tracker/poses"/>
+    <remap from="fake_localization/initialpose" to="/whoola/initialpose"/>
+    <remap from="init_pose_manager/initialise"  to="initialise_pose"/>
+    <remap from="init_pose_manager/initialised" to="pose_initialised"/>
+  </node>
+</launch>
