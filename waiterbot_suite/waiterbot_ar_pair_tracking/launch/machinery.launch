@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find waiterbot_ar_marker_tracking)/launch/machinery.launch">
+    <arg name="ar_marker_size" value="10.0"/>
+  </include>
+</launch>
