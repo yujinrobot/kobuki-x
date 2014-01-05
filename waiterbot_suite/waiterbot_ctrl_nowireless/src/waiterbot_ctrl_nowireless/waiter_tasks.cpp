@@ -9,7 +9,9 @@
 
 #include "waiterbot_ctrl_nowireless/waiter_node.hpp"
 
-namespace waiterbot {
+namespace waiterbot
+{
+
 bool WaiterIsolated::recordOrderOrigin(std::string& message)
 {
   // base frame is robot's pose on global frame
@@ -53,9 +55,13 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
     return false;
   }
 
+  if(approachVM() == false)
+  {
+    ROS_ERROR("Navigation Failed while approaching the machine");
+    message = "navigation failed....";
+    return false;
+  }
 
-  // maybe local navi to located on better place..?
-  // run autodock algorithm
   playSound("pab.wav");
 
   return true;
@@ -110,4 +116,38 @@ void WaiterIsolated::playSound(const std::string& wav_file) {
     bool return_unused = system(("rosrun waiterbot_bringup play_sound.bash " + resources_path_ + wav_file).c_str());
 
 }
+
+/**
+ * Commands the pose controller to move precisely in front of the VM
+ *
+ * @return true, if VM has been approached.
+ */
+bool WaiterIsolated::approachVM()
+{
+  // activate the pose controller
+  std_msgs::Empty empty_msg;
+  pub_pose_ctrl_enable_.publish(empty_msg);
+  // send target pose
+
+  // wait for result
+  while (!vm_approached_ && ros::ok())
+  {
+    if (!cancel_order_)
+    {
+      ROS_WARN("Waiter : Approaching VM has been cancelled.");
+      // disable the pose controller
+      pub_pose_ctrl_disable_.publish(empty_msg);
+      return false;
+    }
+    ros::Duration(0.1).sleep();
+  }
+
+  // disable the pose controller
+  pub_pose_ctrl_disable_.publish(empty_msg);
+
+  ROS_INFO("VM successfully approached.");
+  return true;
 }
+
+} // namespace waiterbot
+

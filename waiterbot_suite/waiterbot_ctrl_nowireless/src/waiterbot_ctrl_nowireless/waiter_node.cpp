@@ -25,6 +25,9 @@ WaiterIsolated::WaiterIsolated(ros::NodeHandle& n) :
   cancel_order_ = false;
   in_docking_ = false;
   tray_empty_ = false;
+
+  vm_approached_ = false;
+
   init();
 }
 
@@ -58,6 +61,15 @@ void WaiterIsolated::init()
 
   // feedback to tablet 
   pub_navctrl_feedback_= nh_.advertise<waiterbot_msgs::NavCtrlStatus>(WaiterIsolatedDefaultParam::PUB_DRINK_ORDER_FEEDBACK, 1);
+
+  // enables the pose controller
+  pub_pose_ctrl_enable_ = nh_.advertise<std_msgs::Empty>("pose_controller/enable", 1);
+
+  // disables the pose controller
+  pub_pose_ctrl_disable_ = nh_.advertise<std_msgs::Empty>("pose_controller/disable", 1);
+
+  // receives the pose controller's feedback
+  sub_pose_ctrl_feedback_ = nh_.subscribe("pose_controller/feedback", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
 }
 
 bool WaiterIsolated::isInit() {
@@ -163,6 +175,12 @@ void WaiterIsolated::orderCancelledCB(const std_msgs::Empty::ConstPtr& msg)
     navigator_.cancelMoveTo();
   }
 
+}
+
+void WaiterIsolated::poseCtrlFeedbackCB(const std_msgs::String::ConstPtr& msg)
+{
+  ROS_INFO_STREAM("Waiter : Received pose controller feedback: " << msg->data);
+  vm_approached_ = true;
 }
 
 bool WaiterIsolated::endCommand(const int feedback, const std::string message)
