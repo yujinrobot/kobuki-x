@@ -32,6 +32,8 @@
     version: devel}
 - git: {local-name: rocon_demo_msgs, uri: 'https://github.com/robotics-in-concert/rocon_demo_msgs.git',
     version: hydro-devel}
+- git: {local-name: rocon_demos, uri: 'https://github.com/robotics-in-concert/rocon_demos.git',
+    version: ces_software}
 
 ## Rocon dependency
 
