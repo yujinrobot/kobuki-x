@@ -7,7 +7,7 @@ import dynamic_reconfigure.client
 import geometry_msgs.msg as geometry_msgs
 import rospy
 import std_msgs.msg as std_msgs
-
+import tf
 
 class InitPoseManager(object):
     """
@@ -49,6 +49,13 @@ class InitPoseManager(object):
         # enable the pose tracker
         if self._simulation:
             pose_msg = geometry_msgs.PoseWithCovarianceStamped()
+            pose_msg.header.frame_id = "ar_global"
+            pose_msg.header.stamp = rospy.Time.now() - rospy.Duration(0.2) # TODO: get latest common time
+            pose_msg.pose.pose.position.x = 1.0
+            pose_msg.pose.pose.position.y = 0.0
+            pose_msg.pose.pose.position.z = 0.0
+            quat = tf.transformations.quaternion_from_euler(0, 0, 3.1416)
+            pose_msg.pose.pose.orientation = geometry_msgs.Quaternion(*quat)
             self._pub_init_pose.publish(pose_msg)
             # send success right away
             empty_msg = std_msgs.Empty()
