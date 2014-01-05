@@ -136,15 +136,6 @@ namespace waiterbot {
     ROS_WARN("Navigator : Canceling goal with %s state...", ac_move_base_.getState().toString().c_str());
     ac_move_base_.cancelGoal();
 
-    /*
-    while(ac_move_base_.waitForResult(ros::Duration(0.1)) == false && ros::ok())
-    {
-      ROS_INFO("Navigator : Waiting move base to be canceled...");
-      ros::Duration(1.0).sleep();
-    }
-
-    ROS_INFO("Navigator : Move base canceled..");
-    */
     return true;
   }
 
