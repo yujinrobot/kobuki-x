@@ -44,5 +44,7 @@
 
   <!-- ************* Joystick Manager *********** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_xbox360_joystick.launch" />
-
+  
+  <!-- ************* Joystick Manager *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/init_pose_manager.launch" />
 </launch>
