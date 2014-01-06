@@ -30,7 +30,8 @@ class Node(object):
             '_parameters',
             '_spotted_markers',
             '_thread',
-            '_rotate'
+            '_rotate',
+            '_rate'
         ]
     SPOTTED_NONE = 'none'
     SPOTTED_LEFT = 'left'
@@ -47,6 +48,7 @@ class Node(object):
         self._spotted_markers = Node.SPOTTED_NONE
         self._rotate = Rotate('~cmd_vel')
         self._thread = None
+        self._rate = 0.36  # this could be parameterised
 
     def _setup_parameters(self):
         param = {}
@@ -73,24 +75,29 @@ class Node(object):
     def _ros_enable_subscriber(self, msg):
         if msg.data:
             if not self._rotate.is_running():
+                direction = Rotate.CLOCKWISE
                 if self._spotted_markers == Node.SPOTTED_BOTH:
                     rospy.loginfo("AR Pair Search: received an enable command, both spotted markers already in view!")
                     self._publishers['result'].publish(std_msgs.Bool(True))
                     return
                 elif self._spotted_markers == Node.SPOTTED_LEFT:
                     rospy.loginfo("AR Pair Search: received an enable command, only left in view.")
-                    self._rotate.init(yaw_direction=Rotate.CLOCKWISE)
                 elif self._spotted_markers == Node.SPOTTED_RIGHT:
                     rospy.loginfo("AR Pair Search: received an enable command, only right in view.")
-                    self._rotate.init(yaw_direction=Rotate.COUNTER_CLOCKWISE)
+                    direction = Rotate.COUNTER_CLOCKWISE
                 else:  # self._spotted_markers == Node.SPOTTED_NONE or RIGHT
                     rospy.loginfo("AR Pair Search: received an enable command, none in view.")
-                    self._rotate.init(yaw_direction=Rotate.COUNTER_CLOCKWISE)
+                    direction = Rotate.COUNTER_CLOCKWISE
+                self._rotate.init(yaw_absolute_rate=self._rate, yaw_direction=direction)
                 self._thread = threading.Thread(target=self._rotate.execute)
+                self._thread.start()
         else:
+            if self._rotate.is_running():
+                self._publishers['result'].publish(std_msgs.Bool(False))
             self._rotate.stop()
-            self._thread.join()
-            self._thread = None
+            if self._thread is not None:
+                self._thread.join()
+                self._thread = None
 
     def _ros_spotted_subscriber(self, msg):
         self._spotted_markers = msg.data

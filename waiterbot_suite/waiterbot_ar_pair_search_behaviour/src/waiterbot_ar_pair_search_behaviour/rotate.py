@@ -36,6 +36,7 @@ class Rotate(object):
     def __init__(self, cmd_vel_topic):
         self._cmd_vel_publisher = None
         self._cmd_vel_frequency = 5
+        self._cmd_vel_topic = cmd_vel_topic
         self._rate = rospy.Rate(self._cmd_vel_frequency)
         self._stop = False
         self._running = False
@@ -88,21 +89,13 @@ class Rotate(object):
         rospy.sleep(0.5)
 
         twist = self._twist
-        last_direction = -1 * self.yaw_direction
         while not self._stop and not rospy.is_shutdown():
-            if self.yaw_direction != last_direction:
-                last_direction = self.yaw_direction
-                if twist.angular.z > 0:
-                    mod = -1.0
-                else:
-                    mod = 1.0
-                update = mod * self.yaw_absolute_rate / 10.0
-                twist.angular.z = twist.angular.z + update
-            elif math.fabs(twist.angular.z) < self.yaw_absolute_rate:
+            update = self.yaw_direction * self.yaw_absolute_rate / 10.0
+            if math.fabs(twist.angular.z) < self.yaw_absolute_rate:
                 twist.angular.z = twist.angular.z + update
             else:
                 # Make sure it is exact so the inequality in the while loop doesn't mess up next time around
-                twist.angular.z = mod * self.yaw_absolute_rate
+                twist.angular.z = self.yaw_direction * self.yaw_absolute_rate
             now = rospy.get_rostime()
             rospy.logdebug("AR Pair Search: rotate: %s rad/s [%ss]" % (twist.angular.z, str(now.secs - start.secs)))
             self._cmd_vel_publisher.publish(twist)
