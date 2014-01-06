@@ -5,8 +5,8 @@
     <arg name="ar_marker_max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
   </include>
   <include file="$(find waiterbot_ar_pair_tracking)/launch/tracking.launch">
-    <arg name="ar_pair_left_id"            value="3"/>
-    <arg name="ar_pair_right_id"           value="0"/>
+    <arg name="ar_pair_left_id"            value="10"/>
+    <arg name="ar_pair_right_id"           value="11"/>
     <arg name="ar_pair_baseline"           value="0.26"/> <!-- YO!!!! Change this in tandem with the next one! -->
     <arg name="ar_pair_baseline_half"      value="0.13"/>
     <arg name="ar_pair_target_pose_offset" value="0.33"/> <!-- Target distance in front of the midpoint of the two ar markers -->
