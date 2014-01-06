@@ -80,6 +80,7 @@ namespace waiterbot {
       std::string base_frame_;
       std::string odom_frame_;
       std::string global_frame_;
+      std::string nav_target_vm_;
 
       bool initialized_;
       bool waypointsReceived_;

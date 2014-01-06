@@ -67,4 +67,7 @@
   
   <!-- ************* Pose Initialisation Manager *********** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/init_pose_manager.launch" />
+
+  <!-- ************* TF Publishers *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_tf_publisher.launch" />
 </launch>
