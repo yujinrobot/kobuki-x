@@ -72,8 +72,20 @@ bool WaiterIsolated::goToOrigin(std::string& message)
   navigator_.backward(0.3);
   navigator_.clearCostMaps();
   // go to in front of vending machine
-  geometry_msgs::PoseStamped vm = robot_origin_;
-  vm.header.stamp = ros::Time::now();
+//  geometry_msgs::PoseStamped vm = robot_origin_;
+//  vm.header.stamp = ros::Time::now();
+
+  geometry_msgs::PoseStamped vm;
+  tf::StampedTransform vm_tf;
+  // get origin pose frame transform tree
+  if(tf_handlers_.getTf(global_frame_, nav_target_origin_, vm_tf) == false)
+  {
+    std::stringstream sstm;
+    sstm << "Failed to get transform between " << global_frame_ << " and " << base_frame_;
+    message = sstm.str();
+    return false;
+  }
+  mtk::tf2pose(vm_tf, vm);
 
   if(tray_empty_ == false) {
     if(navigator_.moveTo(vm) == false) {

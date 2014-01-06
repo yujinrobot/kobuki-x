@@ -22,6 +22,9 @@
     <param name="loc_vm" value ="$(arg loc_vm)"/>
     <param name="loc_customer" value="$(arg loc_customer)"/>
 
+    <param name="nav_target_origin" value ="nav_target_origin"/>
+    <param name="nav_target_vm"     value="nav_target_vm"/>
+
     <!-- Remaps -->
     <!-- Nav Watchdog -->
     <param name="nav_watchdog/amc_max_error" value="1.0"/>
