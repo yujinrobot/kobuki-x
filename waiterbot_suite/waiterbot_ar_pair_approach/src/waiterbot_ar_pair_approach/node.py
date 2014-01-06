@@ -80,7 +80,7 @@ class Node(object):
         subscribers['approach_controller_result'] = rospy.Subscriber('~approach_pose_reached', std_msgs.Bool, self._ros_controller_result_callback)
         return (publishers, subscribers)
 
-    def is_running(self):
+    def _is_running(self):
         return self._running
 
     ##########################################################################
