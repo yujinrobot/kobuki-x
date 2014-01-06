@@ -134,7 +134,7 @@ class Node(object):
         self._publishers['initial_pose_trigger'].publish(std_msgs.Empty())
         rospy.loginfo("AR Pair Approach : enabling the approach controller")
         self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
-        while not rospy.is_shutdown and not self._stop_requested:
+        while not rospy.is_shutdown() and not self._stop_requested:
             rospy.loginfo("AR Pair Approach : waiting for the approach controller....")
             if self._controller_finished:
                 self._controller_finished = False
@@ -142,7 +142,7 @@ class Node(object):
             rospy.sleep(0.1)
         rospy.loginfo("AR Pair Approach : disabling the approach controller")
         self._publishers['disable_approach_controller'].publish(std_msgs.Empty())
-        if rospy.is_shutdown or self._stop_requested:
+        if rospy.is_shutdown() or self._stop_requested:
             self._stop_requested = False
             self._publishers['result'].publish(std_msgs.Bool(False))
         else:
