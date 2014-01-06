@@ -10,6 +10,7 @@
  */
 
 #include "../../include/waiterbot_ar_pair_tracking/tracking.hpp"
+#include <std_msgs/String.h>
 
 namespace waiterbot
 {
@@ -36,6 +37,7 @@ bool ARPairTracking::init()
   **********************/
   pub_initial_pose_ = pnh.advertise<geometry_msgs::PoseWithCovarianceStamped>(ARPairTrackingDefaultParams::PUB_INITIAL_POSE, 1);
   pub_relative_target_pose_ = pnh.advertise<geometry_msgs::PoseStamped>(ARPairTrackingDefaultParams::PUB_RELATIVE_TARGET_POSE, 1);
+  pub_spotted_markers_ = pnh.advertise<std_msgs::String>(ARPairTrackingDefaultParams::PUB_SPOTTED_MARKERS, 1);
   return true;
 }
 
@@ -52,7 +54,21 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
 
   ar_track_alvar::AlvarMarker left;
   ar_track_alvar::AlvarMarker right;
-  if(included(ar_pair_left_id_, spotted_markers, &left) && included(ar_pair_right_id_, spotted_markers, &right))
+  bool left_spotted = included(ar_pair_left_id_, spotted_markers, &left);
+  bool right_spotted = included(ar_pair_right_id_, spotted_markers, &right);
+  // should use a custom message instead of strings (e.g. bool left_spotted, bool right_spotted)
+  std_msgs::String spotted;
+  if(left_spotted && !right_spotted) {
+    spotted.data = "left";
+  } else if(!left_spotted && right_spotted) {
+      spotted.data = "right";
+  } else if(left_spotted && right_spotted) {
+      spotted.data = "both";
+  } else {
+    spotted.data = "none";
+  }
+  pub_spotted_markers_.publish(spotted);
+  if(left_spotted && right_spotted)
   {
     double left_side = tracked_markers[ar_pair_left_id_].distance2d;
     double right_side = tracked_markers[ar_pair_right_id_].distance2d;

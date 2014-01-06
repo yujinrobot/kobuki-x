@@ -20,6 +20,7 @@ for the node.
 
 ### Publishers
 
+* `~/spotted_markers` : string identifying which markers are spotted - 'none', 'left', 'right', 'both'.
 * `~/initial_pose` : pose with covariance stamped for use to set an initial pose for amcl (assuming 
 `/map` is at the base of the midpoint of the two ar markers.
 * `~relative_target_pose` : 2d pose between sensor and target location, use for an approach controller.

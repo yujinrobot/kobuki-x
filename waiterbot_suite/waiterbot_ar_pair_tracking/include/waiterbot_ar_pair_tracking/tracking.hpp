@@ -38,8 +38,9 @@ namespace ARPairTrackingDefaultParams {
   const int    AR_PAIR_RIGHT_ID   = 0;
   const double AR_PAIR_BASELINE   = 0.26;
   const bool   PUBLISH_TRANSFORMS = true;
-  const std::string PUB_RELATIVE_TARGET_POSE    = "relative_target_pose";
-  const std::string PUB_INITIAL_POSE    = "initial_pose";
+  const std::string PUB_RELATIVE_TARGET_POSE = "relative_target_pose";
+  const std::string PUB_INITIAL_POSE         = "initial_pose";
+  const std::string PUB_SPOTTED_MARKERS      = "spotted_markers";
 }
 
 /*****************************************************************************
@@ -60,18 +61,10 @@ class ARPairTracking : public ARMarkerTracking
     void customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker> &tracked_markers);
     void computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker>& tracked_markers);
 
-//    //////////////////// tf related
-//    void broadcastMarkersTF();
-//    bool getMarkerTf(const std::string& ref_frame, uint32_t marker_id, const ros::Time& timestamp, tf::StampedTransform& tf);
-
   private:
     // Confidence evaluation attributes
-    // Other attributes
-//    std::string global_frame_;
-//    std::string odom_frame_;
-//    std::string base_frame_;
 
-    ros::Publisher     pub_relative_target_pose_, pub_initial_pose_;
+    ros::Publisher pub_relative_target_pose_, pub_initial_pose_, pub_spotted_markers_;
 
     tf::Transformer          tf_internal_;
     tf::TransformListener    tf_listener_;
