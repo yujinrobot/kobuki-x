@@ -109,6 +109,7 @@ class Node(object):
             self._publishers['result'].publish(std_msgs.Bool(True))
 
     def _ros_controller_result_callback(self, msg):
+        rospy.loginfo("AR Pair Approach : received result from the approach controller.")
         self._controller_finished = True
 
     ##########################################################################
@@ -132,6 +133,7 @@ class Node(object):
         rospy.loginfo("AR Pair Approach : enabling the approach controller")
         self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
         while not rospy.is_shutdown and not self._stop_requested:
+            rospy.loginfo("AR Pair Approach : waiting for the approach controller....")
             if self._controller_finished:
                 self._controller_finished = False
                 break
