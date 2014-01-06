@@ -1,0 +1,6 @@
+<!-- 
+   Search behaviour node.
+-->
+<launch>
+  <node pkg="waiterbot_ar_pair_search_behaviour" type="search.py" name="ar_pair_search"/>
+</launch>
