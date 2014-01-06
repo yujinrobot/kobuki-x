@@ -1,6 +1,6 @@
 <launch>
   <include file="$(find waiterbot_ar_marker_tracking)/launch/machinery.launch">
-    <arg name="ar_marker_size"  value="10.0"/>
-    <arg name="cam_image_topic" value="camera/rgb/image_raw" />
+    <arg name="ar_marker_size"  value="6.2"/>
+    <arg name="ar_marker_cam_image_topic" value="camera/rgb/image_raw" />
   </include>
 </launch>
