@@ -4,7 +4,6 @@
 <launch>
   <!-- configuration file-->
   <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
-  <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
   <arg name="master_ctrl_param" default="$(find waiterbot_ctrl_nowireless)/param/master_ctrl.yaml"/>
 
   <!-- data file -->

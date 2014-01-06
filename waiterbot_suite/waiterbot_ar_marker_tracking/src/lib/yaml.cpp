@@ -7,7 +7,7 @@
    Date   : Dec 2013
  */
 
-#include "waiterbot_sensors/yaml_parser_ar_markers.hpp"
+#include "../../include/waiterbot_ar_marker_tracking/yaml.hpp"
 
 namespace waiterbot {
 

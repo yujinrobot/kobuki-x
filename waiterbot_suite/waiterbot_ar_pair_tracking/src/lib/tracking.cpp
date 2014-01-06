@@ -1,0 +1,200 @@
+/*
+ * ar_marker_processor.hpp
+ *
+ *  LICENSE : BSD - https://raw.github.com/yujinrobot/kobuki-x/license/LICENSE
+ *
+ *  Created on: Apr 6, 2013
+ *      Author: jorge
+ *  Modified on: Dec, 2013 
+ *      Jihoon Lee
+ */
+
+#include "../../include/waiterbot_ar_pair_tracking/tracking.hpp"
+
+namespace waiterbot
+{
+
+ARPairTracking::ARPairTracking() {
+  std::cout << "ARPairTracking constructor" << std::endl;
+  init(); 
+}
+
+ARPairTracking::~ARPairTracking() {}
+
+bool ARPairTracking::init()
+{
+  ros::NodeHandle nh, pnh("~");
+  
+  // Parameters
+  pnh.param("ar_pair_left_id",  ar_pair_left_id_,  ARPairTrackingDefaultParams::AR_PAIR_LEFT_ID);
+  pnh.param("ar_pair_right_id", ar_pair_right_id_, ARPairTrackingDefaultParams::AR_PAIR_RIGHT_ID);
+  pnh.param("ar_pair_baseline", ar_pair_baseline_, ARPairTrackingDefaultParams::AR_PAIR_BASELINE);
+  pnh.param("publish_transforms", publish_transforms, ARPairTrackingDefaultParams::PUBLISH_TRANSFORMS);
+
+  /*********************
+  ** Publishers
+  **********************/
+  pub_initial_pose_ = pnh.advertise<geometry_msgs::PoseWithCovarianceStamped>(ARPairTrackingDefaultParams::PUB_INITIAL_POSE, 1);
+  pub_relative_target_pose_ = pnh.advertise<geometry_msgs::PoseStamped>(ARPairTrackingDefaultParams::PUB_RELATIVE_TARGET_POSE, 1);
+  return true;
+}
+
+void ARPairTracking::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker> &tracked_markers)
+{
+  // TODO: use confidence to incorporate covariance to global poses
+  //ROS_INFO("Received msg");
+
+  computeRelativeRobotPose(spotted_markers, tracked_markers);
+}
+
+void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker>& tracked_markers)
+{
+
+  ar_track_alvar::AlvarMarker left;
+  ar_track_alvar::AlvarMarker right;
+  if(included(ar_pair_left_id_, spotted_markers, &left) && included(ar_pair_right_id_, spotted_markers, &right))
+  {
+    double left_side = tracked_markers[ar_pair_left_id_].distance2d;
+    double right_side = tracked_markers[ar_pair_right_id_].distance2d;
+
+    double left_x = left.pose.pose.position.x;
+    double left_z = left.pose.pose.position.z;
+    double right_x = right.pose.pose.position.x;
+    double right_z = right.pose.pose.position.z;
+
+    double left_d = std::sqrt(left_x*left_x + left_z*left_z);
+    double right_d = std::sqrt(right_x*right_x + right_z*right_z);
+    double b = ar_pair_baseline_/2 + (left_d*left_d-right_d*right_d)/(2*ar_pair_baseline_);
+    double a = std::sqrt(left_d*left_d - b*b);
+    ROS_DEBUG_STREAM("AR Pairing Tracker : computing robot-marker relative pose");
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   left : [" << left_x << "," << left_z << "," << left_d << "]");
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   right: [" << right_x << "," << right_z << "," << right_d <<  "]");
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   1: " << ar_pair_baseline_/2);
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   2: " << (left_d*left_d-right_d*right_d)/(2*ar_pair_baseline_));
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   a=" << a << " b=" << b);
+    // a = math.sqrt(self.left_marker.distance*self.left_marker.distance - b*b)
+    //b = self.baseline/2 + (self.left_marker.distance*self.left_marker.distance - self.right_marker.distance*self.right_marker.distance)/(2*self.baseline)
+
+
+    // angle between the robot and the first marker
+    double alpha = atan2(left_x, left_z);
+    double alpha_degrees = alpha * (180.0) / M_PI;
+
+    // alpah + beta is angle between the robot and the second marker
+    double beta = atan2(right_x, right_z);
+    double beta_degrees = beta * (180.0) / M_PI;
+
+    // theta is the angle between the wall and the perpendicular in front of the robot
+    double theta = atan2((left_z - right_z), (right_x - left_x));
+    double theta_degrees = theta * (180.0) / M_PI;
+
+    double target_x = left_x + (right_x - left_x) / 2 - 0.4 * sin(theta);
+    double target_z = left_z + (right_z - left_z) / 2 - 0.4 * cos(theta);
+    double target_heading = atan2(target_x, target_z);
+    double target_heading_degrees = target_heading * 180.0 / M_PI;
+
+    ROS_DEBUG_STREAM("AR Pairing Tracker :      alpha=" << alpha_degrees << "degrees");
+    ROS_DEBUG_STREAM("AR Pairing Tracker :       beta=" << beta_degrees << "degrees");
+    ROS_DEBUG_STREAM("AR Pairing Tracker :      theta=" << theta_degrees << "degrees");
+    ROS_DEBUG_STREAM("AR Pairing Tracker : t_[x,z,h]=[" << target_x << "," << target_z << "," << target_heading_degrees << "deg]");
+
+    // target_pose -> robot
+//    std::string frame = "robot";
+    geometry_msgs::PoseStamped pose;
+    pose.header.frame_id = "camera_rgb_optical_frame";
+    pose.pose.position.x = target_x;
+    pose.pose.position.y = 0; 
+    pose.pose.position.z = target_z;
+//    pose.pose.position.x = -target_x;
+//    pose.pose.position.y = 0;
+//    pose.pose.position.z = target_z;
+
+    tf::Quaternion quat, quat_pitch;
+    //quat.setEuler(theta,0,0);
+    quat.setEuler(theta,0,0);
+    //quat_pitch.setEuler(0,M_PI,0);
+    //quat *= quat_pitch;
+ 
+    pose.pose.orientation.x = quat.getX(); 
+    pose.pose.orientation.y = quat.getY(); 
+    pose.pose.orientation.z = quat.getZ(); 
+    pose.pose.orientation.w = quat.getW(); 
+
+//    tf::StampedTransform tf;
+//    tf.child_frame_id_ = frame;
+//    mtk::pose2tf(pose, tf);
+//    tf.stamp_ = ros::Time::now();
+//    tf_brcaster_.sendTransform(tf);
+
+    try
+    {
+      // get and set ar_link -> target_pose
+      tf::StampedTransform tf_ar_target_pose;
+      tf_listener_.lookupTransform("target_pose", "ar_global", ros::Time(0), tf_ar_target_pose);
+      tf_internal_.setTransform(tf_ar_target_pose);
+
+      //ROS_WARN_STREAM("TFS: " <<  tf_ar_target_pose.frame_id_ << "," <<  tf_ar_target_pose.child_frame_id_);
+      /*
+      ROS_INFO_STREAM("ar_link -> target_position: x = " << tf_ar_target_pose.getOrigin().x()
+                     << ", y = " << tf_ar_target_pose.getOrigin().y()
+                     << ", z = " << tf_ar_target_pose.getOrigin().z());
+                     */
+
+      // set target_pose -> camera
+      tf::StampedTransform tf_ar_camera;
+      tf_ar_camera.child_frame_id_ = "target_pose";
+      mtk::pose2tf(pose, tf_ar_camera);  // pose frame_id is set above (camera_rgb_optical_frame)
+      tf_ar_camera.stamp_ = ros::Time::now();
+      tf_internal_.setTransform(tf_ar_camera);
+      /*
+      ROS_INFO_STREAM("target_pose -> camera_rgb_optical_frame: x = " << tf_ar_camera.getOrigin().x()
+                     << ", y = " << tf_ar_camera.getOrigin().y()
+                     << ", z = " << tf_ar_camera.getOrigin().z());
+                     */
+
+      // get and set camera -> base_footprint
+      tf::StampedTransform tf_camera_base_footprint;
+      tf_listener_.lookupTransform("base_footprint", "camera_rgb_optical_frame", ros::Time(0), tf_camera_base_footprint);
+      tf_internal_.setTransform(tf_camera_base_footprint);
+      /*
+      ROS_INFO_STREAM("camera_rgb_optical_frame -> odom: x = " << tf_camera_odom.getOrigin().x()
+                     << ", y = " << tf_camera_odom.getOrigin().y()
+                     << ", z = " << tf_camera_odom.getOrigin().z());
+                     */
+
+      // get and publish ar_link -> base_footprint
+      tf::StampedTransform tf_ar_base_footprint;
+      tf_internal_.lookupTransform("ar_global", "base_footprint", ros::Time(0), tf_ar_base_footprint);
+      boost::shared_ptr<geometry_msgs::PoseWithCovarianceStamped> pwcs(new geometry_msgs::PoseWithCovarianceStamped);
+
+      pwcs->header.stamp = tf_ar_base_footprint.stamp_;
+      pwcs->header.frame_id = "ar_global";
+
+      geometry_msgs::PoseStamped ps;
+      mtk::tf2pose(tf_ar_base_footprint, ps);
+      pwcs->pose.pose = ps.pose;
+
+      // publish robot pose to nav watch dog
+      pub_initial_pose_.publish(pwcs);
+      pub_relative_target_pose_.publish(pose);
+
+      // only for use in standalone mode with a 3d sensor (no robot).
+      if(publish_transforms) {
+        tf_brcaster_.sendTransform(tf_ar_base_footprint);
+      }
+      /*
+      ROS_INFO_STREAM("ar_link -> odom: x = " << tf_ar_odom.getOrigin().x()
+                     << ", y = " << tf_ar_odom.getOrigin().y()
+                     << ", z = " << tf_ar_odom.getOrigin().z());
+                     */
+    }
+    catch (tf::TransformException const &ex)
+    {
+      ROS_WARN_STREAM("TF error: " << ex.what());
+//      ROS_INFO_STREAM("All known frames: " << tf_internal_.allFramesAsString());
+    }
+
+  }
+}
+
+} // waiterbot namespace

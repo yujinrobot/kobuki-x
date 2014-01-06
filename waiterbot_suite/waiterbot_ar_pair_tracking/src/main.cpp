@@ -10,14 +10,14 @@
  *      Jihoon Lee
  */
 
-#include "waiterbot_sensors/ar_marker_processor.hpp"
+#include "../include/waiterbot_ar_pair_tracking/tracking.hpp"
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "ar_marker_processor");
-  waiterbot::ARMarkerProcessor arp;
-  ROS_INFO("AR Marker Processor : Initialized");
-  arp.spin();
+  waiterbot::ARPairTracking tracking;
+  ROS_INFO("AR Pair Tracking : initialised");
+  tracking.spin();
 
   return 0;
 }

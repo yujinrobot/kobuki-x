@@ -21,7 +21,7 @@
 
 #include <yocs_math_toolkit/common.hpp>
 #include <yocs_math_toolkit/geometry.hpp>
-#include "waiterbot_sensors/yaml_parser_ar_markers.hpp"
+#include "yaml_parser_ar_markers.hpp"
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <ar_track_alvar/AlvarMarkers.h>

@@ -9,7 +9,7 @@
  *      Jihoon Lee
  */
 
-#include "waiterbot_sensors/ar_marker_processor.hpp"
+#include "../../include/waiterbot_ar_pair_tracking/ar_marker_processor.hpp"
 
 namespace waiterbot {
 
