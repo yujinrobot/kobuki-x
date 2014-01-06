@@ -77,6 +77,7 @@ class Node(object):
         subscribers = {}
         subscribers['enable'] = rospy.Subscriber('~enable', std_msgs.Bool, self._ros_enable_subscriber)
         subscribers['spotted_markers'] = rospy.Subscriber('~spotted_markers', std_msgs.String, self._ros_spotted_subscriber)
+        subscribers['approach_controller_result'] = rospy.Subscriber('~approach_pose_reached', std_msgs.String, self._ros_controller_result_callback)
         return (publishers, subscribers)
 
     def is_running(self):
@@ -107,6 +108,9 @@ class Node(object):
             self._thread.join()
             self._publishers['result'].publish(std_msgs.Bool(True))
 
+    def _ros_controller_result_callback(self, msg):
+        self._controller_finished = True
+
     ##########################################################################
     # Execute
     ##########################################################################
@@ -115,9 +119,6 @@ class Node(object):
         if not self._rotate.is_stopped():
             self._rotate.stop()
             self._stop_requested = True
-
-    def _controller_result_callback(self, msg):
-        self._controller_finished = True
 
     def execute(self):
         found_markers = self._initialise_rotation()
@@ -134,6 +135,7 @@ class Node(object):
             if self._controller_finished:
                 self._controller_finished = False
                 break
+            rospy.sleep(0.1)
         if rospy.is_shutdown or self._stop_requested:
             pass
         rospy.loginfo("AR Pair Approach : disabling the approach controller")
