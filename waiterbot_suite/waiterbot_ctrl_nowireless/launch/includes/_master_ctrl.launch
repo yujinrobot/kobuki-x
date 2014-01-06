@@ -40,10 +40,13 @@
     <!-- WaiterIsolated -->
     <remap from="digital_input" to="/mobile_base/events/digital_input"/>
 
-          <!--  Yet to use these
-            <remap from="issue_goal"    to="move_base_simple/goal"/>
-            <remap from="cancel_goal"   to="move_base/cancel"/> 
-            -->
-
+    <!-- Pose initialisation -->
+    <remap from="init_pose_manager/initialise" to="init_pose_manager/initialise"/>
+    <remap from="init_pose_manager/initialised" to="init_pose_manager/initialised"/>
+    
+    <!--  Yet to use these
+      <remap from="issue_goal"    to="move_base_simple/goal"/>
+      <remap from="cancel_goal"   to="move_base/cancel"/> 
+      -->
    </node> 
  </launch>
