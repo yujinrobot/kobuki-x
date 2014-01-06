@@ -126,6 +126,7 @@ class Node(object):
             result = self._rotate.execute()
             if not result:
                 self._publishers['result'].publish(std_msgs.Bool(False))
+                self._stop_requested = False
                 self._running = False
                 return
         self._publishers['initial_pose_trigger'].publish(std_msgs.Empty())
@@ -137,10 +138,13 @@ class Node(object):
                 self._controller_finished = False
                 break
             rospy.sleep(0.1)
-        if rospy.is_shutdown or self._stop_requested:
-            self._stop_requested = False
         rospy.loginfo("AR Pair Approach : disabling the approach controller")
         self._publishers['disable_approach_controller'].publish(std_msgs.Empty())
+        if rospy.is_shutdown or self._stop_requested:
+            self._stop_requested = False
+            self._publishers['result'].publish(std_msgs.Bool(False))
+        else:
+            self._publishers['result'].publish(std_msgs.Bool(True))
         self._running = False
 
     ##########################################################################
@@ -156,7 +160,6 @@ class Node(object):
         direction = Rotate.CLOCKWISE
         if self._spotted_markers == Node.SPOTTED_BOTH:
             rospy.loginfo("AR Pair Search: received an enable command, both spotted markers already in view!")
-            self._publishers['result'].publish(std_msgs.Bool(True))
             return True
         elif self._spotted_markers == Node.SPOTTED_LEFT:
             rospy.loginfo("AR Pair Search: received an enable command, only left in view.")
