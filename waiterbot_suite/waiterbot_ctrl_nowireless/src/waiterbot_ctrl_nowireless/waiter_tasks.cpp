@@ -50,6 +50,7 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
   navigator_.clearCostMaps();
 
   // go close to the VM using navigation
+  ROS_INFO("Waiter : Navigating to vending machine ...");
   if(navigator_.moveTo(vm) == false) {
     ROS_ERROR("Navigation Failed while going to vending machine");
     message = "navigation failed....";
@@ -57,14 +58,16 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
   }
 
   // re-intialise
-  if(reinitialise() == false)
-  {
-    ROS_ERROR("Navigation failed while reinitialising.");
-    message = "navigation failed....";
-    return false;
-  }
+//  ROS_INFO("Waiter : Re-initialising before approach ...");
+//  if(reinitialise() == false)
+//  {
+//    ROS_ERROR("Navigation failed while reinitialising.");
+//    message = "navigation failed....";
+//    return false;
+//  }
 
   // approach the VM using the approach controller
+  ROS_INFO("Waiter : Approaching vending machine ...");
   if(approachVM() == false)
   {
     ROS_ERROR("Navigation Failed while approaching the machine");
@@ -151,8 +154,8 @@ bool WaiterIsolated::approachVM()
   // wait for result
   while (!vm_approached_ && ros::ok())
   {
-    vm_approached_ = true; // for testing
-    if (!cancel_order_)
+//    vm_approached_ = true; // for testing TODO: remove
+    if (cancel_order_)
     {
       ROS_WARN("Waiter : Cancel command received during approach of the vending machine.");
       // disable the pose controller
@@ -185,7 +188,7 @@ bool WaiterIsolated::reinitialise()
 
   while (!pose_initialised_ && ros::ok())
   {
-    if (!cancel_order_)
+    if (cancel_order_)
     {
       ROS_WARN("Waiter : Cancel command received during re-initialisation");
       // disable the pose controller

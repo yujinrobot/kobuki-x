@@ -36,13 +36,6 @@ namespace waiterbot {
   void WaiterIsolated::goToVMCommand(int& feedback, std::string& message)
   {
     std::string local_message = "";
-    // record the robot location
-//    if(recordOrderOrigin(local_message) == false)
-//    {
-//      message = "Error while recording origin. Reason : " + local_message;
-//      feedback = waiterbot_msgs::NavCtrlStatus::ERROR;
-//      return;
-//    }
 
     if(goToVendingMachine(message) == false) 
     {

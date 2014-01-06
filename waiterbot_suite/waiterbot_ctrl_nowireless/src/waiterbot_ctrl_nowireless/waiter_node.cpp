@@ -69,7 +69,7 @@ void WaiterIsolated::init()
   pub_pose_ctrl_enable_ = nh_.advertise<std_msgs::Bool>("approach_controller/enable", 1);
 
   // receives the pose controller's feedback
-  sub_pose_ctrl_feedback_ = nh_.subscribe("approach_controller/feedback", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
+  sub_pose_ctrl_feedback_ = nh_.subscribe("approach_controller/result", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
 
   // triggers the re-intialisation
   pub_initialise_pose_ = nh_.advertise<std_msgs::Empty>("init_pose_manager/initialise", 1);
