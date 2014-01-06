@@ -74,13 +74,19 @@ class Node(object):
         if msg.data:
             if not self._rotate.is_running():
                 if self._spotted_markers == Node.SPOTTED_BOTH:
+                    rospy.loginfo("AR Pair Search: received an enable command, both spotted markers already in view!")
                     self._publishers['result'].publish(std_msgs.Bool(True))
                     return
                 elif self._spotted_markers == Node.SPOTTED_LEFT:
+                    rospy.loginfo("AR Pair Search: received an enable command, only left in view.")
                     self._rotate.init(yaw_direction=Rotate.CLOCKWISE)
-                else:  # self._spotted_markers == Node.SPOTTED_NONE or RIGHT
+                elif self._spotted_markers == Node.SPOTTED_RIGHT:
+                    rospy.loginfo("AR Pair Search: received an enable command, only right in view.")
                     self._rotate.init(yaw_direction=Rotate.COUNTER_CLOCKWISE)
-                self._thread = threading.Thread(self._rotate.execute)
+                else:  # self._spotted_markers == Node.SPOTTED_NONE or RIGHT
+                    rospy.loginfo("AR Pair Search: received an enable command, none in view.")
+                    self._rotate.init(yaw_direction=Rotate.COUNTER_CLOCKWISE)
+                self._thread = threading.Thread(target=self._rotate.execute)
         else:
             self._rotate.stop()
             self._thread.join()
