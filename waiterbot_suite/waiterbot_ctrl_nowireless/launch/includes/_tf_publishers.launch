@@ -1,0 +1,9 @@
+<launch>
+  <!--
+      AR marker tree:
+      Includes the target poses for navigation and approach
+      as well as the global reference frame aka 'map'
+    -->
+  <node pkg="tf" type="static_transform_publisher" name="vm_nav_target_publisher"
+        args="0.0 0.36 0.0 0.0 0.0 0 target_pose nav_target_vm 100"/>
+</launch>

@@ -44,6 +44,7 @@ void WaiterIsolated::init()
   priv_n.param("base_frame",    base_frame_,   WaiterIsolatedDefaultParam::BASE_FRAME);
   priv_n.param("odom_frame",    odom_frame_,   WaiterIsolatedDefaultParam::ODOM_FRAME);
   priv_n.param("global_frame",  global_frame_, WaiterIsolatedDefaultParam::GLOBAL_FRAME);
+  priv_n.param("nav_target_vm",  nav_target_vm_, WaiterIsolatedDefaultParam::NAV_TARGET_VM);
 
   // listen to green and red buttons
   sub_digital_input_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_DIGITAL_INPUT, 5, & WaiterIsolated::digitalInputCB, this);

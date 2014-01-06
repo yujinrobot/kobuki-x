@@ -4,7 +4,6 @@
 <launch>
   <!-- configuration file-->
   <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
-  <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
   <arg name="master_ctrl_param" default="$(find waiterbot_ctrl_nowireless)/param/master_ctrl.yaml"/>
 
   <!-- data file -->
@@ -62,5 +61,13 @@
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
   -->
+
+  <!-- ************* Fake Initialization *********** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_fake_local.launch"/>
+  
+  <!-- ************* Pose Initialisation Manager *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/init_pose_manager.launch" />
+
+  <!-- ************* TF Publishers *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_tf_publisher.launch" />
 </launch>

@@ -37,7 +37,7 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
   geometry_msgs::PoseStamped vm;// = map_wp_[loc_vm_];
   tf::StampedTransform vm_tf;
   // get target pose frame transform tree
-  if(tf_handlers_.getTf(global_frame_,"target_pose",vm_tf) == false)
+  if(tf_handlers_.getTf(global_frame_,"nav_target_vm_",vm_tf) == false)
   {
     std::stringstream sstm;
     sstm << "Failed to get transform between " << global_frame_ << " and " << base_frame_;

@@ -11,6 +11,7 @@ project(waiterbot_ar_pair_tracking)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  std_msgs
   geometry_msgs
   yocs_math_toolkit
   waiterbot_ar_marker_tracking
@@ -26,7 +27,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot_ar_pair_tracking
-  CATKIN_DEPENDS roscpp ar_track_alvar geometry_msgs yocs_math_toolkit waiterbot_ar_marker_tracking
+  CATKIN_DEPENDS roscpp ar_track_alvar std_msgs geometry_msgs yocs_math_toolkit waiterbot_ar_marker_tracking
   DEPENDS Boost
 )
 

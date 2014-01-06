@@ -1,32 +1,15 @@
 <launch>
-  <arg name="marker_size"          default="10.0" />
-  <arg name="max_new_marker_error" default="0.08" />
-  <arg name="max_track_error"      default="0.2" />
-  <arg name="max_frequency"        default="5.0" />
-  <arg name="cam_image_topic"      default="camera/rgb/image_raw" />
-  <arg name="cam_info_topic"       default="camera/rgb/camera_info" />    
-  <arg name="output_frame"         default="camera_rgb_optical_frame" />
-  <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg max_frequency)">
-    <remap from="ARmarker_points"       to="ar_track_alvar/ARmarker_points"/>
-    <remap from="ar_pose_marker"        to="ar_track_alvar/ar_pose_marker"/>
-    <remap from="visualization_marker"  to="ar_track_alvar/visualization_marker"/>
-  </node>
-
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_3 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_0 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 0.0 ar_link target_pose 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_global_publisher" args="0.0 0.0 0.36 1.57 0.0 1.57 ar_global ar_link 100"/>
-
-  <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
-  <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
-  <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
-  <node name="ar_pair_tracking" pkg="waiterbot_sensors" type="ar_marker_processor" respawn="false">
-    <rosparam file="$(arg common_param)" command="load"/>
-    <rosparam file="$(arg ar_marker_processor_param)" command="load"/>
-    <param name="global_marker_filename" value="$(arg global_marker_filename)"/>
-    <param name="vending_marker_left_id" value="3"/>
-    <param name="vending_marker_right_id" value="0"/>
-    <param name="vending_marker_dist"    value="0.257"/>
-  </node>
-
+  <!-- openni is launched elswhere in the rapp (in rgb mode) -->
+  <include file="$(find waiterbot_ar_marker_tracking)/launch/includes/ar_track_alvar.xml">
+    <arg name="ar_marker_size" value="6.0"/>
+    <arg name="ar_marker_max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
+  </include>
+  <include file="$(find waiterbot_ar_pair_tracking)/launch/tracking.launch">
+    <arg name="ar_pair_left_id"            value="3"/>
+    <arg name="ar_pair_right_id"           value="0"/>
+    <arg name="ar_pair_baseline"           value="0.26"/> <!-- YO!!!! Change this in tandem with the next one! -->
+    <arg name="ar_pair_baseline_half"      value="0.13"/>
+    <arg name="ar_pair_target_pose_offset" value="0.33"/> <!-- Target distance in front of the midpoint of the two ar markers -->
+    <arg name="ar_pair_publish_transforms" value="false"/> <!-- Don't want it to publish internal transforms that disrupt the main tree -->
+  </include>
 </launch>
