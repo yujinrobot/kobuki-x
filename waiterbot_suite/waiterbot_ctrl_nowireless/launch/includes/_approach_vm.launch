@@ -1,13 +1,14 @@
 <launch>
-  <node pkg="waiterbot_ar_pair_approach_behaviour" type="approach.py" name="ar_pair_approach">
+  <node pkg="waiterbot_ar_pair_approach" type="approach.py" name="ar_pair_approach">
     <!-- <remap from="ar_pair_search/enable" to="somewhere/enable"/> -->
     <!-- <remap from="ar_pair_search/result" to="somewhere/result"/> -->
-
-    <remap from="ar_pair_search/enable_approach_controller" to="approach_controller/enable"/>
-    <remap from="ar_pair_search/disable_approach_controller" to="approach_controller/disable"/>
-    <remap from="ar_pair_search/approach_pose_reached" to="approach_controller/pose_reached"/>
-    <remap from="ar_pair_search/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
-    <remap from="ar_pair_search/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+    
+    <remap from="ar_pair_approach/initialise" to="initialise_pose"/>
+    <remap from="ar_pair_approach/enable_approach_controller" to="diff_drive_pose_controller/enable"/>
+    <remap from="ar_pair_approach/disable_approach_controller" to="diff_drive_pose_controller/disable"/>
+    <remap from="ar_pair_approach/approach_pose_reached" to="diff_drive_pose_controller/pose_reached"/>
+    <remap from="ar_pair_approach/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
+    <remap from="ar_pair_approach/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
   </node>
   
   <!-- static publisher for the approach_footprint used below is hanging out with the group of tf_publishers -->
