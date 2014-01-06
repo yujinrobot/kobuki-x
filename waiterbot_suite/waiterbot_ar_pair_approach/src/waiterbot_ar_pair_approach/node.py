@@ -104,9 +104,7 @@ class Node(object):
     def _ros_spotted_subscriber(self, msg):
         self._spotted_markers = msg.data
         if self._spotted_markers == Node.SPOTTED_BOTH and self._rotate.is_running():
-            self._stop()
-            self._thread.join()
-            self._publishers['result'].publish(std_msgs.Bool(True))
+            self._rotate.stop()
 
     def _ros_controller_result_callback(self, msg):
         rospy.loginfo("AR Pair Approach : received result from the approach controller.")
@@ -119,7 +117,7 @@ class Node(object):
     def _stop(self):
         if not self._rotate.is_stopped():
             self._rotate.stop()
-            self._stop_requested = True
+        self._stop_requested = True
 
     def execute(self):
         found_markers = self._initialise_rotation()
@@ -130,7 +128,7 @@ class Node(object):
                 self._running = False
                 return
         self._publishers['initial_pose_trigger'].publish(std_msgs.Empty())
-        rospy.loginfo("AR Pair Approach : enabling the approach controller")
+        rospy.loginfo("AR Pair Approach : enabling the approach controller [%s]" % self._stop_requested)
         self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
         while not rospy.is_shutdown and not self._stop_requested:
             rospy.loginfo("AR Pair Approach : waiting for the approach controller....")
@@ -139,7 +137,7 @@ class Node(object):
                 break
             rospy.sleep(0.1)
         if rospy.is_shutdown or self._stop_requested:
-            pass
+            self._stop_requested = False
         rospy.loginfo("AR Pair Approach : disabling the approach controller")
         self._publishers['disable_approach_controller'].publish(std_msgs.Empty())
         self._running = False
