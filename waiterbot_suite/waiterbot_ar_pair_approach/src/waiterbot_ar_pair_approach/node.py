@@ -57,6 +57,7 @@ class Node(object):
         self._rate = 0.36  # this could be parameterised
         self._listener = tf.TransformListener()
         self._controller_finished = False
+        self._stop_requested = False
 
     def _setup_parameters(self):
         param = {}
@@ -128,7 +129,7 @@ class Node(object):
                 self._running = False
                 return
         self._publishers['initial_pose_trigger'].publish(std_msgs.Empty())
-        rospy.loginfo("AR Pair Approach : enabling the approach controller [%s]" % self._stop_requested)
+        rospy.loginfo("AR Pair Approach : enabling the approach controller")
         self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
         while not rospy.is_shutdown and not self._stop_requested:
             rospy.loginfo("AR Pair Approach : waiting for the approach controller....")
