@@ -49,12 +49,22 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
   vm.header.stamp = ros::Time::now();
   navigator_.clearCostMaps();
 
+  // go close to the VM using navigation
   if(navigator_.moveTo(vm) == false) {
     ROS_ERROR("Navigation Failed while going to vending machine");
     message = "navigation failed....";
     return false;
   }
 
+  // re-intialise
+  if(reinitialise() == false)
+  {
+    ROS_ERROR("Navigation failed while reinitialising.");
+    message = "navigation failed....";
+    return false;
+  }
+
+  // approach the VM using the approach controller
   if(approachVM() == false)
   {
     ROS_ERROR("Navigation Failed while approaching the machine");
@@ -72,9 +82,6 @@ bool WaiterIsolated::goToOrigin(std::string& message)
   // move back a bit
   navigator_.backward(0.3);
   navigator_.clearCostMaps();
-
-  // re-intialise
-
 
   // get origin pose frame transform tree
   geometry_msgs::PoseStamped vm;
@@ -111,7 +118,6 @@ bool WaiterIsolated::dockInBase() {
     ROS_INFO("Waiter : Waiting for docking...");
   }
 
-
   in_docking_ = false;
   if(ac_autodock_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
@@ -138,19 +144,20 @@ void WaiterIsolated::playSound(const std::string& wav_file) {
 bool WaiterIsolated::approachVM()
 {
   // activate the pose controller
-  std_msgs::Empty empty_msg;
-  pub_pose_ctrl_enable_.publish(empty_msg);
+  std_msgs::Bool bool_msg;
+  bool_msg.data = true;
+  pub_pose_ctrl_enable_.publish(bool_msg);
 
   // wait for result
   while (!vm_approached_ && ros::ok())
   {
-    // for testing
-    vm_approached_ = true;
+    vm_approached_ = true; // for testing
     if (!cancel_order_)
     {
       ROS_WARN("Waiter : Cancel command received during approach of the vending machine.");
       // disable the pose controller
-      pub_pose_ctrl_disable_.publish(empty_msg);
+      bool_msg.data = false;
+      pub_pose_ctrl_enable_.publish(bool_msg);
       return false;
     }
     ros::Duration(0.1).sleep();
@@ -158,7 +165,8 @@ bool WaiterIsolated::approachVM()
   vm_approached_ = false;
 
   // disable the pose controller
-  pub_pose_ctrl_disable_.publish(empty_msg);
+  bool_msg.data = false;
+  pub_pose_ctrl_enable_.publish(bool_msg);
 
   ROS_INFO("Waiter : VM successfully approached.");
   return true;

@@ -26,6 +26,7 @@
 #include <waiterbot_msgs/NavCtrlGoTo.h>
 #include <waiterbot_msgs/NavCtrlStatus.h>
 #include <yocs_msgs/WaypointList.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/String.h>
 
@@ -47,7 +48,7 @@ namespace waiterbot {
       void commandCB(const waiterbot_msgs::NavCtrlGoTo::ConstPtr& msg);
       void trayEmptyCB(const std_msgs::Empty::ConstPtr& msg);
       void orderCancelledCB(const std_msgs::Empty::ConstPtr& msg);
-      void poseCtrlFeedbackCB(const std_msgs::String::ConstPtr& msg);
+      void poseCtrlFeedbackCB(const std_msgs::Bool::ConstPtr& msg);
       void initialisedCB(const std_msgs::Empty::ConstPtr& msg);
 
       bool endCommand(const int feedback, const std::string message);
@@ -67,7 +68,6 @@ namespace waiterbot {
       ros::NodeHandle nh_;
       ros::Publisher  pub_navctrl_feedback_;
       ros::Publisher  pub_pose_ctrl_enable_;
-      ros::Publisher  pub_pose_ctrl_disable_;
       ros::Publisher  pub_initialise_pose_;
       ros::Subscriber sub_digital_input_;
       ros::Subscriber sub_waypoints_;

@@ -66,13 +66,10 @@ void WaiterIsolated::init()
   pub_navctrl_feedback_= nh_.advertise<waiterbot_msgs::NavCtrlStatus>(WaiterIsolatedDefaultParam::PUB_DRINK_ORDER_FEEDBACK, 1);
 
   // enables the pose controller
-  pub_pose_ctrl_enable_ = nh_.advertise<std_msgs::Empty>("pose_controller/enable", 1);
-
-  // disables the pose controller
-  pub_pose_ctrl_disable_ = nh_.advertise<std_msgs::Empty>("pose_controller/disable", 1);
+  pub_pose_ctrl_enable_ = nh_.advertise<std_msgs::Bool>("approach_controller/enable", 1);
 
   // receives the pose controller's feedback
-  sub_pose_ctrl_feedback_ = nh_.subscribe("pose_controller/feedback", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
+  sub_pose_ctrl_feedback_ = nh_.subscribe("approach_controller/feedback", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
 
   // triggers the re-intialisation
   pub_initialise_pose_ = nh_.advertise<std_msgs::Empty>("init_pose_manager/initialise", 1);
@@ -183,13 +180,20 @@ void WaiterIsolated::orderCancelledCB(const std_msgs::Empty::ConstPtr& msg)
     cancel_order_ = true;
     navigator_.cancelMoveTo();
   }
-
 }
 
-void WaiterIsolated::poseCtrlFeedbackCB(const std_msgs::String::ConstPtr& msg)
+void WaiterIsolated::poseCtrlFeedbackCB(const std_msgs::Bool::ConstPtr& msg)
 {
-  ROS_INFO_STREAM("Waiter : Received pose controller feedback: " << msg->data);
-  vm_approached_ = true;
+  if (msg->data)
+  {
+    ROS_INFO_STREAM("Waiter : Approach succeeded.");
+    vm_approached_ = true;
+  }
+  else
+  {
+    ROS_INFO_STREAM("Waiter : Approach failed.");
+    vm_approached_ = false;
+  }
 }
 
 void WaiterIsolated::initialisedCB(const std_msgs::Empty::ConstPtr& msg)

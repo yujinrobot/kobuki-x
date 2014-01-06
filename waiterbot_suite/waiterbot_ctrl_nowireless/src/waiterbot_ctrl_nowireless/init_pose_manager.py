@@ -34,7 +34,7 @@ class InitPoseManager(object):
     def _trackedPosesCB(self, msg):
         if self._initialise:
             # send pose to pose initialisation node
-            msg.header.stamp -= rospy.Duration(0.2) - rospy.Duration(0.2) # TODO: get latest common time
+            msg.header.stamp -= rospy.Duration(0.2) # TODO: get latest common time
             self._pub_init_pose.publish(msg)
             empty_msg = std_msgs.Empty()
             # disable the pose tracker

@@ -1,7 +1,7 @@
 <launch>
   <!-- openni is launched elswhere in the rapp (in rgb mode) -->
   <include file="$(find waiterbot_ar_marker_tracking)/launch/includes/ar_track_alvar.xml">
-    <arg name="ar_marker_size" value="6.0"/>
+    <arg name="ar_marker_size" value="5.4"/> <!-- small ones: 5.4, Daniel's: 6.0 -->
     <arg name="ar_marker_max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
   </include>
   <include file="$(find waiterbot_ar_pair_tracking)/launch/tracking.launch">
