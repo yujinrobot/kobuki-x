@@ -89,7 +89,7 @@ class Node(object):
 
     def _ros_enable_subscriber(self, msg):
         if msg.data:
-            if not self.is_running():
+            if not self._is_running():
                 self._running = True
                 self._thread = threading.Thread(target=self.execute)
                 self._thread.start()
