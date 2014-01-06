@@ -1,19 +1,19 @@
-<launch>
-  <include file="$(find waiterbot_ar_marker_tracking)/launch/machinery.launch">
-    <arg name="ar_marker_size"            value="10.0"/>
-    <arg name="ar_marker_cam_image_topic" value="camera/rgb/image_raw" />
-  </include>
-  <include file="$(find waiterbot_ar_pair_tracking)/launch/tracking.launch">
-    <arg name="ar_pair_publish_transforms" default="true"/>
-  </include>
+<!--
+  Launcher I used for testing with a turtlebot (not a waiterbot).
+  
+  Fire up launchers in this order:
+  
+  - turtlebot/minimal.launch
+  - waiterbot_ar_pair_approach/machinery.launch
+  - waiterbot_ar_pair_approach/turtlebot_approach.launch
+ -->
 
-  <!-- Extra transforms - drop this one right under target_pose -->
-  <!-- 
-  <node pkg="tf" type="static_transform_publisher" name="ar_global_target_footprint_publisher" args="0.4 0.0 0.0 0.0 0.0 0.0 ar_global target_footprint 100"/>
-   -->
+<launch>
+
+  <!-- parent -> child -->
+  <node pkg="tf" type="static_transform_publisher" name="ar_global_target_footprint_publisher" args="0.0 0.0 0.4 0.0 0.0 0.0 ar_global target_footprint 100"/>
 
   <!-- Ideally, you'd load this into the appropriate mobile base manager -->
-  <!-- 
   <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager"/>
   
   <node pkg="nodelet" type="nodelet" name="diff_drive_pose_controller"
@@ -28,5 +28,4 @@
     <param name="beta" value="0.2"/>
     <param name="lambda" value="2.0"/>
   </node>
- -->
 </launch>
