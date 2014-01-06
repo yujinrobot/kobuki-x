@@ -18,6 +18,6 @@
   <include file="$(find waiterbot_ar_marker_tracking)/launch/includes/ar_track_alvar.xml">
     <arg name="ar_marker_size" value="$(arg ar_marker_size)"/>
     <arg name="ar_marker_cam_image_topic" value="$(arg ar_marker_cam_image_topic)" />
-    <arg name="ar_marker_max_frequency" value="$(arg ar_marker_cam_image_topic)" />
+    <arg name="ar_marker_max_frequency" value="$(arg ar_marker_max_frequency)" />
   </include>
 </launch>
