@@ -117,7 +117,6 @@ class Node(object):
     ##########################################################################
 
     def _stop(self):
-        rospy.loginfo("AR Pair Approach : received a command to stop.")
         if not self._rotate.is_stopped():
             self._rotate.stop()
         self._stop_requested = True
@@ -135,7 +134,6 @@ class Node(object):
         rospy.loginfo("AR Pair Approach : enabling the approach controller")
         self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
         while not rospy.is_shutdown() and not self._stop_requested:
-            rospy.loginfo("AR Pair Approach : waiting for the approach controller....")
             if self._controller_finished:
                 self._controller_finished = False
                 break
