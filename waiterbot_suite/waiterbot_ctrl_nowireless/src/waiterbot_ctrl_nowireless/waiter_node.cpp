@@ -27,6 +27,7 @@ WaiterIsolated::WaiterIsolated(ros::NodeHandle& n) :
   tray_empty_ = false;
 
   vm_approached_ = false;
+  pose_initialised_ = false;
 
   init();
 }
@@ -72,6 +73,12 @@ void WaiterIsolated::init()
 
   // receives the pose controller's feedback
   sub_pose_ctrl_feedback_ = nh_.subscribe("pose_controller/feedback", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
+
+  // triggers the re-intialisation
+  pub_initialise_pose_ = nh_.advertise<std_msgs::Empty>("init_pose_manager/initialise", 1);
+
+  // monitors the re-intialisation
+  sub_pose_initialised_ = nh_.subscribe("init_pose_manager/initialised", 1, &WaiterIsolated::initialisedCB, this);
 }
 
 bool WaiterIsolated::isInit() {
@@ -183,6 +190,12 @@ void WaiterIsolated::poseCtrlFeedbackCB(const std_msgs::String::ConstPtr& msg)
 {
   ROS_INFO_STREAM("Waiter : Received pose controller feedback: " << msg->data);
   vm_approached_ = true;
+}
+
+void WaiterIsolated::initialisedCB(const std_msgs::Empty::ConstPtr& msg)
+{
+  ROS_INFO_STREAM("Waiter : Robot pose initialised.");
+  pose_initialised_ = true;
 }
 
 bool WaiterIsolated::endCommand(const int feedback, const std::string message)

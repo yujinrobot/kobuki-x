@@ -69,15 +69,16 @@ bool WaiterIsolated::goToVendingMachine(std::string& message)
 
 bool WaiterIsolated::goToOrigin(std::string& message)
 {
+  // move back a bit
   navigator_.backward(0.3);
   navigator_.clearCostMaps();
-  // go to in front of vending machine
-//  geometry_msgs::PoseStamped vm = robot_origin_;
-//  vm.header.stamp = ros::Time::now();
 
+  // re-intialise
+
+
+  // get origin pose frame transform tree
   geometry_msgs::PoseStamped vm;
   tf::StampedTransform vm_tf;
-  // get origin pose frame transform tree
   if(tf_handlers_.getTf(global_frame_, nav_target_origin_, vm_tf) == false)
   {
     std::stringstream sstm;
@@ -139,25 +140,54 @@ bool WaiterIsolated::approachVM()
   // activate the pose controller
   std_msgs::Empty empty_msg;
   pub_pose_ctrl_enable_.publish(empty_msg);
-  // send target pose
 
   // wait for result
   while (!vm_approached_ && ros::ok())
   {
+    // for testing
+    vm_approached_ = true;
     if (!cancel_order_)
     {
-      ROS_WARN("Waiter : Approaching VM has been cancelled.");
+      ROS_WARN("Waiter : Cancel command received during approach of the vending machine.");
       // disable the pose controller
       pub_pose_ctrl_disable_.publish(empty_msg);
       return false;
     }
     ros::Duration(0.1).sleep();
   }
+  vm_approached_ = false;
 
   // disable the pose controller
   pub_pose_ctrl_disable_.publish(empty_msg);
 
-  ROS_INFO("VM successfully approached.");
+  ROS_INFO("Waiter : VM successfully approached.");
+  return true;
+}
+
+/**
+ * Re-initialises the robot pose
+ *
+ * @return true, if re-initialisation succeeded.
+ */
+bool WaiterIsolated::reinitialise()
+{
+  // disable the pose controller
+  std_msgs::Empty empty_msg;
+  pub_initialise_pose_.publish(empty_msg);
+
+  while (!pose_initialised_ && ros::ok())
+  {
+    if (!cancel_order_)
+    {
+      ROS_WARN("Waiter : Cancel command received during re-initialisation");
+      // disable the pose controller
+      return false;
+    }
+    ros::Duration(0.1).sleep();
+  }
+  pose_initialised_ = false;
+
+  ROS_INFO("Waiter : Successfully re-initialised.");
   return true;
 }
 
