@@ -3,7 +3,7 @@
 ##############################################################################
 
 cmake_minimum_required(VERSION 2.8.3)
-project(waiterbot_ar_pair_search_behaviour)
+project(waiterbot_ar_pair_approach)
 
 ##############################################################################
 # Catkin

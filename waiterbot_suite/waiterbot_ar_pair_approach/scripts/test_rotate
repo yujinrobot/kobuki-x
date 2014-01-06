@@ -8,7 +8,7 @@
 ##############################################################################
 
 import rospy
-import waiterbot_ar_pair_search_behaviour
+import waiterbot_ar_pair_approach
 import threading
 
 ##############################################################################
@@ -18,7 +18,7 @@ import threading
 if __name__ == '__main__':
 
     rospy.init_node('test_rotate')
-    rotate = waiterbot_ar_pair_search_behaviour.Rotate('/cmd_vel')
+    rotate = waiterbot_ar_pair_approach.Rotate('/cmd_vel')
     thread = threading.Thread(target=rotate.execute)
     thread.start()
     rospy.sleep(3.0)
