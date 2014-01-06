@@ -9,6 +9,7 @@
 import rospy
 import std_msgs.msg as std_msgs
 import threading
+import tf
 
 # Local imports
 from .rotate import Rotate
@@ -85,8 +86,15 @@ class Node(object):
                 elif self._spotted_markers == Node.SPOTTED_RIGHT:
                     rospy.loginfo("AR Pair Search: received an enable command, only right in view.")
                     direction = Rotate.COUNTER_CLOCKWISE
-                else:  # self._spotted_markers == Node.SPOTTED_NONE or RIGHT
+                else:  # self._spotted_markers == Node.SPOTTED_NONE 
                     rospy.loginfo("AR Pair Search: received an enable command, none in view.")
+#                    listener = tf.TransformListener()
+#                    try:
+#                        (translation, orientation) = listener.lookupTransform('ar_global', 'base_footprint', rospy.Time(0))
+#                        print("Eulers: %s" % tf.transformations.euler_from_quaternion(orientation))
+#                    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+#                        print("Exception %s" % str(e))
+#                        pass
                     direction = Rotate.COUNTER_CLOCKWISE
                 self._rotate.init(yaw_absolute_rate=self._rate, yaw_direction=direction)
                 self._thread = threading.Thread(target=self._rotate.execute)
@@ -115,3 +123,6 @@ class Node(object):
           Parse the set of /remocons/<name>_<uuid> connections.
         '''
         rospy.spin()
+        if self._thread is not None:
+          self._thread.join()
+
