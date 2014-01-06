@@ -1,7 +1,7 @@
 <launch>
   <node pkg="waiterbot_ar_pair_search_behaviour" type="search.py" name="ar_pair_search">
-    <remap from="ar_pair_search/enable" to="somewhere/enable"/>
-    <remap from="ar_pair_search/result" to="somewhere/result"/>
+    <!-- <remap from="ar_pair_search/enable" to="somewhere/enable"/> -->
+    <!-- <remap from="ar_pair_search/result" to="somewhere/result"/> -->
     <remap from="ar_pair_search/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
   </node>
 </launch>
