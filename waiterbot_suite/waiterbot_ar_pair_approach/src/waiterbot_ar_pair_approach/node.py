@@ -101,6 +101,7 @@ class Node(object):
             if self._thread is not None:
                 self._thread.join()
                 self._thread = None
+            self._stop_requested = False
 
     def _ros_spotted_subscriber(self, msg):
         self._spotted_markers = msg.data
@@ -116,6 +117,7 @@ class Node(object):
     ##########################################################################
 
     def _stop(self):
+        rospy.loginfo("AR Pair Approach : received a command to stop.")
         if not self._rotate.is_stopped():
             self._rotate.stop()
         self._stop_requested = True
