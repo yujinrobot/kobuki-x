@@ -10,10 +10,12 @@
    
   <!-- ************************* Public Arguments ************************* -->
   <arg name="ar_marker_size" default="10.0" />
+  <arg name="ar_marker_cam_image_topic" default="camera/rgb/image_raw" />
 
   <!-- **************************** Includes ****************************** -->
   <include file="$(find waiterbot_ar_pair_tracking)/launch/includes/openni.xml"/>
   <include file="$(find waiterbot_ar_pair_tracking)/launch/includes/ar_track_alvar.xml">
     <arg name="marker_size" value="$(arg ar_marker_size)"/>
+    <arg name="ar_marker_cam_image_topic" value="$(arg ar_marker_cam_image_topic)" />
   </include>
 </launch>
