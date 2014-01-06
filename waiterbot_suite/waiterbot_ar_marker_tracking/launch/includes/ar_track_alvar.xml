@@ -9,7 +9,7 @@
   <arg name="output_frame" default="camera_rgb_optical_frame" />
   <arg name="cam_image_topic" default="camera/rgb/image_raw" />
 
-  <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg ar_marker_marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg ar_marker_max_frequency)">
+  <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg ar_marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg ar_marker_max_frequency)">
     <param name="max_frequency" value="$(arg ar_marker_max_frequency)"/>  <!-- Set as a parameter so other nodes can read it (e.g. jorge's ar code) -->
     <!-- Convenience remaps only, avoid clutter in the root. -->
     <remap from="ARmarker_points"       to="ar_track_alvar/ARmarker_points"/>  <!-- Depth topic only -->

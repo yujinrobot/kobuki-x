@@ -21,13 +21,7 @@
   <arg name="loc_customer" default="customer"/>
 
   <!--  ********** Alvar AR markers tracker && AR marker Processor ***********  -->
-  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch">
-    <arg name="common_param" value="$(arg common_param)"/>
-    <arg name="global_marker_filename" value="$(arg global_marker_filename)"/>
-    <arg name="ar_marker_processor_param" value="$(arg ar_marker_processor_param)"/>
-
-    <arg name="max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
-  </include>
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch"/>
 
   <!--  ************* Waiterbot Master controller **************  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_master_ctrl.launch">
@@ -66,8 +60,8 @@
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_fake_local.launch"/>
   
   <!-- ************* Pose Initialisation Manager *********** -->
-  <include file="$(find waiterbot_ctrl_nowireless)/launch/init_pose_manager.launch" />
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_init_pose_manager.launch" />
 
   <!-- ************* TF Publishers *********** -->
-  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_tf_publisher.launch" />
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_tf_publishers.launch" />
 </launch>
