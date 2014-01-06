@@ -75,6 +75,9 @@ class Rotate(object):
         else:
             self.yaw_direction = Rotate.CLOCKWISE
 
+    def is_stopped(self):
+        return self._stop
+
     def stop(self):
         self._stop = True
 

@@ -97,7 +97,7 @@ class Node(object):
     def _ros_spotted_subscriber(self, msg):
         self._spotted_markers = msg.data
         if self._spotted_markers == Node.SPOTTED_BOTH and self._rotate.is_running():
-            self._rotate.stop()
+            self._stop()
             self._thread.join()
             self._publishers['result'].publish(std_msgs.Bool(True))
 
@@ -106,11 +106,13 @@ class Node(object):
     ##########################################################################
 
     def _stop(self):
-        self._rotate.stop()
+        if not self._rotate.is_stopped():
+            self._rotate.stop()
 
     def execute(self):
-        self._initialise_rotation()
-        self._rotate.execute()
+        found_markers = self._initialise_rotation()
+        if not found_markers:
+            self._rotate.execute()
         self._running = False
 
     ##########################################################################
@@ -120,12 +122,14 @@ class Node(object):
     def _initialise_rotation(self):
         '''
           Do not call this if already running, you will cause self._rotate to become volatile.
+
+          @return : True or false depending on if we can skip this step or not.
         '''
         direction = Rotate.CLOCKWISE
         if self._spotted_markers == Node.SPOTTED_BOTH:
             rospy.loginfo("AR Pair Search: received an enable command, both spotted markers already in view!")
             self._publishers['result'].publish(std_msgs.Bool(True))
-            return
+            return True
         elif self._spotted_markers == Node.SPOTTED_LEFT:
             rospy.loginfo("AR Pair Search: received an enable command, only left in view.")
         elif self._spotted_markers == Node.SPOTTED_RIGHT:
@@ -142,6 +146,7 @@ class Node(object):
                 direction = Rotate.COUNTER_CLOCKWISE
             rospy.loginfo("AR Pair Search: received an enable command, none in view.")
         self._rotate.init(yaw_absolute_rate=self._rate, yaw_direction=direction)
+        return False
 
     def spin(self):
         '''
