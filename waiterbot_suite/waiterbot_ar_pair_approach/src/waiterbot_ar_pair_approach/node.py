@@ -34,7 +34,9 @@ class Node(object):
             '_rotate',
             '_rate',
             '_listener',
-            '_running'
+            '_running',
+            '_controller_finished',
+            '_stop_requested'
         ]
     SPOTTED_NONE = 'none'
     SPOTTED_LEFT = 'left'
@@ -54,6 +56,7 @@ class Node(object):
         self._running = False
         self._rate = 0.36  # this could be parameterised
         self._listener = tf.TransformListener()
+        self._controller_finished = False
 
     def _setup_parameters(self):
         param = {}
@@ -68,6 +71,9 @@ class Node(object):
         '''
         publishers = {}
         publishers['result'] = rospy.Publisher('~result', std_msgs.Bool)
+        publishers['initial_pose_trigger'] = rospy.Publisher('~initialise', std_msgs.Empty)
+        publishers['enable_approach_controller'] = rospy.Publisher('~enable_approach_controller', std_msgs.Empty)
+        publishers['disable_approach_controller'] = rospy.Publisher('~disable_approach_controller', std_msgs.Empty)
         subscribers = {}
         subscribers['enable'] = rospy.Subscriber('~enable', std_msgs.Bool, self._ros_enable_subscriber)
         subscribers['spotted_markers'] = rospy.Subscriber('~spotted_markers', std_msgs.String, self._ros_spotted_subscriber)
@@ -108,11 +114,30 @@ class Node(object):
     def _stop(self):
         if not self._rotate.is_stopped():
             self._rotate.stop()
+            self._stop_requested = True
+
+    def _controller_result_callback(self, msg):
+        self._controller_finished = True
 
     def execute(self):
         found_markers = self._initialise_rotation()
         if not found_markers:
-            self._rotate.execute()
+            result = self._rotate.execute()
+            if not result:
+                self._publishers['result'].publish(std_msgs.Bool(False))
+                self._running = False
+                return
+        self._publishers['initial_pose_trigger'].publish(std_msgs.Empty())
+        rospy.loginfo("AR Pair Approach : enabling the approach controller")
+        self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
+        while not rospy.is_shutdown and not self._stop_requested:
+            if self._controller_finished:
+                self._controller_finished = False
+                break
+        if rospy.is_shutdown or self._stop_requested:
+            pass
+        rospy.loginfo("AR Pair Approach : disabling the approach controller")
+        self._publishers['disable_approach_controller'].publish(std_msgs.Empty())
         self._running = False
 
     ##########################################################################
