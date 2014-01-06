@@ -97,8 +97,11 @@ class Rotate(object):
                 # Make sure it is exact so the inequality in the while loop doesn't mess up next time around
                 twist.angular.z = self.yaw_direction * self.yaw_absolute_rate
             now = rospy.get_rostime()
-            rospy.logdebug("AR Pair Search: rotate: %s rad/s [%ss]" % (twist.angular.z, str(now.secs - start.secs)))
-            self._cmd_vel_publisher.publish(twist)
+            rospy.loginfo("AR Pair Search: rotate: %s rad/s [%ss]" % (twist.angular.z, str(now.secs - start.secs)))
+            try:
+                self._cmd_vel_publisher.publish(twist)
+            except ROSException:  # shutdown
+                break
             self._rate.sleep()
         if not rospy.is_shutdown():
             cmd = geometry_msgs.Twist()
