@@ -32,7 +32,8 @@ class Node(object):
             '_spotted_markers',
             '_thread',
             '_rotate',
-            '_rate'
+            '_rate',
+            '_listener'
         ]
     SPOTTED_NONE = 'none'
     SPOTTED_LEFT = 'left'
@@ -50,6 +51,7 @@ class Node(object):
         self._rotate = Rotate('~cmd_vel')
         self._thread = None
         self._rate = 0.36  # this could be parameterised
+        self._listener = tf.TransformListener()
 
     def _setup_parameters(self):
         param = {}
@@ -86,16 +88,16 @@ class Node(object):
                 elif self._spotted_markers == Node.SPOTTED_RIGHT:
                     rospy.loginfo("AR Pair Search: received an enable command, only right in view.")
                     direction = Rotate.COUNTER_CLOCKWISE
-                else:  # self._spotted_markers == Node.SPOTTED_NONE 
+                else:  # self._spotted_markers == Node.SPOTTED_NONE
+                    try:
+                        # this is from global to base footprint
+                        (unused_t, orientation) = self._listener.lookupTransform('ar_global', 'base_footprint', rospy.Time(0))
+                        unused_roll, unused_pitch, yaw = tf.transformations.euler_from_quaternion(orientation)
+                        rospy.loginfo("AR Pair Search : current yaw = %s" % str(yaw))
+                        direction = Rotate.COUNTER_CLOCKWISE if yaw > 0 else Rotate.CLOCKWISE
+                    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as unused_e:
+                        direction = Rotate.COUNTER_CLOCKWISE
                     rospy.loginfo("AR Pair Search: received an enable command, none in view.")
-#                    listener = tf.TransformListener()
-#                    try:
-#                        (translation, orientation) = listener.lookupTransform('ar_global', 'base_footprint', rospy.Time(0))
-#                        print("Eulers: %s" % tf.transformations.euler_from_quaternion(orientation))
-#                    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-#                        print("Exception %s" % str(e))
-#                        pass
-                    direction = Rotate.COUNTER_CLOCKWISE
                 self._rotate.init(yaw_absolute_rate=self._rate, yaw_direction=direction)
                 self._thread = threading.Thread(target=self._rotate.execute)
                 self._thread.start()
@@ -124,5 +126,4 @@ class Node(object):
         '''
         rospy.spin()
         if self._thread is not None:
-          self._thread.join()
-
+            self._thread.join()

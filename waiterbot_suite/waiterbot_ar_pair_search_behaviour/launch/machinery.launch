@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find waiterbot_ar_marker_tracking)/launch/machinery.launch">
+    <arg name="ar_marker_size"            value="10.0"/>
+    <arg name="ar_marker_cam_image_topic" value="camera/rgb/image_raw" />
+  </include>
+  <include file="$(find waiterbot_ar_pair_tracking)/launch/tracking.launch">
+    <arg name="ar_pair_publish_transforms" default="false"/>
+  </include>
+</launch>
