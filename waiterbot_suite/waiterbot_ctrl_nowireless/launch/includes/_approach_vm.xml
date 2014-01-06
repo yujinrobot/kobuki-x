@@ -1,8 +1,34 @@
 <launch>
-  <node pkg="waiterbot_ar_pair_search_behaviour" type="search.py" name="ar_pair_search">
+  <node pkg="waiterbot_ar_pair_approach_behaviour" type="approach.py" name="ar_pair_approach">
     <!-- <remap from="ar_pair_search/enable" to="somewhere/enable"/> -->
     <!-- <remap from="ar_pair_search/result" to="somewhere/result"/> -->
+
+    <remap from="ar_pair_search/enable_approach_controller" to="approach_controller/enable"/>
+    <remap from="ar_pair_search/disable_approach_controller" to="approach_controller/disable"/>
+    <remap from="ar_pair_search/approach_pose_reached" to="approach_controller/pose_reached"/>
     <remap from="ar_pair_search/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
     <remap from="ar_pair_search/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+  </node>
+  
+  <!-- static publisher for the approach_footprint used below is hanging out with the group of tf_publishers -->
+  
+  <!-- For debugging
+  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager"/>
+   -->
+  
+  <node pkg="nodelet" type="nodelet" name="diff_drive_pose_controller"
+        args="load yocs_diff_drive_pose_controller/DiffDrivePoseControllerNodelet /mobile_base_nodelet_manager">
+    <param name="spin_rate" value="25"/>
+    <param name="start_enabled" value="false"/>
+    <param name="base_frame_name" value="base_footprint"/>
+    <param name="goal_frame_name" value="approach_footprint"/>
+    <param name="v_max" value="0.1"/>
+    <param name="k_1" value="1.0"/>
+    <param name="k_2" value="10.0"/>
+    <param name="beta" value="0.2"/>
+    <param name="lambda" value="2.0"/>
+    <param name="dist_thres" value="0.01"/>
+    <param name="orient_thres" value="0.06"/>
+    <remap from="diff_drive_pose_controller/command_velocity" to="/cmd_vel_mux/input/navigation"/>
   </node>
 </launch>

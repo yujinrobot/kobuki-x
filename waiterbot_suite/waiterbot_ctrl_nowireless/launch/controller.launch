@@ -22,6 +22,7 @@
 
   <!--  ********** Alvar AR markers tracker && AR marker Processor ***********  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch"/>
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_approach_vm.launch"/>
 
   <!--  ************* Waiterbot Master controller **************  -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_master_ctrl.launch">
