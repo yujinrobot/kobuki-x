@@ -8,6 +8,6 @@ import waiterbot_ar_pair_approach
 
 if __name__ == '__main__':
 
-    rospy.init_node('ar_pair_search')
-    search_behaviour = waiterbot_ar_pair_approach.Node()
-    search_behaviour.spin()
+    rospy.init_node('ar_pair_approach')
+    approach_behaviour = waiterbot_ar_pair_approach.Node()
+    approach_behaviour.spin()

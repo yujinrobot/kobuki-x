@@ -8,6 +8,7 @@
 
 import rospy
 import math
+import std_msgs.msg as std_msgs
 import geometry_msgs.msg as geometry_msgs
 
 ##############################################################################
@@ -29,6 +30,7 @@ class Rotate(object):
             '_rate',
             '_running',
             '_twist',
+            '_initialise_pose_trigger'  # tell the waiterbot's initial pose manager to grab an initialisation
         ]
     CLOCKWISE = -1
     COUNTER_CLOCKWISE = 1
@@ -40,6 +42,7 @@ class Rotate(object):
         self._rate = rospy.Rate(self._cmd_vel_frequency)
         self._stop = False
         self._running = False
+        self._initialise_pose_trigger = rospy.Publisher('~initialise', std_msgs.Empty)
 
         twist = geometry_msgs.Twist()
         twist.linear.x = 0
@@ -86,8 +89,8 @@ class Rotate(object):
         self._stop = False
         self._running = True
         start = rospy.get_rostime()
-        rospy.sleep(0.5)
-
+        rospy.sleep(0.3)
+        result = False
         twist = self._twist
         while not self._stop and not rospy.is_shutdown():
             update = self.yaw_direction * self.yaw_absolute_rate / 10.0
@@ -107,6 +110,9 @@ class Rotate(object):
             cmd = geometry_msgs.Twist()
             cmd.angular.z = 0.0
             self._cmd_vel_publisher.publish(cmd)
+            self._initialise_pose_trigger.publish(std_msgs.Empty())
+            result = True
         self._cmd_vel_publisher.unregister()
         self._cmd_vel_publisher = None
         self._running = False
+        return result

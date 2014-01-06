@@ -1,9 +1,9 @@
 <!-- 
-   Search behaviour node.
+   Search behaviour node, run with machinery.launch
 -->
 <launch>
-  <node pkg="waiterbot_ar_pair_approach" type="search.py" name="ar_pair_search">
-    <remap from="ar_pair_search/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
-    <remap from="ar_pair_search/cmd_vel" to="/cmd_vel_mux/input/navi"/>
+  <node pkg="waiterbot_ar_pair_approach" type="approach.py" name="ar_pair_approach">
+    <remap from="ar_pair_approach/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
+    <remap from="ar_pair_approach/cmd_vel" to="mobile_base/commands/velocity"/>
   </node>    
 </launch>
