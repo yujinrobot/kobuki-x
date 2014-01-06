@@ -16,4 +16,16 @@ get with ar marker data from one.
 ### Markers
 
 We use left marker id 3 and right marker id 0 by default, but these are configurable as parameters
-for the node.  
+for the node. 
+
+### Publishers
+
+* `~/initial_pose` : pose with covariance stamped for use to set an initial pose for amcl (assuming 
+`/map` is at the base of the midpoint of the two ar markers.
+* `~relative_target_pose` : 2d pose between sensor and target location, use for an approach controller.
+
+## Todo
+
+Remove the transform logic inside the node and just publish the relative target pose. This removes
+any need for this node to have external information (in this case a camera_rgb_optical_frame to
+base_footprint transform). 

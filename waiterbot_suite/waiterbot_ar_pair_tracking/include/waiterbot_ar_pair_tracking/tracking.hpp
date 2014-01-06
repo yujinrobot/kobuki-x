@@ -34,10 +34,12 @@ namespace waiterbot
 {
 
 namespace ARPairTrackingDefaultParams {
-  const int    VENDING_MARKER_LEFT_ID    = 3;
-  const int    VENDING_MARKER_RIGHT_ID   = 0;
-  const double VENDING_MARKER_BASELINE       = 0.26;
-  const std::string PUB_ROBOT_POSE_AR    = "robot_pose_ar";
+  const int    AR_PAIR_LEFT_ID    = 3;
+  const int    AR_PAIR_RIGHT_ID   = 0;
+  const double AR_PAIR_BASELINE   = 0.26;
+  const bool   PUBLISH_TRANSFORMS = true;
+  const std::string PUB_RELATIVE_TARGET_POSE    = "relative_target_pose";
+  const std::string PUB_INITIAL_POSE    = "initial_pose";
 }
 
 /*****************************************************************************
@@ -69,16 +71,17 @@ class ARPairTracking : public ARMarkerTracking
 //    std::string odom_frame_;
 //    std::string base_frame_;
 
-    ros::Publisher     pub_robot_pose_ar_;
+    ros::Publisher     pub_relative_target_pose_, pub_initial_pose_;
 
     tf::Transformer          tf_internal_;
     tf::TransformListener    tf_listener_;
     tf::TransformBroadcaster tf_brcaster_;
 //    double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
 
-    int                      vending_marker_left_id_;
-    int                      vending_marker_right_id_;
-    double                   vending_marker_baseline_;
+    int    ar_pair_left_id_;
+    int    ar_pair_right_id_;
+    double ar_pair_baseline_;
+    bool   publish_transforms;
 };
 
 } /* namespace waiterbot */

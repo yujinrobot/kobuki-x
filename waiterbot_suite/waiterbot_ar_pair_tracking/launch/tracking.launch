@@ -1,29 +1,26 @@
 <launch>
+  <arg name="ar_pair_left_id"            default="3"/>
+  <arg name="ar_pair_right_id"           default="0"/>
+  <arg name="ar_pair_baseline"           default="0.26"/> <!-- YO!!!! Change this in tandem with the next one! -->
+  <arg name="ar_pair_baseline_half"      default="0.13"/>
+  <arg name="ar_pair_target_pose_offset" default="0.33"/> <!-- Target distance in front of the midpoint of the two ar markers -->
+  <arg name="ar_pair_publish_transforms" default="true"/> <!-- Disable this if a base footprint is being published elseewhere -->
   
-  <arg name="vending_marker_left_id" default="3"/>
-  <arg name="vending_marker_right_id" default="0"/>
-  <arg name="vending_marker_baseline"    default="0.257"/>
-
   <node name="ar_pair_tracking" pkg="waiterbot_ar_pair_tracking" type="waiterbot_ar_pair_tracking_node" respawn="false">
-    <param name="vending_marker_left_id" value="$(arg vending_marker_left_id)"/>
-    <param name="vending_marker_right_id" value="$(arg vending_marker_right_id)"/>
-    <param name="vending_marker_baseline"    value="$(arg vending_marker_baseline)"/>
+    <param name="ar_pair_left_id"    value="$(arg ar_pair_left_id)"/>
+    <param name="ar_pair_right_id"   value="$(arg ar_pair_right_id)"/>
+    <param name="ar_pair_baseline"   value="$(arg ar_pair_baseline)"/>
+    <param name="publish_transforms" value="$(arg ar_pair_publish_transforms)"/>
   </node>
-  <!-- parent - child -->
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_3 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_0 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 3.14 target_pose ar_link 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_global_publisher" args="0.0 -0.36 0.0 0.0 0.0 0.0 ar_link ar_global 100"/>
-
-  <node pkg="tf" type="static_transform_publisher" name="camera_rgb_optical_frame_publisher" args="0.0 0.0 0.36 -1.57 0.0 -1.57 base_footprint camera_rgb_optical_frame 100"/>
-
-  <!-- 
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_3 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="0.13 0.0 0.0 0.0 0.0 0.0 ar_link ar_0 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 0.0 ar_link target_pose 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="ar_link_global_publisher" args="0.0 0.0 0.36 1.57 0.0 1.57 ar_global ar_link 100"/>
-
-  <node pkg="tf" type="static_transform_publisher" name="camera_rgb_optical_frame_publisher" args="0.0 0.36 0.0 0.0 0.0 0.0 camera_rgb_optical_frame base_footprint 100"/>
-  -->
-</launch>
   
+  <!-- parent - child -->
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_left_publisher" args="-$(arg ar_pair_baseline_half) 0.0 0.0 0.0 0.0 0.0 ar_link ar_3 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_right_publisher" args="$(arg ar_pair_baseline_half) 0.0 0.0 0.0 0.0 0.0 ar_link ar_0 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_target_publisher" args="0.0 0.0 0.4 0.0 0.0 3.14 target_pose ar_link 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="ar_link_global_publisher" args="0.0 -0.36 0.0 0.0 -1.57 -1.57 ar_link ar_global 100"/>
+
+  <!-- Only used when testing with a standalone 3d sensor (will disappear once we remove the transform logic from inside the node) -->
+  <group if="$(arg ar_pair_publish_transforms)">
+    <node pkg="tf" type="static_transform_publisher" name="camera_rgb_optical_frame_publisher" args="0.0 0.0 0.36 -1.57 0.0 -1.57 base_footprint camera_rgb_optical_frame 100"/>
+  </group>
+</launch>

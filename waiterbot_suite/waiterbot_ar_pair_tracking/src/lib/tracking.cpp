@@ -26,11 +26,16 @@ bool ARPairTracking::init()
   ros::NodeHandle nh, pnh("~");
   
   // Parameters
-  pnh.param("vending_marker_left_id",  vending_marker_left_id_,  ARPairTrackingDefaultParams::VENDING_MARKER_LEFT_ID);
-  pnh.param("vending_marker_right_id", vending_marker_right_id_, ARPairTrackingDefaultParams::VENDING_MARKER_RIGHT_ID);
-  pnh.param("vending_marker_baseline", vending_marker_baseline_, ARPairTrackingDefaultParams::VENDING_MARKER_BASELINE);
+  pnh.param("ar_pair_left_id",  ar_pair_left_id_,  ARPairTrackingDefaultParams::AR_PAIR_LEFT_ID);
+  pnh.param("ar_pair_right_id", ar_pair_right_id_, ARPairTrackingDefaultParams::AR_PAIR_RIGHT_ID);
+  pnh.param("ar_pair_baseline", ar_pair_baseline_, ARPairTrackingDefaultParams::AR_PAIR_BASELINE);
+  pnh.param("publish_transforms", publish_transforms, ARPairTrackingDefaultParams::PUBLISH_TRANSFORMS);
 
-  pub_robot_pose_ar_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(ARPairTrackingDefaultParams::PUB_ROBOT_POSE_AR, 1);
+  /*********************
+  ** Publishers
+  **********************/
+  pub_initial_pose_ = pnh.advertise<geometry_msgs::PoseWithCovarianceStamped>(ARPairTrackingDefaultParams::PUB_INITIAL_POSE, 1);
+  pub_relative_target_pose_ = pnh.advertise<geometry_msgs::PoseStamped>(ARPairTrackingDefaultParams::PUB_RELATIVE_TARGET_POSE, 1);
   return true;
 }
 
@@ -47,10 +52,10 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
 
   ar_track_alvar::AlvarMarker left;
   ar_track_alvar::AlvarMarker right;
-  if(included(vending_marker_left_id_, spotted_markers, &left) && included(vending_marker_right_id_, spotted_markers, &right))
+  if(included(ar_pair_left_id_, spotted_markers, &left) && included(ar_pair_right_id_, spotted_markers, &right))
   {
-    double left_side = tracked_markers[vending_marker_left_id_].distance2d;
-    double right_side = tracked_markers[vending_marker_right_id_].distance2d;
+    double left_side = tracked_markers[ar_pair_left_id_].distance2d;
+    double right_side = tracked_markers[ar_pair_right_id_].distance2d;
 
     double left_x = left.pose.pose.position.x;
     double left_z = left.pose.pose.position.z;
@@ -59,13 +64,13 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
 
     double left_d = std::sqrt(left_x*left_x + left_z*left_z);
     double right_d = std::sqrt(right_x*right_x + right_z*right_z);
-    double b = vending_marker_baseline_/2 + (left_d*left_d-right_d*right_d)/(2*vending_marker_baseline_);
+    double b = ar_pair_baseline_/2 + (left_d*left_d-right_d*right_d)/(2*ar_pair_baseline_);
     double a = std::sqrt(left_d*left_d - b*b);
     ROS_DEBUG_STREAM("AR Pairing Tracker : computing robot-marker relative pose");
     ROS_DEBUG_STREAM("AR Pairing Tracker :   left : [" << left_x << "," << left_z << "," << left_d << "]");
     ROS_DEBUG_STREAM("AR Pairing Tracker :   right: [" << right_x << "," << right_z << "," << right_d <<  "]");
-    ROS_DEBUG_STREAM("AR Pairing Tracker :   1: " << vending_marker_baseline_/2);
-    ROS_DEBUG_STREAM("AR Pairing Tracker :   2: " << (left_d*left_d-right_d*right_d)/(2*vending_marker_baseline_));
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   1: " << ar_pair_baseline_/2);
+    ROS_DEBUG_STREAM("AR Pairing Tracker :   2: " << (left_d*left_d-right_d*right_d)/(2*ar_pair_baseline_));
     ROS_DEBUG_STREAM("AR Pairing Tracker :   a=" << a << " b=" << b);
     // a = math.sqrt(self.left_marker.distance*self.left_marker.distance - b*b)
     //b = self.baseline/2 + (self.left_marker.distance*self.left_marker.distance - self.right_marker.distance*self.right_marker.distance)/(2*self.baseline)
@@ -170,9 +175,13 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
       pwcs->pose.pose = ps.pose;
 
       // publish robot pose to nav watch dog
-      pub_robot_pose_ar_.publish(pwcs);
+      pub_initial_pose_.publish(pwcs);
+      pub_relative_target_pose_.publish(pose);
 
-      tf_brcaster_.sendTransform(tf_ar_base_footprint);
+      // only for use in standalone mode with a 3d sensor (no robot).
+      if(publish_transforms) {
+        tf_brcaster_.sendTransform(tf_ar_base_footprint);
+      }
       /*
       ROS_INFO_STREAM("ar_link -> odom: x = " << tf_ar_odom.getOrigin().x()
                      << ", y = " << tf_ar_odom.getOrigin().y()
