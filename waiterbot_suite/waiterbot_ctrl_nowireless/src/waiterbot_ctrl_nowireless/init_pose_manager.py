@@ -50,7 +50,7 @@ class InitPoseManager(object):
         if self._simulation:
             pose_msg = geometry_msgs.PoseWithCovarianceStamped()
             pose_msg.header.frame_id = "ar_global"
-            pose_msg.header.stamp = rospy.Time.now() - rospy.Duration(0.2) # TODO: get latest common time
+            pose_msg.header.stamp = rospy.Time.now() - rospy.Duration(0.5) # TODO: get latest common time
             pose_msg.pose.pose.position.x = 1.0
             pose_msg.pose.pose.position.y = 0.0
             pose_msg.pose.pose.position.z = 0.0

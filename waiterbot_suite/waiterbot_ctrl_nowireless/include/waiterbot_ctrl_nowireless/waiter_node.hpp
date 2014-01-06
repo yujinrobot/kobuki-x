@@ -48,6 +48,7 @@ namespace waiterbot {
       void trayEmptyCB(const std_msgs::Empty::ConstPtr& msg);
       void orderCancelledCB(const std_msgs::Empty::ConstPtr& msg);
       void poseCtrlFeedbackCB(const std_msgs::String::ConstPtr& msg);
+      void initialisedCB(const std_msgs::Empty::ConstPtr& msg);
 
       bool endCommand(const int feedback, const std::string message);
       void sendFeedback(const int feedback, const std::string message);
@@ -60,18 +61,21 @@ namespace waiterbot {
       bool dockInBase();
       void playSound(const std::string& wav_file);
       bool approachVM();
+      bool reinitialise();
 
     private: // variables
       ros::NodeHandle nh_;
       ros::Publisher  pub_navctrl_feedback_;
       ros::Publisher  pub_pose_ctrl_enable_;
       ros::Publisher  pub_pose_ctrl_disable_;
+      ros::Publisher  pub_initialise_pose_;
       ros::Subscriber sub_digital_input_;
       ros::Subscriber sub_waypoints_;
       ros::Subscriber sub_navctrl_;
       ros::Subscriber sub_order_cancelled_;
       ros::Subscriber sub_tray_empty_;
-      ros::Subscriber  sub_pose_ctrl_feedback_;
+      ros::Subscriber sub_pose_ctrl_feedback_;
+      ros::Subscriber sub_pose_initialised_;
       actionlib::SimpleActionClient<kobuki_msgs::AutoDockingAction> ac_autodock_;
 
       std::string resources_path_;
@@ -86,6 +90,7 @@ namespace waiterbot {
       bool initialized_;
       bool waypointsReceived_;
       bool inCommand_;
+      bool pose_initialised_;
 
       Navigator navigator_;
       NavWatchdog watchdog_;
