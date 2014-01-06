@@ -4,7 +4,7 @@ from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 d = generate_distutils_setup(
-    packages=['waiterbot_ar_pair_search_behaviour'],
+    packages=['waiterbot_ar_pair_approach'],
     package_dir={'': 'src'},
 #    scripts=['scripts/concert_roles_and_apps',
 #             ],
