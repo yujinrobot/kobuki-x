@@ -29,7 +29,7 @@
   -->
 
   <!--  ************** Additional sensors *************  -->
-  <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/>
+<!--  <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/> -->
 
   <!-- Reconfigure command velocity multiplexer to fit waiterbot needs. Just set the parameter doesn't work
        if we start the waiterbot rapp with app manager; we must explicitly call the reconfigure service -->
@@ -37,13 +37,13 @@
             '{config:{strs:[[yaml_cfg_file,$(find waiterbot_bringup)/param/vel_multiplexer.yaml]]}}'"/>
 
   <!--  ******** Kobuki auto-docking controller *******  -->
-  <include file="$(find waiterbot_bringup)/launch/includes/_autodock.launch"/>
+<!--  <include file="$(find waiterbot_bringup)/launch/includes/_autodock.launch"/> -->
 
   <!--  ******* Waiterbot controller ****** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/controller.launch"/>
 
   <!-- ************* Joystick Manager *********** -->
-  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_xbox360_joystick.launch" />
+<!--  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_xbox360_joystick.launch" /> -->
   
   <!-- ************* Joystick Manager *********** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/init_pose_manager.launch" />
