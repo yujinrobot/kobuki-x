@@ -61,5 +61,10 @@
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
   -->
+
+  <!-- ************* Fake Initialization *********** -->
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_fake_local.launch"/>
+  
+  <!-- ************* Pose Initialisation Manager *********** -->
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/init_pose_manager.launch" />
 </launch>
