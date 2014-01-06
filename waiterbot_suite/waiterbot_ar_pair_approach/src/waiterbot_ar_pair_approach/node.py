@@ -10,6 +10,8 @@ import rospy
 import std_msgs.msg as std_msgs
 import threading
 import tf
+import dynamic_reconfigure.client
+
 
 # Local imports
 from .rotate import Rotate
@@ -36,7 +38,8 @@ class Node(object):
             '_listener',
             '_running',
             '_controller_finished',
-            '_stop_requested'
+            '_stop_requested',
+            '_dynamic_reconfigure_client'
         ]
     SPOTTED_NONE = 'none'
     SPOTTED_LEFT = 'left'
@@ -58,12 +61,12 @@ class Node(object):
         self._listener = tf.TransformListener()
         self._controller_finished = False
         self._stop_requested = False
+        self._dynamic_reconfigure_client = dynamic_reconfigure.client.Client(rospy.get_param('~ar_tracker', 'ar_track_alvar'))
 
     def _setup_parameters(self):
-        param = {}
-        #param['yaw_absolute_rate'] = rospy.get_param('~yaw_absolute_rate', 1.2)
-        #param['yaw_update_increment'] = rospy.get_param('~yaw_update_increment', 1.2)
-        return param
+        parameters = {}
+        parameters['search_only'] = rospy.get_param('~search_only', False)
+        return parameters
 
     def _setup_ros_api(self):
         '''
@@ -121,15 +124,26 @@ class Node(object):
             self._rotate.stop()
         self._stop_requested = True
 
+    def _post_execute(self, result):
+        self._stop_requested = False
+        if not rospy.is_shutdown():
+            self._dynamic_reconfigure_client.update_configuration({'enabled': 'False'})
+            self._publishers['result'].publish(std_msgs.Bool(result))
+        self._running = False
+
     def execute(self):
+        self._dynamic_reconfigure_client.update_configuration({'enabled': 'True'})
         found_markers = self._initialise_rotation()
         if not found_markers:
             result = self._rotate.execute()
-            if not result:
-                self._publishers['result'].publish(std_msgs.Bool(False))
-                self._stop_requested = False
-                self._running = False
+            if not result or self._stop_requested:
+                self._post_execute(False)
                 return
+        rospy.loginfo("AR Pair Approach : found both ar pair markers.")
+        if self._parameters['search_only']:
+            rospy.loginfo("AR Pair Approach : aborting initialisation and approach as requested.")
+            return
+        rospy.loginfo("AR Pair Approach : setting an initial pose from the global ar pair reference.")
         self._publishers['initial_pose_trigger'].publish(std_msgs.Empty())
         rospy.loginfo("AR Pair Approach : enabling the approach controller")
         self._publishers['enable_approach_controller'].publish(std_msgs.Empty())
@@ -141,11 +155,9 @@ class Node(object):
         rospy.loginfo("AR Pair Approach : disabling the approach controller")
         self._publishers['disable_approach_controller'].publish(std_msgs.Empty())
         if rospy.is_shutdown() or self._stop_requested:
-            self._stop_requested = False
-            self._publishers['result'].publish(std_msgs.Bool(False))
+            self._post_execute(False)
         else:
-            self._publishers['result'].publish(std_msgs.Bool(True))
-        self._running = False
+            self._post_execute(True)
 
     ##########################################################################
     # Runtime
@@ -159,12 +171,12 @@ class Node(object):
         '''
         direction = Rotate.CLOCKWISE
         if self._spotted_markers == Node.SPOTTED_BOTH:
-            rospy.loginfo("AR Pair Search: received an enable command, both spotted markers already in view!")
+            rospy.loginfo("AR Pair Approach : received an enable command, both spotted markers already in view!")
             return True
         elif self._spotted_markers == Node.SPOTTED_LEFT:
-            rospy.loginfo("AR Pair Search: received an enable command, only left in view.")
+            rospy.loginfo("AR Pair Approach : received an enable command, only left in view.")
         elif self._spotted_markers == Node.SPOTTED_RIGHT:
-            rospy.loginfo("AR Pair Search: received an enable command, only right in view.")
+            rospy.loginfo("AR Pair Approach : received an enable command, only right in view.")
             direction = Rotate.COUNTER_CLOCKWISE
         else:  # self._spotted_markers == Node.SPOTTED_NONE
             try:

@@ -10,6 +10,7 @@ import rospy
 import math
 import std_msgs.msg as std_msgs
 import geometry_msgs.msg as geometry_msgs
+#import tf
 
 ##############################################################################
 # Classes
@@ -30,6 +31,7 @@ class Rotate(object):
             '_rate',
             '_running',
             '_twist',
+            '_listener',
             '_initialise_pose_trigger'  # tell the waiterbot's initial pose manager to grab an initialisation
         ]
     CLOCKWISE = -1
@@ -52,6 +54,7 @@ class Rotate(object):
         twist.angular.y = 0
         twist.angular.z = 0
         self._twist = twist
+        #self._listener = tf.TransformListener()
         self.init()
 
     def init(self, yaw_absolute_rate=1.2, yaw_direction=CLOCKWISE):
