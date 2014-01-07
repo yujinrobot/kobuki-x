@@ -32,7 +32,7 @@
     <param name="start_enabled" value="false"/>
     <param name="base_frame_name" value="base_footprint"/>
     <param name="goal_frame_name" value="approach_footprint"/>
-    <param name="v_min" value="0.01"/>
+    <param name="v_min" value="0.02"/>
     <param name="v_max" value="0.15"/>
     <param name="w_min" value="0.05"/>
     <param name="w_max" value="0.60"/>

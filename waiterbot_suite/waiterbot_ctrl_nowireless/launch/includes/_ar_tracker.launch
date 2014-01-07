@@ -1,15 +1,21 @@
 <launch>
   <!-- openni is launched elswhere in the rapp (in rgb mode) -->
   <include file="$(find waiterbot_ar_marker_tracking)/launch/includes/ar_track_alvar.xml">
-    <arg name="ar_marker_size" value="5.4"/> <!-- small ones: 5.4, Daniel's: 6.0 -->
+    <arg name="ar_marker_size" value="5.4"/> <!-- Marcus': 5.4, Daniel's: 6.0 -->
     <arg name="ar_marker_max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
   </include>
-  <include file="$(find waiterbot_ar_pair_tracking)/launch/tracking.launch">
-    <arg name="ar_pair_left_id"            value="10"/>
-    <arg name="ar_pair_right_id"           value="11"/>
-    <arg name="ar_pair_baseline"           value="0.26"/> <!-- YO!!!! Change this in tandem with the next one! -->
-    <arg name="ar_pair_baseline_half"      value="0.13"/>
-    <arg name="ar_pair_target_pose_offset" value="0.33"/> <!-- Target distance in front of the midpoint of the two ar markers -->
-    <arg name="ar_pair_publish_transforms" value="false"/> <!-- Don't want it to publish internal transforms that disrupt the main tree -->
-  </include>
+
+  <arg name="ar_pair_left_id"            default="10"/>
+  <arg name="ar_pair_right_id"           default="11"/>
+  <arg name="ar_pair_baseline"/> <!-- YO!!!! Change this in tandem with the next one! -->
+  <arg name="ar_pair_baseline_half"/>
+  <arg name="ar_pair_target_pose_offset"/> <!-- Target distance in front of the midpoint of the two ar markers -->
+  <arg name="ar_pair_publish_transforms" default="false"/> <!-- Disable this if a ar_global-base_footprint is being published elseewhere -->
+  
+  <node name="ar_pair_tracking" pkg="waiterbot_ar_pair_tracking" type="waiterbot_ar_pair_tracking_node" respawn="false">
+    <param name="ar_pair_left_id"    value="$(arg ar_pair_left_id)"/>
+    <param name="ar_pair_right_id"   value="$(arg ar_pair_right_id)"/>
+    <param name="ar_pair_baseline"   value="$(arg ar_pair_baseline)"/>
+    <param name="publish_transforms" value="$(arg ar_pair_publish_transforms)"/>
+  </node>
 </launch>

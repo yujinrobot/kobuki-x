@@ -19,9 +19,18 @@
   <!-- Master controller related-->
   <arg name="loc_vm" default="vending_machine"/>
   <arg name="loc_customer" default="customer"/>
+  
+  <!-- Important Poses -->
+  <arg name="ar_pair_baseline"            default="0.26"/>
+  <arg name="ar_pair_baseline_half"       default="0.13"/>
+  <arg name="ar_pair_target_pose_offset"  default="0.40"/>
 
   <!--  ********** Alvar AR markers tracker && AR marker Processor ***********  -->
-  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch"/>
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_ar_tracker.launch">
+    <arg name="ar_pair_baseline"            value="$(arg ar_pair_baseline)"/>
+    <arg name="ar_pair_baseline_half"       value="$(arg ar_pair_baseline_half)"/>
+    <arg name="ar_pair_target_pose_offset"  value="$(arg ar_pair_target_pose_offset)"/>
+  </include>
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_approach_vm.launch"/>
 
   <!--  ************* Waiterbot Master controller **************  -->
@@ -64,5 +73,8 @@
   <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_init_pose_manager.launch" />
 
   <!-- ************* TF Publishers *********** -->
-  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_tf_publishers.launch" />
+  <include file="$(find waiterbot_ctrl_nowireless)/launch/includes/_tf_publishers.launch">
+    <arg name="ar_pair_baseline_half"       value="$(arg ar_pair_baseline_half)"/>
+    <arg name="ar_pair_target_pose_offset"  value="$(arg ar_pair_target_pose_offset)"/>
+  </include>
 </launch>
