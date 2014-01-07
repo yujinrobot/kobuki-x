@@ -19,18 +19,19 @@
     <param name="base_frame_name" value="base_footprint"/>
     <param name="goal_frame_name" value="base_goal_pose"/>
     <param name="v_min" value="0.01"/>
-    <param name="v_max" value="0.15"/>
-    <param name="w_min" value="0.05"/>
-    <param name="w_max" value="0.60"/>
+    <param name="v_max" value="0.10"/>
     <param name="k_1" value="1.0"/>
     <param name="k_2" value="10.0"/>
-    <param name="beta" value="0.2"/>
-    <param name="lambda" value="2.0"/>
-    <param name="dist_thres" value="0.01"/>
+    <param name="beta" value="0.1"/>
+    <param name="lambda" value="1.0"/>
+    <param name="dist_thres" value="0.02"/>
     <param name="orient_thres" value="0.06"/>
+    <param name="dist_eps" value="0.004"/>
+    <param name="orient_eps" value="0.012"/>
     <remap from="diff_drive_pose_controller/command_velocity" to="pose_controller_velocity_smoother/raw_cmd_vel"/>
+<!--     <remap from="diff_drive_pose_controller/command_velocity" to="/mobile_base/commands/velocity"/> -->
   </node>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_goal_pose_publisher"
-        args="0.5 0.2 0.0 0.0 0.0 0.0 odom base_goal_pose 100"/>
+<!--   <node pkg="tf" type="static_transform_publisher" name="base_goal_pose_publisher" -->
+<!--         args="0.5 0.2 0.0 0.0 0.0 0.0 odom base_goal_pose 100"/> -->
 </launch>
