@@ -5,11 +5,11 @@
       as well as the global reference frame aka 'map'
     -->
   <node pkg="tf" type="static_transform_publisher" name="vm_nav_target_publisher"
-        args="0.0 0.36 0.0 1.57 -1.57 0.0 target_pose nav_target_vm 100"/>
+        args="0.0 0.36 -0.30 1.57 -1.57 0.0 target_pose nav_target_vm 100"/>
   <node pkg="tf" type="static_transform_publisher" name="origin_nav_target_publisher"
         args="2.0 0.0 0.0 0.0 0.0 0.0 ar_global nav_target_origin 100"/>
   <!-- Extra transforms - drop this one right under target_pose -->
   <node pkg="tf" type="static_transform_publisher" name="target_pose_footprint_publisher" 
-        args="0.0 0.36 0.0 1.57 -1.57 0.0 target_pose approach_footprint 100"/>
+        args="0.0 0.36 0.10 1.57 -1.57 0.0 target_pose approach_footprint 100"/>
   
 </launch>
