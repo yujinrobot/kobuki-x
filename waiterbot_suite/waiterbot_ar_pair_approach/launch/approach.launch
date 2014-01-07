@@ -1,5 +1,5 @@
 <!-- 
-   Search behaviour node, run with machinery.launch
+   For testing only - run alongside other shells with machinery.launch and kobuki_node. 
 -->
 <launch>
   <node pkg="waiterbot_ar_pair_approach" type="approach.py" name="ar_pair_approach">
