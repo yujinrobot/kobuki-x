@@ -37,9 +37,10 @@ class InitPoseManager(object):
             msg.header.stamp -= rospy.Duration(0.2) # TODO: get latest common time
             self._pub_init_pose.publish(msg)
             empty_msg = std_msgs.Empty()
-            # disable the pose tracker
-            params = { 'enabled' : 'False' }
-            config = self._client.update_configuration(params)
+            if not self._simulation:
+                # disable the pose tracker
+                params = { 'enabled' : 'False' }
+                config = self._client.update_configuration(params)
             # send result
             self._pub_result.publish(empty_msg)
             rospy.loginfo("InitPoseManager: Initialisation done.")
