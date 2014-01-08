@@ -113,7 +113,12 @@ class Node(object):
 
     def _ros_controller_result_callback(self, msg):
         rospy.loginfo("AR Pair Approach : received result from the approach controller.")
-        self._controller_finished = True
+        if msg.data:
+            rospy.loginfo("AR Pair Approach : Controller reached the goal.")
+            self._controller_finished = True
+        else:
+            rospy.loginfo("AR Pair Approach : Controller failed to reach the goal.")
+            # TODO: handle this situation
 
     ##########################################################################
     # Execute
