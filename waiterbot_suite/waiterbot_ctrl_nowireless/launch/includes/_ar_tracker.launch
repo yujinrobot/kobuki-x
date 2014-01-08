@@ -13,9 +13,10 @@
   <arg name="ar_pair_publish_transforms" default="false"/> <!-- Disable this if a ar_global-base_footprint is being published elseewhere -->
   
   <node name="ar_pair_tracking" pkg="waiterbot_ar_pair_tracking" type="waiterbot_ar_pair_tracking_node" respawn="false">
-    <param name="ar_pair_left_id"    value="$(arg ar_pair_left_id)"/>
-    <param name="ar_pair_right_id"   value="$(arg ar_pair_right_id)"/>
-    <param name="ar_pair_baseline"   value="$(arg ar_pair_baseline)"/>
-    <param name="publish_transforms" value="$(arg ar_pair_publish_transforms)"/>
+    <param name="ar_pair_left_id"             value="$(arg ar_pair_left_id)"/>
+    <param name="ar_pair_right_id"            value="$(arg ar_pair_right_id)"/>
+    <param name="ar_pair_baseline"            value="$(arg ar_pair_baseline)"/>
+    <param name="ar_pair_target_pose_offset"  value="$(arg ar_pair_target_pose_offset)"/>
+    <param name="publish_transforms"          value="$(arg ar_pair_publish_transforms)"/>
   </node>
 </launch>

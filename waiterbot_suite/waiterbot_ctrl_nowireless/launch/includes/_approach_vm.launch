@@ -31,8 +31,8 @@
     <param name="spin_rate" value="25"/>
     <param name="start_enabled" value="false"/>
     <param name="base_frame_name" value="base_footprint"/>
-    <param name="goal_frame_name" value="base_goal_pose"/>
-    <param name="v_min" value="0.01"/>
+    <param name="goal_frame_name" value="approach_footprint"/>
+    <param name="v_min" value="0.04"/>
     <param name="v_max" value="0.10"/>
     <param name="k_1" value="1.0"/>
     <param name="k_2" value="10.0"/>
