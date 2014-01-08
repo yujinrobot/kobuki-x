@@ -33,10 +33,13 @@
 namespace waiterbot
 {
 
-namespace ARPairTrackingDefaultParams {
-  const int    AR_PAIR_LEFT_ID    = 3;
-  const int    AR_PAIR_RIGHT_ID   = 0;
-  const double AR_PAIR_BASELINE   = 0.26;
+namespace ARPairTrackingDefaultParams
+{
+  const int    AR_PAIR_LEFT_ID            = 3;
+  const int    AR_PAIR_RIGHT_ID           = 0;
+  const double AR_PAIR_BASELINE           = 0.26;
+  const double AR_PAIR_TARGET_POSE_OFFSET = 0.40;
+
   const bool   PUBLISH_TRANSFORMS = true;
   const std::string PUB_RELATIVE_TARGET_POSE = "relative_target_pose";
   const std::string PUB_INITIAL_POSE         = "initial_pose";
@@ -74,6 +77,7 @@ class ARPairTracking : public ARMarkerTracking
     int    ar_pair_left_id_;
     int    ar_pair_right_id_;
     double ar_pair_baseline_;
+    double ar_pair_target_pose_offset_;
     bool   publish_transforms;
 };
 

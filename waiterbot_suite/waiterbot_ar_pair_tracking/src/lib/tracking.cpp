@@ -30,6 +30,7 @@ bool ARPairTracking::init()
   pnh.param("ar_pair_left_id",  ar_pair_left_id_,  ARPairTrackingDefaultParams::AR_PAIR_LEFT_ID);
   pnh.param("ar_pair_right_id", ar_pair_right_id_, ARPairTrackingDefaultParams::AR_PAIR_RIGHT_ID);
   pnh.param("ar_pair_baseline", ar_pair_baseline_, ARPairTrackingDefaultParams::AR_PAIR_BASELINE);
+  pnh.param("ar_pair_target_pose_offset", ar_pair_target_pose_offset_, ARPairTrackingDefaultParams::AR_PAIR_TARGET_POSE_OFFSET);
   pnh.param("publish_transforms", publish_transforms, ARPairTrackingDefaultParams::PUBLISH_TRANSFORMS);
 
   /*********************
@@ -104,8 +105,8 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
     double theta = atan2((left_z - right_z), (right_x - left_x));
     double theta_degrees = theta * (180.0) / M_PI;
 
-    double target_x = left_x + (right_x - left_x) / 2 - 0.4 * sin(theta);
-    double target_z = left_z + (right_z - left_z) / 2 - 0.4 * cos(theta);
+    double target_x = left_x + (right_x - left_x) / 2 - ar_pair_target_pose_offset_ * sin(theta);
+    double target_z = left_z + (right_z - left_z) / 2 - ar_pair_target_pose_offset_ * cos(theta);
     double target_heading = atan2(target_x, target_z);
     double target_heading_degrees = target_heading * 180.0 / M_PI;
 
