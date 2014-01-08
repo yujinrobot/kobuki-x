@@ -1,12 +1,5 @@
 /*
- * ar_marker_processor.hpp
- *
  *  LICENSE : BSD - https://raw.github.com/yujinrobot/kobuki-x/license/LICENSE
- *
- *  Created on: Apr 6, 2013
- *      Author: jorge
- *  Modified on: Dec, 2013 
- *      Jihoon Lee
  */
 
 #include "../../include/waiterbot_ar_pair_tracking/tracking.hpp"
@@ -45,8 +38,6 @@ bool ARPairTracking::init()
 void ARPairTracking::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker> &tracked_markers)
 {
   // TODO: use confidence to incorporate covariance to global poses
-  //ROS_INFO("Received msg");
-
   computeRelativeRobotPose(spotted_markers, tracked_markers);
 }
 
@@ -89,9 +80,6 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
     ROS_DEBUG_STREAM("AR Pairing Tracker :   1: " << ar_pair_baseline_/2);
     ROS_DEBUG_STREAM("AR Pairing Tracker :   2: " << (left_d*left_d-right_d*right_d)/(2*ar_pair_baseline_));
     ROS_DEBUG_STREAM("AR Pairing Tracker :   a=" << a << " b=" << b);
-    // a = math.sqrt(self.left_marker.distance*self.left_marker.distance - b*b)
-    //b = self.baseline/2 + (self.left_marker.distance*self.left_marker.distance - self.right_marker.distance*self.right_marker.distance)/(2*self.baseline)
-
 
     // angle between the robot and the first marker
     double alpha = atan2(left_x, left_z);
@@ -115,33 +103,20 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
     ROS_DEBUG_STREAM("AR Pairing Tracker :      theta=" << theta_degrees << "degrees");
     ROS_DEBUG_STREAM("AR Pairing Tracker : t_[x,z,h]=[" << target_x << "," << target_z << "," << target_heading_degrees << "deg]");
 
-    // target_pose -> robot
-//    std::string frame = "robot";
+    // target_pose -> camera
     geometry_msgs::PoseStamped pose;
     pose.header.frame_id = "camera_rgb_optical_frame";
     pose.pose.position.x = target_x;
     pose.pose.position.y = 0; 
     pose.pose.position.z = target_z;
-//    pose.pose.position.x = -target_x;
-//    pose.pose.position.y = 0;
-//    pose.pose.position.z = target_z;
 
     tf::Quaternion quat, quat_pitch;
-    //quat.setEuler(theta,0,0);
     quat.setEuler(theta,0,0);
-    //quat_pitch.setEuler(0,M_PI,0);
-    //quat *= quat_pitch;
- 
+
     pose.pose.orientation.x = quat.getX(); 
     pose.pose.orientation.y = quat.getY(); 
     pose.pose.orientation.z = quat.getZ(); 
     pose.pose.orientation.w = quat.getW(); 
-
-//    tf::StampedTransform tf;
-//    tf.child_frame_id_ = frame;
-//    mtk::pose2tf(pose, tf);
-//    tf.stamp_ = ros::Time::now();
-//    tf_brcaster_.sendTransform(tf);
 
     try
     {
@@ -150,34 +125,17 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
       tf_listener_.lookupTransform("target_pose", "ar_global", ros::Time(0), tf_ar_target_pose);
       tf_internal_.setTransform(tf_ar_target_pose);
 
-      //ROS_WARN_STREAM("TFS: " <<  tf_ar_target_pose.frame_id_ << "," <<  tf_ar_target_pose.child_frame_id_);
-      /*
-      ROS_INFO_STREAM("ar_link -> target_position: x = " << tf_ar_target_pose.getOrigin().x()
-                     << ", y = " << tf_ar_target_pose.getOrigin().y()
-                     << ", z = " << tf_ar_target_pose.getOrigin().z());
-                     */
-
       // set target_pose -> camera
       tf::StampedTransform tf_ar_camera;
       tf_ar_camera.child_frame_id_ = "target_pose";
       mtk::pose2tf(pose, tf_ar_camera);  // pose frame_id is set above (camera_rgb_optical_frame)
       tf_ar_camera.stamp_ = ros::Time::now();
       tf_internal_.setTransform(tf_ar_camera);
-      /*
-      ROS_INFO_STREAM("target_pose -> camera_rgb_optical_frame: x = " << tf_ar_camera.getOrigin().x()
-                     << ", y = " << tf_ar_camera.getOrigin().y()
-                     << ", z = " << tf_ar_camera.getOrigin().z());
-                     */
 
       // get and set camera -> base_footprint
       tf::StampedTransform tf_camera_base_footprint;
       tf_listener_.lookupTransform("base_footprint", "camera_rgb_optical_frame", ros::Time(0), tf_camera_base_footprint);
       tf_internal_.setTransform(tf_camera_base_footprint);
-      /*
-      ROS_INFO_STREAM("camera_rgb_optical_frame -> odom: x = " << tf_camera_odom.getOrigin().x()
-                     << ", y = " << tf_camera_odom.getOrigin().y()
-                     << ", z = " << tf_camera_odom.getOrigin().z());
-                     */
 
       // get and publish ar_link -> base_footprint
       tf::StampedTransform tf_ar_base_footprint;
@@ -199,16 +157,10 @@ void ARPairTracking::computeRelativeRobotPose(const ar_track_alvar::AlvarMarkers
       if(publish_transforms) {
         tf_brcaster_.sendTransform(tf_ar_base_footprint);
       }
-      /*
-      ROS_INFO_STREAM("ar_link -> odom: x = " << tf_ar_odom.getOrigin().x()
-                     << ", y = " << tf_ar_odom.getOrigin().y()
-                     << ", z = " << tf_ar_odom.getOrigin().z());
-                     */
     }
     catch (tf::TransformException const &ex)
     {
       ROS_WARN_STREAM("TF error: " << ex.what());
-//      ROS_INFO_STREAM("All known frames: " << tf_internal_.allFramesAsString());
     }
 
   }

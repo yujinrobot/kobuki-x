@@ -2,9 +2,10 @@
 <package>
   <name>waiterbot_ar_pair_tracking</name>
   <version>0.0.0</version>
-  <description>The waiterbot_sensors package</description>
-  <maintainer email="d.stonier@yujinrobot.com">Jihoon Lee</maintainer>
+  <description>The AR pair tracking package</description>
+  <maintainer email="stonier@yujinrobot.com">Daniel Stonier</maintainer>
   <author>Daniel Stonier</author> 
+  <author>Jihoon Lee</author> 
   <author>Jorge Santos Simon</author> 
 
   <license>BSD</license>
