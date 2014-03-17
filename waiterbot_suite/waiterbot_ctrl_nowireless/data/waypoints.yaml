@@ -2,15 +2,15 @@ waypoints:
   - name: vending_machine
     frame_id: map
     pose:
-      position:
-        x: 0.4466
-        y: 0.4462
-        z: 0
-      orientation:
-        x: 0
-        y: 0
-        z: 0.344
-        w: 0.9389
+      position: 
+        x: -0.476236625149
+        y: 0.383768709485
+        z: 0.0
+      orientation: 
+        x: 0.0
+        y: 0.0
+        z: -0.0562615681241
+        w: 0.998416063549
   - name: customer
     frame_id: map
     pose:

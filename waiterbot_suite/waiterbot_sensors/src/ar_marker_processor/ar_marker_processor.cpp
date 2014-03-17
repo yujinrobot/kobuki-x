@@ -179,10 +179,12 @@ namespace waiterbot
     if (marker.obs_list_.size() > obs_list_max_size)
       marker.obs_list_.pop_back();
 
+    /*
         ROS_INFO_STREAM(msgMarker.id << ":  Dist : "
                      << marker.distance << " Heading : [" << marker.heading << "] Confidence : [" << marker.confidence << "]   "
                       << marker.conf_distance << "   " << marker.conf_heading << " Stability : ["
                       << marker.stability << "]   ["<< marker.persistence << "]   [" << position << "]   " << marker.obs_list_.size());
+                      */
   }
 
   void ARMarkerProcessor::processDockingMarkers(const ar_track_alvar::AlvarMarkers::ConstPtr& msg,std::vector<TrackedMarker>& tracked_markers)
