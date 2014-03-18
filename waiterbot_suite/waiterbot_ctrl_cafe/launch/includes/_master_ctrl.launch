@@ -13,7 +13,7 @@
   </node>
 
   <!-- Waiterbot main node -->
-  <node name="waiterbot_ctrl_cafe" pkg="waiterbot_ctrl_cafe" type="waiterbot_node" output="screen">
+  <node name="waiterbot_ctrl_cafe" pkg="waiterbot_ctrl_cafe" type="waiterbot_ctrl_cafe_node" output="screen">
     <param name="global_frame" value="/map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
