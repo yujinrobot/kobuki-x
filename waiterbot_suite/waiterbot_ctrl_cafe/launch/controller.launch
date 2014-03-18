@@ -39,7 +39,9 @@
   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_ctrl_cafe)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
+  <!--
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_annotations_pub.launch"/>
+  -->
 <!-- <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
 
   <!--  ******************** Amcl *********************  -->
