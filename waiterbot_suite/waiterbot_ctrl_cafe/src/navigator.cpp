@@ -485,7 +485,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
           {
             // Do not moo at more than 0.1 Hz... we don't want to be bothersome...
             ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying", wait_for_pickup_point_);
-            if (play_sounds_) system(("rosrun waiterbot_controller play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+            if (play_sounds_) system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + "/moo.wav").c_str());
 
             // Clear also the costmaps (at this point we have disabled recovery behaviors!)
             clearCostmaps();
@@ -715,7 +715,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
 bool Navigator::cleanupAndSuccess(const std::string& wav_file)
 {
   if ((wav_file.length() > 0) && (play_sounds_))
-    system(("rosrun waiterbot_controller play_sound.bash " + resources_path_ + wav_file).c_str());
+    system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + wav_file).c_str());
 
   // Revert to standard configuration after completing a task
   //  - clear costmaps, mostly to restore global map to source bitmap
