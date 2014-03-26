@@ -15,3 +15,9 @@
 # vim tmp files
 *.swo
 *.swp
+
+# Python
+*.pyc
+
+CATKIN_IGNORE
+

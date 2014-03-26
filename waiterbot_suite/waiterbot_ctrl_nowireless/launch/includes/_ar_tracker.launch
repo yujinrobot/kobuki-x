@@ -1,29 +1,22 @@
 <launch>
-  <arg name="common_param" default="$(find waiterbot_ctrl_nowireless)/param/common.yaml"/>
-  <arg name="ar_marker_processor_param" default="$(find waiterbot_ctrl_nowireless)/param/ar_marker_processor.yaml"/>
-  <arg name="global_marker_filename" default="$(find waiterbot_ctrl_nowireless)/data/global_markers.yaml"/>
-  <arg name="marker_size"          default="7.2" />
-  <!--<arg name="marker_size"          default="6.9 />-->
-  <arg name="max_new_marker_error" default="0.08" />
-  <arg name="max_track_error"      default="0.2" />
-  <arg name="max_frequency"        default="5.0" />
+  <!-- openni is launched elswhere in the rapp (in rgb mode) -->
+  <include file="$(find waiterbot_ar_marker_tracking)/launch/includes/ar_track_alvar.xml">
+    <arg name="ar_marker_size" value="5.4"/> <!-- Marcus': 5.4, Daniel's: 6.0 -->
+    <arg name="ar_marker_max_frequency" value="4.0"/>   <!-- This is a CPU-hungry bastard; reduce its rate  -->
+  </include>
+
+  <arg name="ar_pair_left_id"            default="10"/>
+  <arg name="ar_pair_right_id"           default="11"/>
+  <arg name="ar_pair_baseline"/> <!-- YO!!!! Change this in tandem with the next one! -->
+  <arg name="ar_pair_baseline_half"/>
+  <arg name="ar_pair_target_pose_offset"/> <!-- Target distance in front of the midpoint of the two ar markers -->
+  <arg name="ar_pair_publish_transforms" default="false"/> <!-- Disable this if a ar_global-base_footprint is being published elseewhere -->
   
-  <arg name="cam_image_topic"      default="camera/rgb/image_raw" />
-  <arg name="cam_info_topic"       default="camera/rgb/camera_info" />    
-  <arg name="output_frame"         default="base_footprint" />
-
-  <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg max_frequency)">
-    <param name="max_frequency" value="$(arg max_frequency)"/>  <!-- Must be be set as a parameter so other nodes can read it (e.g. ar_markers) -->
-
-    <remap from="ARmarker_points"       to="ar_track_alvar/ARmarker_points"/>
-    <remap from="ar_pose_marker"        to="ar_track_alvar/ar_pose_marker"/>
-    <remap from="visualization_marker"  to="ar_track_alvar/visualization_marker"/>
+  <node name="ar_pair_tracking" pkg="waiterbot_ar_pair_tracking" type="waiterbot_ar_pair_tracking_node" respawn="false">
+    <param name="ar_pair_left_id"             value="$(arg ar_pair_left_id)"/>
+    <param name="ar_pair_right_id"            value="$(arg ar_pair_right_id)"/>
+    <param name="ar_pair_baseline"            value="$(arg ar_pair_baseline)"/>
+    <param name="ar_pair_target_pose_offset"  value="$(arg ar_pair_target_pose_offset)"/>
+    <param name="publish_transforms"          value="$(arg ar_pair_publish_transforms)"/>
   </node>
-
-  <node name="ar_marker_processor" pkg="waiterbot_sensors" type="ar_marker_processor" respawn="false" output="screen">
-    <rosparam file="$(arg common_param)" command="load"/>
-    <rosparam file="$(arg ar_marker_processor_param)" command="load"/>
-    <param name="global_marker_filename" value="$(arg global_marker_filename)"/>
-  </node>
-
 </launch>

@@ -22,13 +22,16 @@
     <param name="loc_vm" value ="$(arg loc_vm)"/>
     <param name="loc_customer" value="$(arg loc_customer)"/>
 
+    <param name="nav_target_origin" value ="nav_target_origin"/>
+    <param name="nav_target_vm"     value="nav_target_vm"/>
+
     <!-- Remaps -->
     <!-- Nav Watchdog -->
     <param name="nav_watchdog/amc_max_error" value="1.0"/>
     <remap from="nav_watchdog/amcl_init"     to="initialpose"/>
     <remap from="nav_watchdog/amcl_pose"     to="amcl_pose"/>
     <remap from="nav_watchdog/reset_pose"    to="initialpose"/>
-    <remap from="nav_watchdog/robot_pose_ar"    to="robot_pose_ar"/>
+    <remap from="nav_watchdog/robot_pose_ar" to="robot_pose_ar"/>
 
     <!-- Navigator -->
     <remap from="odometry"      to="/odom"/>
@@ -37,10 +40,17 @@
     <!-- WaiterIsolated -->
     <remap from="digital_input" to="/mobile_base/events/digital_input"/>
 
-          <!--  Yet to use these
-            <remap from="issue_goal"    to="move_base_simple/goal"/>
-            <remap from="cancel_goal"   to="move_base/cancel"/> 
-            -->
-
+    <!-- Pose initialisation -->
+    <remap from="init_pose_manager/initialise"  to="initialise_pose"/>
+    <remap from="init_pose_manager/initialised" to="pose_initialised"/>
+    
+    <!-- Pose initialisation -->
+    <remap from="approach_controller/enable"    to="ar_pair_approach/enable"/>
+    <remap from="approach_controller/result"    to="ar_pair_approach/result"/>
+    
+    <!--  Yet to use these
+      <remap from="issue_goal"    to="move_base_simple/goal"/>
+      <remap from="cancel_goal"   to="move_base/cancel"/> 
+      -->
    </node> 
  </launch>

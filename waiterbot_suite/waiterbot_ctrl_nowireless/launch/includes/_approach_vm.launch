@@ -1,0 +1,47 @@
+<launch>
+  <node pkg="waiterbot_ar_pair_approach" type="approach.py" name="ar_pair_approach">
+    <!-- <remap from="ar_pair_search/enable" to="somewhere/enable"/> -->
+    <!-- <remap from="ar_pair_search/result" to="somewhere/result"/> -->
+    
+    <remap from="ar_pair_approach/initialise" to="initialise_pose"/>
+    <remap from="ar_pair_approach/enable_approach_controller" to="diff_drive_pose_controller/enable"/>
+    <remap from="ar_pair_approach/disable_approach_controller" to="diff_drive_pose_controller/disable"/>
+    <remap from="ar_pair_approach/approach_pose_reached" to="diff_drive_pose_controller/pose_reached"/>
+    <remap from="ar_pair_approach/spotted_markers" to="ar_pair_tracking/spotted_markers"/>
+    <remap from="ar_pair_approach/cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+  </node>
+  
+  <!-- static publisher for the approach_footprint used below is hanging out with the group of tf_publishers -->
+  
+  <!-- For debugging
+  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager"/>
+   -->
+  
+  <!-- remember to change speed limits for the velocity smoother as , when changing for the pose controller -->
+  <node pkg="nodelet" type="nodelet" name="pose_controller_velocity_smoother"
+        args="load yocs_velocity_smoother/VelocitySmootherNodelet /mobile_base_nodelet_manager">
+    <rosparam file="$(find waiterbot_ctrl_nowireless)/param/vel_smoother_pose_controller.yaml" command="load"/>
+    <remap from="pose_controller_velocity_smoother/smooth_cmd_vel" to="/cmd_vel_mux/input/navigation"/>
+    <remap from="pose_controller_velocity_smoother/robot_cmd_vel" to="/mobile_base/commands/velocity"/>
+    <remap from="pose_controller_velocity_smoother/odometry" to="/odom"/>
+  </node>
+  
+  <node pkg="nodelet" type="nodelet" name="diff_drive_pose_controller"
+        args="load yocs_diff_drive_pose_controller/DiffDrivePoseControllerNodelet /mobile_base_nodelet_manager">
+    <param name="spin_rate" value="25"/>
+    <param name="start_enabled" value="false"/>
+    <param name="base_frame_name" value="base_footprint"/>
+    <param name="goal_frame_name" value="approach_footprint"/>
+    <param name="v_min" value="0.04"/>
+    <param name="v_max" value="0.10"/>
+    <param name="k_1" value="1.0"/>
+    <param name="k_2" value="10.0"/>
+    <param name="beta" value="0.1"/>
+    <param name="lambda" value="1.0"/>
+    <param name="dist_thres" value="0.02"/>
+    <param name="orient_thres" value="0.06"/>
+    <param name="dist_eps" value="0.004"/>
+    <param name="orient_eps" value="0.012"/>
+    <remap from="diff_drive_pose_controller/command_velocity" to="pose_controller_velocity_smoother/raw_cmd_vel"/>
+  </node>
+</launch>

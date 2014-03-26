@@ -1,4 +1,5 @@
 # commonly shared configurations among nodes
-global_frame: map
-odom_frame  : odom
-base_frame  : base_footprint
+global_frame   : ar_global
+odom_frame     : odom
+base_frame     : base_footprint
+nav_target_vm  : nav_target_vm

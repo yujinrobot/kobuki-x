@@ -25,6 +25,10 @@ WaiterIsolated::WaiterIsolated(ros::NodeHandle& n) :
   cancel_order_ = false;
   in_docking_ = false;
   tray_empty_ = false;
+
+  vm_approached_ = false;
+  pose_initialised_ = false;
+
   init();
 }
 
@@ -41,6 +45,8 @@ void WaiterIsolated::init()
   priv_n.param("base_frame",    base_frame_,   WaiterIsolatedDefaultParam::BASE_FRAME);
   priv_n.param("odom_frame",    odom_frame_,   WaiterIsolatedDefaultParam::ODOM_FRAME);
   priv_n.param("global_frame",  global_frame_, WaiterIsolatedDefaultParam::GLOBAL_FRAME);
+  priv_n.param("nav_target_origin",  nav_target_origin_, WaiterIsolatedDefaultParam::NAV_TARGET_ORIGIN);
+  priv_n.param("nav_target_vm",  nav_target_vm_, WaiterIsolatedDefaultParam::NAV_TARGET_VM);
 
   // listen to green and red buttons
   sub_digital_input_ = nh_.subscribe(WaiterIsolatedDefaultParam::SUB_DIGITAL_INPUT, 5, & WaiterIsolated::digitalInputCB, this);
@@ -58,6 +64,18 @@ void WaiterIsolated::init()
 
   // feedback to tablet 
   pub_navctrl_feedback_= nh_.advertise<waiterbot_msgs::NavCtrlStatus>(WaiterIsolatedDefaultParam::PUB_DRINK_ORDER_FEEDBACK, 1);
+
+  // enables the pose controller
+  pub_pose_ctrl_enable_ = nh_.advertise<std_msgs::Bool>("approach_controller/enable", 1);
+
+  // receives the pose controller's feedback
+  sub_pose_ctrl_feedback_ = nh_.subscribe("approach_controller/result", 1, &WaiterIsolated::poseCtrlFeedbackCB, this);
+
+  // triggers the re-intialisation
+  pub_initialise_pose_ = nh_.advertise<std_msgs::Empty>("init_pose_manager/initialise", 1);
+
+  // monitors the re-intialisation
+  sub_pose_initialised_ = nh_.subscribe("init_pose_manager/initialised", 1, &WaiterIsolated::initialisedCB, this);
 }
 
 bool WaiterIsolated::isInit() {
@@ -87,6 +105,7 @@ void WaiterIsolated::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstP
     if(prev_digital_input.values[1] == false && msg->values[1] == true)
     {
       ROS_INFO("Waiter : Red button pressed");
+      navigator_.clearCostMaps();
     }
 
     if(prev_digital_input.values[0] == false && msg->values[0] == true)
@@ -159,12 +178,28 @@ void WaiterIsolated::orderCancelledCB(const std_msgs::Empty::ConstPtr& msg)
   if(inCommand_)
   {
     cancel_order_ = true;
-    if(in_docking_)
-      ac_autodock_.cancelGoal();
-    else
-      navigator_.cancelMoveTo();
+    navigator_.cancelMoveTo();
   }
+}
 
+void WaiterIsolated::poseCtrlFeedbackCB(const std_msgs::Bool::ConstPtr& msg)
+{
+  if (msg->data)
+  {
+    ROS_INFO_STREAM("Waiter : Approach succeeded.");
+    vm_approached_ = true;
+  }
+  else
+  {
+    ROS_INFO_STREAM("Waiter : Approach failed.");
+    vm_approached_ = false;
+  }
+}
+
+void WaiterIsolated::initialisedCB(const std_msgs::Empty::ConstPtr& msg)
+{
+  ROS_INFO_STREAM("Waiter : Robot pose initialised.");
+  pose_initialised_ = true;
 }
 
 bool WaiterIsolated::endCommand(const int feedback, const std::string message)

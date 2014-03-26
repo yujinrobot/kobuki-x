@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(waiterbot_ctrl_nowireless)
 
 find_package(catkin REQUIRED COMPONENTS
-  waiterbot_bringup roscpp waiterbot_msgs yocs_msgs kobuki_msgs yocs_math_toolkit tf
+  waiterbot_bringup roscpp waiterbot_msgs yocs_msgs kobuki_msgs yocs_math_toolkit tf std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+
+catkin_python_setup()
 
 ###################################
 ## catkin specific configuration ##
