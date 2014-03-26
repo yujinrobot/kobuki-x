@@ -1,20 +1,8 @@
 <launch>
-  <!-- App manager -->
-  <arg name="robot_name" value="whoola"/>
-  <arg name="robot_type" value="waiterbot"/>
-  <arg name="hub_whitelist" default="$(optenv ROBOT_HUB_WHITELIST Internal Hub)"/>
-  <arg name="rapp_lists" value="ces_rapps/ces.rapps"/>
-  <arg name="robot_icon" default="turtlebot_bringup/turtlebot2.png"/>
-  <arg name="gateway_watch_loop_period" default="10"/>
-  
-  <include file="$(find rocon_app_manager)/launch/paired_private.launch">
-    <arg name="robot_name" value="$(arg robot_name)"/>
-    <arg name="robot_type" value="$(arg robot_type)"/>
-    <arg name="robot_icon" value="$(arg robot_icon)"/>
-    <arg name="rapp_lists" value="$(arg rapp_lists)"/>
-    <arg name="gateway_watch_loop_period" value="$(arg gateway_watch_loop_period)"/>
-    <arg name="disable_uuids" value="true"/>
-    <arg name="hub_whitelist" value="$(arg hub_whitelist)"/>
+  <include file="$(find turtlebot_bringup)/launch/minimal_with_appmanager.launch">
+    <arg name="robot_name" value="whoola"/>
+    <arg name="robot_type" value="waiterbot"/>
+    <arg name="rapp_package_whitelist" value="[ces_rapps, cafe_rapps]"/>
   </include>
   
   <arg name="base"       value="kobuki"/>
