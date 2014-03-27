@@ -1,12 +1,19 @@
 <launch>
-  <include file="$(find turtlebot_bringup)/launch/minimal_with_appmanager.launch">
-    <arg name="robot_name" value="whoola"/>
-    <arg name="robot_type" value="waiterbot"/>
-    <arg name="rapp_package_whitelist" value="[ces_rapps, cafe_rapps]"/>
+  <arg name="robot_name" default="whoola"/>
+  <arg name="robot_type" default="waiterbot"/>
+  <arg name="rapp_package_whitelist" default="[rocon_apps]"/>
+  <arg name="hub_whitelist" default="Waiter Concert"/>
+
+  <include file="$(find rocon_app_manager)/launch/paired_private.launch">
+    <arg name="hub_whitelist" value="$(arg hub_whitelist)"/>
+    <arg name="robot_name" value="$(arg robot_name)"/>
+    <arg name="robot_type" value="$(arg robot_type)"/>
+    <arg name="rapp_package_whitelist" value="$(arg rapp_package_whitelist)"/>
   </include>
   
   <arg name="base"       value="kobuki"/>
   <arg name="battery"    value="/sys/class/power_supply/BAT0"/>
+  <arg name="serialport" value="/dev/kobuki"/>
   <arg name="simulation" value="false"/>
   <param name="/use_sim_time" value="$(arg simulation)"/>
   
@@ -27,6 +34,7 @@
   
   <include file="$(find turtlebot_bringup)/launch/includes/mobile_base.launch.xml">
     <arg name="base" value="$(arg base)" />
+    <arg name="serialport" value="$(arg serialport)"/>
   </include>
   
   <include file="$(find turtlebot_bringup)/launch/includes/netbook.launch.xml">
