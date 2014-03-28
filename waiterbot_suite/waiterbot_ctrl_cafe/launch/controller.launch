@@ -22,6 +22,20 @@
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
 
+
+  <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+    <!-- We only need RGB images and pseudo laser scan -->
+    <arg name="depth_registration"              value="false"/>
+    <arg name="rgb_processing"                  value="true" />
+    <arg name="ir_processing"                   value="false"/>
+    <arg name="depth_processing"                value="false"/>
+    <arg name="depth_registered_processing"     value="false"/>
+    <arg name="disparity_processing"            value="false"/>
+    <arg name="disparity_registered_processing" value="false"/>
+    <arg name="scan_processing"                 value="true" />
+  </include>
+
+
   <!--  ********** Alvar AR markers tracker ***********  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_ar_tracker.launch">
     <arg name="max_frequency" value="4.0"/>  <!-- This is a CPU-hungry bastard; reduce its rate --> 
