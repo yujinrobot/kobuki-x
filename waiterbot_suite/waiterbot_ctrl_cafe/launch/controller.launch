@@ -35,6 +35,16 @@
     <arg name="scan_processing"                 value="true" />
   </include>
 
+  <!--  ************** Additional sensors *************  -->
+  <!--
+  <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/>
+  -->
+
+  <!-- Reconfigure command velocity multiplexer to fit waiterbot needs. Just set the parameter doesn't work
+      if we start the waiterbot rapp with app manager; we must explicitly call the reconfigure service -->
+  <node pkg="rosservice" type="rosservice" name="reconfig_vel_mux" args="call --wait /cmd_vel_mux/set_parameters
+            '{config:{strs:[[yaml_cfg_file,$(find waiterbot_bringup)/param/vel_multiplexer.yaml]]}}'"/>
+
 
   <!--  ********** Alvar AR markers tracker ***********  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_ar_tracker.launch">
@@ -48,15 +58,15 @@
 
   <!--  ************** Rosnav move base ***************  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_move_base.launch"/>
+  
+  <!--  ******** Kobuki auto-docking controller *******  -->
+  <include file="$(find waiterbot_bringup)/launch/includes/_autodock.launch"/>
+
 
   <!--  ****** Geometric and semantic map servers *****  -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_ctrl_cafe)/resources/maps/$(arg map_name).yaml">
     <param name="frame_id" value="/map"/>
   </node>
-  <!--
-  <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_annotations_pub.launch"/>
-  -->
-<!-- <include file="$(find cafe_rapps)/rapps/database/cafe_database.launch"/>-->
 
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_amcl.launch">
