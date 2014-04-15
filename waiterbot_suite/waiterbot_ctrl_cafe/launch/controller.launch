@@ -21,6 +21,8 @@
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find waiterbot_ctrl_cafe)/custom_rosconsole.conf"/>
+
 
 
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
@@ -36,9 +38,7 @@
   </include>
 
   <!--  ************** Additional sensors *************  -->
-  <!--
   <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/>
-  -->
 
   <!-- Reconfigure command velocity multiplexer to fit waiterbot needs. Just set the parameter doesn't work
       if we start the waiterbot rapp with app manager; we must explicitly call the reconfigure service -->

@@ -48,7 +48,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
 
   if (! localized_)
   {
-    ROS_DEBUG_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f",
+    ROS_INFO_THROTTLE(2.0, "AR marker localization received: %.2f, %.2f, %.2f",
                        msg->pose.pose.position.x, msg->pose.pose.position.y,
                        tf::getYaw(msg->pose.pose.orientation));
   }

@@ -58,7 +58,7 @@ bool WaiterNode::wakeUp()
   // TODO: unlike on the rest of the app. we make calla to ar_markers_ instead of registering callbacks!
   // (in fact, ar_markers_ should be a node). Also this is very brittle; we have no fallback mechanisms at all
 
-  ROS_DEBUG("Waking up! first try to recognize our own nest; slowly moving back...");
+  ROS_INFO("Waking up! first try to recognize our own nest; slowly moving back...");
 
   if (ar_markers_.enableTracker() == false)
   {
@@ -100,7 +100,7 @@ bool WaiterNode::wakeUp()
 
   ar_track_alvar::AlvarMarker closest_marker;
   ar_markers_.closest(1.0, 0.3, true, closest_marker);
-  ROS_DEBUG("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
+  ROS_INFO("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
 
   uint32_t base_marker_id = closest_marker.id;
   //base_marker_.header.frame_id = "map";
@@ -116,7 +116,7 @@ bool WaiterNode::wakeUp()
     return cleanupAndError();
   }
 
-  ROS_DEBUG("We are now localized; look again for our docking station marker...");
+  ROS_INFO("We are now localized; look again for our docking station marker...");
 
   // Look (again) for our docking station marker; should be just in front of us!
   timeout = false;
@@ -141,7 +141,7 @@ bool WaiterNode::wakeUp()
     // TODO do nothing more by now, but we will want to make an error sound, red leds, etc.
   }
 
-  ROS_DEBUG("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
+  ROS_INFO("Docking station AR marker %d spotted and registered as a global marker", base_marker_id);
 
   if (ar_markers_.disableTracker() == false)
   {
@@ -163,7 +163,7 @@ bool WaiterNode::wakeUp()
 
 bool WaiterNode::leaveNest()
 {
-  ROS_DEBUG("Leaving the nest when already localized; slowly moving back for half meter");
+  ROS_INFO("Leaving the nest when already localized; slowly moving back for half meter");
   navigator_.backward(0.5);
 
   // Enable safety controller for normal navigation
@@ -203,7 +203,7 @@ bool WaiterNode::gotoTable(int table_id)
     // Look for the requested table's pose (and get rid of the useless covariance)
     if (table_poses_.tables[i].name.find(mtk::nb2str(table_id), strlen("table")) != std::string::npos)
     {
-      ROS_DEBUG("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
+      ROS_INFO("Target table %d: rad = %f, pose = %s", table_id, table_poses_.tables[i].radius,
                 mtk::pose2str(table_poses_.tables[i].pose.pose.pose));
       table_pose.header = table_poses_.tables[i].pose.header;
       table_pose.pose = table_poses_.tables[i].pose.pose.pose;
