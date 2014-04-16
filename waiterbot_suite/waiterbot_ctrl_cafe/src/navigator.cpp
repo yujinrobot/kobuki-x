@@ -12,9 +12,9 @@
 
 #include <kobuki_msgs/MotorPower.h>
 
-#include "waiterbot_controller/ar_markers.hpp"
+#include "waiterbot_ctrl_cafe/ar_markers.hpp"
 
-#include "waiterbot_controller/navigator.hpp"
+#include "waiterbot_ctrl_cafe/navigator.hpp"
 
 namespace waiterbot
 {

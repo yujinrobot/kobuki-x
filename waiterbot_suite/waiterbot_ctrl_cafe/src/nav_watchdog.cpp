@@ -10,7 +10,7 @@
 #include <yocs_math_toolkit/geometry.hpp>
 
 //#include "waiterbot/navigator.hpp"
-#include "waiterbot_controller/nav_watchdog.hpp"
+#include "waiterbot_ctrl_cafe/nav_watchdog.hpp"
 
 
 namespace waiterbot
@@ -79,7 +79,7 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
     last_amcl_init_.header = msg->header;
     last_amcl_init_.pose = msg->pose.pose;
 
-    localized_ |= LOCALIZED_AMCL;
+    //localized_ |= LOCALIZED_AMCL;
 
     ROS_WARN("Amcl (re)initialized by AR marker with pose: %.2f, %.2f, %.2f",
               msg->pose.pose.position.x, msg->pose.pose.position.y, tf::getYaw(msg->pose.pose.orientation));

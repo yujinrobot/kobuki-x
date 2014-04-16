@@ -10,7 +10,7 @@
 #include <yocs_math_toolkit/common.hpp>
 #include <yocs_math_toolkit/geometry.hpp>
 
-#include "waiterbot_controller/ar_markers.hpp"
+#include "waiterbot_ctrl_cafe/ar_markers.hpp"
 
 namespace waiterbot
 {

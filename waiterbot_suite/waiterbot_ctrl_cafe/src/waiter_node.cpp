@@ -11,7 +11,7 @@
 #include <kobuki_msgs/Sound.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include "waiterbot_controller/waiter_node.hpp"
+#include "waiterbot_ctrl_cafe/waiter_node.hpp"
 
 namespace waiterbot
 {

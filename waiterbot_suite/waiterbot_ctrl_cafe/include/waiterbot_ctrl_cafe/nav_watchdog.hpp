@@ -36,7 +36,7 @@ public:
   ~NavWatchdog();
 
   bool init();
-  bool localized() { return localized_ != 0; };
+  bool localized() { return localized_ & LOCALIZED_AMCL; };
 
   void arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
 

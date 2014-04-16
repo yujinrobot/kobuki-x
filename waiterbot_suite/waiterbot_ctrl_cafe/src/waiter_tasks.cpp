@@ -5,7 +5,7 @@
  *      Author: jorge
  */
 
-#include "waiterbot_controller/waiter_node.hpp"
+#include "waiterbot_ctrl_cafe/waiter_node.hpp"
 
 namespace waiterbot
 {
@@ -105,8 +105,9 @@ bool WaiterNode::wakeUp()
   uint32_t base_marker_id = closest_marker.id;
   //base_marker_.header.frame_id = "map";
 
-  // Now look for a global marker to initialize our localization; full spin clockwise
+  ROS_INFO("Now look for a global marker to initialize our localization; full spin clockwise");
   navigator_.spinClockwise();
+  ROS_INFO("done spinning");
 
   // After a full spin, we should be localized and in front of our docking base marker
   if (nav_watchd_.localized() == false)
@@ -118,8 +119,13 @@ bool WaiterNode::wakeUp()
 
   ROS_INFO("We are now localized; look again for our docking station marker...");
 
-  // Look (again) for our docking station marker; should be just in front of us!
+  navigator_.stop();
+  ROS_INFO("Look (again) for our docking station marker; should be just in front of us!");
   timeout = false;
+
+  // It needs gracefull time to register docking station marker with localized position.
+  // have not found the better way to wait for robot to be localized yet.
+  ros::Duration(2.0).sleep();
   ros::Time t1 = ros::Time::now();
   while ((ar_markers_.spotDockMarker(base_marker_id) == false) && (timeout == false))
   {

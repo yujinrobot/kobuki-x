@@ -19,9 +19,9 @@
 #include <cafe_msgs/DeliverOrderAction.h>
 #include <yocs_msgs/TableList.h>
 
-#include "waiterbot_controller/ar_markers.hpp"
-#include "waiterbot_controller/nav_watchdog.hpp"
-#include "waiterbot_controller/navigator.hpp"
+#include "waiterbot_ctrl_cafe/ar_markers.hpp"
+#include "waiterbot_ctrl_cafe/nav_watchdog.hpp"
+#include "waiterbot_ctrl_cafe/navigator.hpp"
 
 namespace waiterbot
 {
