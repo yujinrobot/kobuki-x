@@ -95,8 +95,9 @@ private:
   void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
 
   bool getMarkerTf(const std::string& ref_frame, const std::string& prefix, uint32_t marker_id,
-                     const ros::Time& timestamp, tf::StampedTransform& tf);
-
+                     const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout);
+  bool getTf(const std::string& ref_frame, const std::string& marker_frame, 
+               const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout);
 };
 
 } /* namespace waiterbot */

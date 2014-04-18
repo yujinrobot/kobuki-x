@@ -85,7 +85,7 @@ void ARMarkersCafe::broadcastMarkersTF()
 
     for (unsigned int i = 0; i <global_markers_.markers.size(); i++)
     {
-      sprintf(child_frame, "%s_%d", i != docking_marker_.id?"global_marker":"docking_base", global_markers_.markers[i].id);
+      sprintf(child_frame, "%s_%d", "global_marker", global_markers_.markers[i].id);
       mtk::pose2tf(global_markers_.markers[i].pose, tf);
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
@@ -95,7 +95,7 @@ void ARMarkersCafe::broadcastMarkersTF()
 
     for (unsigned int i = 0; i <global_markers_mirrors.markers.size(); i++)
     {
-      sprintf(child_frame, "%s_%d", i != docking_marker_.id?"MIRROR":"MIRROR docking", i);
+      sprintf(child_frame, "%s_%d", "MIRROR", i);
       mtk::pose2tf(global_markers_mirrors.markers[i].pose, tf);
       tf.child_frame_id_ = child_frame;
       tf.stamp_ = ros::Time::now();
@@ -213,15 +213,32 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
       // Marker tf on global reference system
       tf::StampedTransform marker_gb;
       mtk::pose2tf(global_marker.pose, marker_gb);
+      tf::StampedTransform base_in_gb;
+
+      if (getTf(base_frame_, global_frame_, spotted_markers.markers[i].header.stamp, base_in_gb, 7.0) == false)
+      {
+        ROS_ERROR("Global marker spotted but we failed to get global marker -> map -> base_footprint tf");
+        continue;
+      }
+      tf::Transform marker_gb_in_base = base_in_gb * marker_gb;
 
       // Marker tf on robot base reference system
       tf::StampedTransform marker_bs;
-      if (getMarkerTf(base_frame_, "global_marker", global_marker.id, spotted_markers.markers[i].header.stamp, marker_bs) == false)
+      if (getMarkerTf(base_frame_, "ar_marker", spotted_markers.markers[i].id, spotted_markers.markers[i].header.stamp, marker_bs, 0.4) == false)
       {
         // This should not happen unless AR tracker made a mistake, as we are using the timestamp he reported
-        ROS_ERROR("Global marker spotted but we failed to get its tf");
+        ROS_ERROR("Global marker spotted but we failed to get spotted marker -> base_footprint tf");
         continue;
       }
+
+      // ar_track_alvar detects good position of marker. But orientation is really bad. 
+      // It is tweak to replace spotted global markers orientation to annotated global markers orientation
+      geometry_msgs::PoseStamped  spotted_global;
+      geometry_msgs::Pose annotated_global;
+      mtk::tf2pose(marker_gb_in_base, annotated_global);
+      mtk::tf2pose(marker_bs, spotted_global);
+      spotted_global.pose.orientation = annotated_global.orientation;
+      mtk::pose2tf(spotted_global, marker_bs); 
 
       // Calculate robot tf on global reference system multiplying the global marker tf (known a priori)
       // by marker tf on base reference system, that is, "subtract" the relative tf to the absolute one
@@ -256,7 +273,7 @@ bool ARMarkersCafe::spotDockMarker(uint32_t base_marker_id)
 
       // Get marker tf on global reference system
       tf::StampedTransform marker_gb;
-      if (getMarkerTf(global_frame_, "docking_base", base_marker_id, docking_marker_.pose.header.stamp, marker_gb) == false)
+      if (getMarkerTf(global_frame_, "ar_marker", base_marker_id, docking_marker_.pose.header.stamp, marker_gb, 0.5) == false)
       {
         // This should not happen unless AR tracker made a mistake, as we are using the timestamp he reported
         ROS_ERROR("Docking base marker spotted but we failed to get its tf");
@@ -280,15 +297,22 @@ bool ARMarkersCafe::spotDockMarker(uint32_t base_marker_id)
 }
 
 bool ARMarkersCafe::getMarkerTf(const std::string& ref_frame, const std::string& prefix, uint32_t marker_id,
-                               const ros::Time& timestamp, tf::StampedTransform& tf)
+                               const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout)
 {
   char marker_frame[32];
   sprintf(marker_frame, "%s_%d", prefix.c_str(), marker_id);
+  std::string target_frame(marker_frame);
 
+  return getTf(ref_frame, target_frame, timestamp, tf, timeout);
+}
+
+bool ARMarkersCafe::getTf(const std::string& ref_frame, const std::string& marker_frame, 
+                               const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout)
+{
   try
   {
     // Get marker tf on given reference system
-    tf_listener_.waitForTransform(ref_frame, marker_frame, timestamp, ros::Duration(0.05));
+    tf_listener_.waitForTransform(ref_frame, marker_frame, timestamp, ros::Duration(timeout));
     tf_listener_.lookupTransform(ref_frame, marker_frame, timestamp, tf);
 
     if (mtk::roll(tf) < -1.0)
@@ -303,11 +327,12 @@ bool ARMarkersCafe::getMarkerTf(const std::string& ref_frame, const std::string&
   }
   catch (tf::TransformException& e)
   {
-    ROS_WARN("Cannot get tf %s -> %s: %s", ref_frame.c_str(), marker_frame, e.what());
+    ROS_ERROR("Cannot get tf %s -> %s: %s", ref_frame.c_str(), marker_frame.c_str(), e.what());
     return false;
   }
   return true;
 }
+
 
 bool ARMarkersCafe::enableTracker()
 {
