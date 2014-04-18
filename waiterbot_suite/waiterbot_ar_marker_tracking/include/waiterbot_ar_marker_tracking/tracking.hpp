@@ -155,7 +155,6 @@ class ARMarkerTracking
     // Check if the given id is in the list of ar markers
     bool excluded(const uint32_t id, const ar_track_alvar::AlvarMarkers& v);
 
-  private:
     // Confidence evaluation attributes
     double min_penalized_dist_;
     double max_reliable_dist_;

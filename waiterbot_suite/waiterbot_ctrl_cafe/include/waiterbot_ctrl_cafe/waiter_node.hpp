@@ -87,7 +87,7 @@ protected:
   ros::Subscriber core_sensors_sub_;
   ros::Subscriber table_poses_sub_;
 
-  ARMarkers   ar_markers_;
+  ARMarkersCafe   ar_markers_;
   NavWatchdog nav_watchd_;
   Navigator   navigator_;
 

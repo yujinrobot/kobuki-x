@@ -175,7 +175,7 @@ bool Navigator::dockInBase_(const move_base_msgs::MoveBaseGoal& mb_goal)
   state_ = GLOBAL_DOCKING;
 
   // Keep an eye open to detect the marker as we approach it
-  if (ARMarkers::enableTracker() == false)
+  if (ARMarkersCafe::enableTracker() == false)
   {
     ROS_ERROR("Marker tracker not available; we cannot auto-dock!");
     return cleanupAndError();
@@ -272,7 +272,7 @@ bool Navigator::dockInBase_(const move_base_msgs::MoveBaseGoal& mb_goal)
     }
   }
 
-  if (ARMarkers::disableTracker() == false)
+  if (ARMarkersCafe::disableTracker() == false)
   {
     ROS_WARN("Unable to stop AR markers tracker; we are spilling a lot of CPU!");
   }
@@ -286,7 +286,7 @@ bool Navigator::dockInBase_(const move_base_msgs::MoveBaseGoal& mb_goal)
   if (state_ == GLOBAL_DOCKING)
   {
     ROS_WARN("Unable to spot docking base marker within the required distance");
-    if (base_marker_id_ < ARMarkers::MARKERS_COUNT)
+    if (base_marker_id_ < waiterbot::ARMarkersCafe::MARKERS_COUNT)
     {
       ROS_WARN("Last spot was %.2f seconds ago at %.2f meters",
                (ros::Time::now() - base_rel_pose_.header.stamp).toSec(), mtk::distance2D(base_rel_pose_.pose));
@@ -485,7 +485,8 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
           {
             // Do not moo at more than 0.1 Hz... we don't want to be bothersome...
             ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying", wait_for_pickup_point_);
-            if (play_sounds_) system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+            int result;
+            if (play_sounds_) result = system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + "/moo.wav").c_str());
 
             // Clear also the costmaps (at this point we have disabled recovery behaviors!)
             clearCostmaps();
@@ -714,8 +715,9 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
 
 bool Navigator::cleanupAndSuccess(const std::string& wav_file)
 {
+  int result;
   if ((wav_file.length() > 0) && (play_sounds_))
-    system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + wav_file).c_str());
+    result = system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + wav_file).c_str());
 
   // Revert to standard configuration after completing a task
   //  - clear costmaps, mostly to restore global map to source bitmap
@@ -743,7 +745,7 @@ bool Navigator::cleanupAndError()
   enableRecovery();
   cancelAllGoals(move_base_ac_);
   cancelAllGoals(auto_dock_ac_);
-  ARMarkers::disableTracker();
+  ARMarkersCafe::disableTracker();
   state_ = IDLE;
 
   return false;

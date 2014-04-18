@@ -133,10 +133,10 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
 {
   ROS_INFO("FAKE delivery order action requested [order: %d, table: %d]", order_id, table_id);
 
-  if (order_id == 11)       ar_markers_.setTrackerFreq(5);
-  if (order_id == 22)       ar_markers_.setTrackerFreq(10);
+//  if (order_id == 11)       ar_markers_.setTrackerFreq(5);
+//  if (order_id == 22)       ar_markers_.setTrackerFreq(10);
 
-  if (order_id == 33)       ar_markers_.setTrackerFreq(0);
+//  if (order_id == 33)       ar_markers_.setTrackerFreq(0);
 //  return;
 //  if (order_id == 1)       order_.status = cafe_msgs::Status::ERROR;
 //  if (order_id == 2)       order_.status = cafe_msgs::Status::WAITING_FOR_KITCHEN;
@@ -179,8 +179,8 @@ void WaiterNode::fakeOrderForEasyDebugging(int order_id, int table_id)
   if (order_id == 9)       boost::thread kk(&Navigator::turn, &navigator_, -M_PI*0.5);
   if (order_id == 10)      ar_markers_.enableTracker();
   if (order_id == 11)      ar_markers_.disableTracker();
-  if (order_id == 13)      ar_markers_.setTrackerFreq(11);
-  if (order_id == 14)      ar_markers_.setTrackerFreq(3);
+//  if (order_id == 13)      ar_markers_.setTrackerFreq(11);
+//  if (order_id == 14)      ar_markers_.setTrackerFreq(3);
 }
 //> DEBUG
 
