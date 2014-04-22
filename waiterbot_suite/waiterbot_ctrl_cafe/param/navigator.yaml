@@ -4,5 +4,5 @@ navigator:
   close_to_pickup_distance :   1.5     # At which distance from pickup point switch off recovery behavior  
   tables_serving_distance  :   0.4     # At which distance from the table we try to serve our orders
   wait_for_pickup_point    :   4.0     # How long to wait before retrying if the pickup point is busy
-  auto_docking_timeout     : 120.0     # How long to wait before retrying auto-docking operation
+  auto_docking_timeout     : 60.0     # How long to wait before retrying auto-docking operation
   go_to_pose_timeout       : 300.0     # How long to wait before assuming we failed to reach a goal
