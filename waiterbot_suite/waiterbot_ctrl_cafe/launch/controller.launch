@@ -51,7 +51,7 @@
 
   <!--  ************* Navigation manager **************  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_master_ctrl.launch">
-    <arg name="debug_mode" value="$(arg debug_mode"/>
+    <arg name="debug_mode" value="$(arg debug_mode)"/>
   </include>
 
   <!--  ************** Rosnav move base ***************  -->
