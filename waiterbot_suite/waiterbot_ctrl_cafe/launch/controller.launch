@@ -21,9 +21,7 @@
   <arg name="initial_pose_x" value="2.0"/>
   <arg name="initial_pose_y" value="2.0"/>
   <arg name="initial_pose_a" value="0.0"/>
-  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find waiterbot_ctrl_cafe)/custom_rosconsole.conf"/>
-
-
+  <arg name="debug_mode"     default="$(optenv DEBUG_MODE true)"/>
 
   <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
     <!-- We only need RGB images and pseudo laser scan -->
@@ -53,7 +51,7 @@
 
   <!--  ************* Navigation manager **************  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_master_ctrl.launch">
-    <arg name="debug_mode" value="true"/>
+    <arg name="debug_mode" value="$(arg debug_mode"/>
   </include>
 
   <!--  ************** Rosnav move base ***************  -->
