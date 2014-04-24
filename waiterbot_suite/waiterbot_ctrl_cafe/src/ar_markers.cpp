@@ -118,6 +118,12 @@ void ARMarkersCafe::broadcastMarkersTF()
   }
 }
 
+void ARMarkersCafe::publish_transform(const std::string parent, const std::string child,const tf::Transform& t)
+{
+  tf::StampedTransform tt(t, ros::Time::now(), parent, child);
+  tf_brcaster_.sendTransform(tt);
+}
+
 void ARMarkersCafe::arMarkerCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
 {
   ARMarkerTracking::arPoseMarkersCB(msg);
@@ -199,6 +205,11 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
     ar_track_alvar::AlvarMarker global_marker;
     if (included(spotted_markers.markers[i].id, global_markers_, &global_marker) == true)
     {
+
+      double dist = mtk::distance2D(global_marker.pose.pose, spotted_markers.markers[i].pose.pose);
+      ROS_INFO("Global Marker confidence = %.2f, pose_conf = %.2f",marker.confidence, global_pose_conf_);
+      ROS_INFO("Distance = %.2f", dist);
+
       // This is a global marker! infer robot's global pose and call registered callbacks if it's reliable enough
       if (marker.confidence <= global_pose_conf_)
       {
@@ -213,14 +224,6 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
       // Marker tf on global reference system
       tf::StampedTransform marker_gb;
       mtk::pose2tf(global_marker.pose, marker_gb);
-      tf::StampedTransform base_in_gb;
-
-      if (getTf(base_frame_, global_frame_, spotted_markers.markers[i].header.stamp, base_in_gb, 7.0) == false)
-      {
-        ROS_ERROR("Global marker spotted but we failed to get global marker -> map -> base_footprint tf");
-        continue;
-      }
-      tf::Transform marker_gb_in_base = base_in_gb * marker_gb;
 
       // Marker tf on robot base reference system
       tf::StampedTransform marker_bs;
@@ -231,18 +234,10 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
         continue;
       }
 
-      // ar_track_alvar detects good position of marker. But orientation is really bad. 
-      // It is tweak to replace spotted global markers orientation to annotated global markers orientation
-      geometry_msgs::PoseStamped  spotted_global;
-      geometry_msgs::Pose annotated_global;
-      mtk::tf2pose(marker_gb_in_base, annotated_global);
-      mtk::tf2pose(marker_bs, spotted_global);
-      spotted_global.pose.orientation = annotated_global.orientation;
-      mtk::pose2tf(spotted_global, marker_bs); 
-
       // Calculate robot tf on global reference system multiplying the global marker tf (known a priori)
       // by marker tf on base reference system, that is, "subtract" the relative tf to the absolute one
-      tf::Transform robot_gb = marker_gb*marker_bs.inverse();
+      tf::Transform robot_gb = marker_gb * marker_bs.inverse();
+      publish_transform("map", "robot",robot_gb);
       mtk::tf2pose(robot_gb, pwcs->pose.pose);
 
       pwcs->header.stamp = spotted_markers.markers[i].header.stamp;
@@ -253,6 +248,20 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
 
     }
   }
+}
+
+void ARMarkersCafe::print_stampedtransform(const std::string& name, tf::StampedTransform& t)
+{
+  tf::Vector3 p = t.getOrigin();
+  tf::Quaternion q = t.getRotation();
+  ROS_INFO("%s : %.2f %.2f %.2f,  %.2f %.2f %.2f %.2f ", name.c_str(), p.getX(),p.getY(), p.getZ(), q.getX(), q.getY(), q.getZ(), q.getW());
+}
+
+void ARMarkersCafe::print_transform(const std::string& name, tf::Transform& t)
+{
+  tf::Vector3 p = t.getOrigin();
+  tf::Quaternion q = t.getRotation();
+  ROS_INFO("%s : %.2f %.2f %.2f,  %.2f %.2f %.2f %.2f ", name.c_str(), p.getX(),p.getY(), p.getZ(), q.getX(), q.getY(), q.getZ(), q.getW());
 }
 
 bool ARMarkersCafe::spotDockMarker(uint32_t base_marker_id)

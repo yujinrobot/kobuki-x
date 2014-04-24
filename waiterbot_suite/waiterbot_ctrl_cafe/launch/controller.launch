@@ -60,12 +60,6 @@
   <!--  ******** Kobuki auto-docking controller *******  -->
   <include file="$(find waiterbot_bringup)/launch/includes/_autodock.launch"/>
 
-
-  <!--  ****** Geometric and semantic map servers *****  -->
-  <node name="map_server" pkg="map_server" type="map_server" args="$(find waiterbot_ctrl_cafe)/resources/maps/$(arg map_name).yaml">
-    <param name="frame_id" value="/map"/>
-  </node>
-
   <!--  ******************** Amcl *********************  -->
   <include file="$(find waiterbot_ctrl_cafe)/launch/includes/_amcl.launch">
     <arg name="scan_topic" value="scan"/>

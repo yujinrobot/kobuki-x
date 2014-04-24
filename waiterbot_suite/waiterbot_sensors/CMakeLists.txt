@@ -31,13 +31,13 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 ## IR Scan Library
-add_library(ir_scan_lib src/ir_scan/ir_scan.cpp)
-add_dependencies(ir_scan_lib adc_driver arduino_interface)
-target_link_libraries(ir_scan_lib ${catkin_LIBRARIES})
+add_library(waiter_sensor_ir_scan_lib src/ir_scan/ir_scan.cpp)
+add_dependencies(waiter_sensor_ir_scan_lib adc_driver arduino_interface)
+target_link_libraries(waiter_sensor_ir_scan_lib ${catkin_LIBRARIES})
 
-add_executable(ir_scan_node src/ir_scan/ir_scan_node.cpp)
-add_dependencies(ir_scan_node ir_scan_lib sensor_msgs_gencpp)
-target_link_libraries(ir_scan_node ir_scan_lib)
+add_executable(waiter_ir_scan_node src/ir_scan/ir_scan_node.cpp)
+add_dependencies(waiter_ir_scan_node waiter_sensor_ir_scan_lib sensor_msgs_gencpp)
+target_link_libraries(waiter_ir_scan_node waiter_sensor_ir_scan_lib)
 
 
 #############

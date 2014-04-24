@@ -25,7 +25,7 @@
   <node pkg="tf" type="static_transform_publisher" name="ir_link_publisher"
         args="0.0 0.0 0.09 0.0 0.0 0.0 $(arg base_link) /ir_link 100"/>
 
-  <node name="ir_to_laserscan" pkg="waiterbot_sensors" type="ir_scan_node">
+  <node name="ir_to_laserscan" pkg="waiterbot_sensors" type="waiter_ir_scan_node">
     <param name="arduino_port" value="/dev/arduino"/>
     <param name="maximum_range" value="0.35"/>
     <param name="infinity_range" value="6.0"/>

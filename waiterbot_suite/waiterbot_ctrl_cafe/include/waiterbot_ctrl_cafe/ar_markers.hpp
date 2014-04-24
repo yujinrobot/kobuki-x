@@ -98,6 +98,10 @@ private:
                      const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout);
   bool getTf(const std::string& ref_frame, const std::string& marker_frame, 
                const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout);
+
+  void print_transform(const std::string& name, tf::Transform& t);
+  void print_stampedtransform(const std::string& name, tf::StampedTransform& t);
+  void publish_transform(const std::string parent, const std::string child,const tf::Transform& t);
 };
 
 } /* namespace waiterbot */
