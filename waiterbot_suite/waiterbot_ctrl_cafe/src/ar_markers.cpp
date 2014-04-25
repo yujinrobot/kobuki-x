@@ -207,6 +207,7 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
     if (included(spotted_markers.markers[i].id, global_markers_, &global_marker) == true)
     {
 
+      /*
       ROS_INFO("Distance3d    = %.2f",marker.distance);
       ROS_INFO("Distance2d    = %.2f",marker.distance2d);
       ROS_INFO("Heading       = %.2f",marker.heading);
@@ -214,6 +215,7 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
       ROS_INFO("conf_heading  = %.2f",marker.conf_heading);
 
       ROS_INFO("Global Marker confidence = %.2f, pose_conf = %.2f",marker.confidence, global_pose_conf_);
+      */
 
       // This is a global marker! infer robot's global pose and call registered callbacks if it's reliable enough
       if (marker.confidence <= global_pose_conf_)

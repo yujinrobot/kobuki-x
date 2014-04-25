@@ -67,11 +67,12 @@ void NavWatchdog::arMarkerMsgCB(const geometry_msgs::PoseWithCovarianceStamped::
 
     // Check if the covariance of the pose is low enough to use it to (re)initialize amcl
     const boost::array<double, 36u>& cov = msg->pose.covariance;
+    /*
     if (max(cov[0], cov[1], cov[6], cov[7], cov[35]) > 0.05)
     {  // TODO: very arbitrary...
       ROS_WARN("Amcl not (re)initialized by AR marker because its cov. is not low enough");
       return;
-    }
+    }*/
 
     geometry_msgs::PoseWithCovarianceStamped pose = *msg;
     pose.header.stamp = ros::Time::now() + ros::Duration(0.1);
