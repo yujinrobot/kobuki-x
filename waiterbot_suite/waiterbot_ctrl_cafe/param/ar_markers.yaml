@@ -9,8 +9,8 @@ ar_markers:
   max_valid_h_inc    : 5.0  # Per second; will get divided by tracker frequency
   max_tracking_time  : 2.0  # In seconds
 
-  min_penalized_dist : 1.4  # Minimum penalized distance (1.0 confidence)
-  max_reliable_dist  : 2.8  # Maximum reliable distance (0.0 confidence)
+  min_penalized_dist : 0.3  # Minimum penalized distance (1.0 confidence)
+  max_reliable_dist  : 2.0  # Maximum reliable distance (0.0 confidence)
   min_penalized_head : 1.0  # Minimum penalized heading (1.0 confidence)
   max_reliable_head  : 1.4  # Maximum reliable heading (0.0 confidence)
 

@@ -67,6 +67,7 @@ private:
 
   double global_pose_conf_;
   double docking_base_conf_;
+  double global_pose_distance_max_;
 
   // Other attributes
   std::string global_frame_;

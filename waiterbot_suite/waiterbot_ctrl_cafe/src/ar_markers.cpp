@@ -47,6 +47,7 @@ bool ARMarkersCafe::init()
   pnh.param("ar_markers/min_penalized_head", min_penalized_head_, 1.0);
   pnh.param("ar_markers/max_reliable_head",  max_reliable_head_,  1.4);
 
+  pnh.param("ar_markers/global_pose_distance_max",   global_pose_distance_max_,   1.5);
   if (nh.getParam("ar_track_alvar/max_frequency", ar_tracker_freq_) == false)
   {
     ar_tracker_freq_ = 10.0;
@@ -206,9 +207,13 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
     if (included(spotted_markers.markers[i].id, global_markers_, &global_marker) == true)
     {
 
-      double dist = mtk::distance2D(global_marker.pose.pose, spotted_markers.markers[i].pose.pose);
+      ROS_INFO("Distance3d    = %.2f",marker.distance);
+      ROS_INFO("Distance2d    = %.2f",marker.distance2d);
+      ROS_INFO("Heading       = %.2f",marker.heading);
+      ROS_INFO("conf_distance = %.2f", marker.conf_distance);
+      ROS_INFO("conf_heading  = %.2f",marker.conf_heading);
+
       ROS_INFO("Global Marker confidence = %.2f, pose_conf = %.2f",marker.confidence, global_pose_conf_);
-      ROS_INFO("Distance = %.2f", dist);
 
       // This is a global marker! infer robot's global pose and call registered callbacks if it's reliable enough
       if (marker.confidence <= global_pose_conf_)
