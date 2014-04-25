@@ -247,6 +247,9 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
 
       pwcs->header.stamp = spotted_markers.markers[i].header.stamp;
       pwcs->header.frame_id = global_frame_;
+      pwcs->pose.covariance[6*0+0] = 0.5 * 0.5;
+      pwcs->pose.covariance[6*1+1] = 0.5 * 0.5;
+      pwcs->pose.covariance[6*5+5] = M_PI/12.0 * M_PI/12.0;
 
       //if (msg->markers[i].id == 1)
       robot_pose_cb_(pwcs);
