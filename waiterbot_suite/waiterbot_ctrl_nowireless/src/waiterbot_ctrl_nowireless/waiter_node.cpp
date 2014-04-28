@@ -87,6 +87,7 @@ bool WaiterIsolated::isInit() {
 
 void WaiterIsolated::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstPtr& msg)
 {
+  /*
   if(digital_input_first_time_ == false)
   {
     prev_digital_input = *msg;
@@ -115,7 +116,7 @@ void WaiterIsolated::digitalInputCB(const kobuki_msgs::DigitalInputEvent::ConstP
 
     // ignore any other cases
     prev_digital_input = *msg;
-  }
+  }*/
 }
 
 void WaiterIsolated::waypointsCB(const yocs_msgs::WaypointList::ConstPtr& msg)
