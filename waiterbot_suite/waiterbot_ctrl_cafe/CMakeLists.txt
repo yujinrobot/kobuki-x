@@ -3,7 +3,7 @@ project(waiterbot_ctrl_cafe)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED tf roscpp actionlib actionlib_msgs sensor_msgs move_base_msgs kobuki_msgs cafe_msgs yocs_msgs
-                             ar_track_alvar waiterbot_ar_marker_tracking yocs_math_toolkit)
+                             ar_track_alvar yocs_ar_marker_tracking yocs_math_toolkit)
 
 
 ## System dependencies are found with CMake's conventions
@@ -16,7 +16,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES waiterbot_ctrl_cafe
   CATKIN_DEPENDS tf roscpp actionlib actionlib_msgs sensor_msgs move_base_msgs kobuki_msgs cafe_msgs yocs_msgs
-                 ar_track_alvar yocs_math_toolkit waiterbot_ar_marker_tracking
+                 ar_track_alvar yocs_math_toolkit yocs_ar_marker_tracking
   DEPENDS Boost
 )
 

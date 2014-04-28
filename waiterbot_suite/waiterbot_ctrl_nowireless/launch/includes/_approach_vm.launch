@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="waiterbot_ar_pair_approach" type="approach.py" name="ar_pair_approach">
+  <node pkg="yocs_ar_pair_approach" type="approach.py" name="ar_pair_approach">
     <!-- <remap from="ar_pair_search/enable" to="somewhere/enable"/> -->
     <!-- <remap from="ar_pair_search/result" to="somewhere/result"/> -->
     

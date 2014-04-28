@@ -18,12 +18,12 @@
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <ar_track_alvar/AlvarMarkers.h>
-#include <waiterbot_ar_marker_tracking/tracking.hpp>
+#include <yocs_ar_marker_tracking/tracking.hpp>
 
 namespace waiterbot
 {
 
-class ARMarkersCafe : public ARMarkerTracking
+class ARMarkersCafe : public yocs::ARMarkerTracking
 {
 public:
   static const uint32_t MARKERS_COUNT;
@@ -59,7 +59,7 @@ public:
 
 
 protected:
-  void customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker> &tracked_markers);
+  void customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<yocs::TrackedMarker> &tracked_markers);
 
 private:
 

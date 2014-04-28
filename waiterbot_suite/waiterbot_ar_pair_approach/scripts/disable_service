@@ -1,3 +1,0 @@
-#!/bin/bash
-
-rostopic pub -1 /ar_pair_approach/enable std_msgs/Bool false

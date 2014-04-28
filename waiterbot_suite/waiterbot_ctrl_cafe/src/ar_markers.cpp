@@ -59,7 +59,7 @@ bool ARMarkersCafe::init()
   global_markers_sub_  = nh.subscribe(             "marker_pose_list", 1, &ARMarkersCafe::globalMarkersCB, this);
 
   // There are 18 different markers
-  tracked_markers_.resize(ARMarkerTrackingDefaultParams::MARKERS_COUNT);
+  tracked_markers_.resize(yocs::ARMarkerTrackingDefaultParams::MARKERS_COUNT);
 
   if (tf_broadcast_freq_ > 0.0)
   {
@@ -172,7 +172,7 @@ void ARMarkersCafe::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr
   }
 }
 
-void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<TrackedMarker> &tracked_markers)
+void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<yocs::TrackedMarker> &tracked_markers)
 {
   for(unsigned int i = 0; i < spotted_markers.markers.size(); i++)
   {
@@ -183,7 +183,7 @@ void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers
        continue;
     }
 
-    const TrackedMarker& marker = tracked_markers[spotted_markers.markers[i].id];
+    const yocs::TrackedMarker& marker = tracked_markers[spotted_markers.markers[i].id];
 
     // Docking spotted!!!
     if( spotted_markers.markers[i].id == docking_marker_.id)
