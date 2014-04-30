@@ -15,9 +15,11 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   // wait for semantic pose initialization
   waitForPoses();
 
+  float wait = 0.3;
+
   // 0. wakeup or leave nest WaiterNode::wakeUp,leaveNest
   sendFeedback(cafe_msgs::Status::GO_TO_KITCHEN);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
   if (getReadyToWork() == false)
   {
     return setFailure("Waiter failed to get ready to work");
@@ -29,9 +31,9 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter failed to go to pickup place");
   }
   sendFeedback(cafe_msgs::Status::ARRIVE_KITCHEN);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_KITCHEN);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
   
   // 2. Wait for button
   if (waitForButton() == false)
@@ -46,9 +48,9 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter failed to go to table");
   }
   sendFeedback(cafe_msgs::Status::ARRIVE_TABLE);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
 
   // 4. wait for button
   if (waitForButton() == false)
@@ -56,9 +58,9 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter didn't receive the button from customer");
   }
   sendFeedback(cafe_msgs::Status::COMPLETE_DELIVERY);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::RETURNING_TO_DOCK);
-  ros::Duration(1).sleep();
+  ros::Duration(wait).sleep();
 
   // 5. return to dock Navigator::dockInBase
   if (navigator_.dockInBase(ar_markers_.getDockingBasePose()) == false)
@@ -67,7 +69,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   }
 
   sendFeedback(cafe_msgs::Status::END_DELIVERY_ORDER);
-  ros::Duration(1).sleep();
+  ros::Duration(0.5).sleep();
 
   return setSucceeded("Delivery successfully completed (hopefully...)");
 }

@@ -54,6 +54,7 @@ private:
   ros::Subscriber status_sub_;  /**< Status information on the goals sent to the move_base */
   ros::Subscriber result_sub_;  /**< Result is empty for the move_base action */
   ros::Subscriber n_goal_sub_;  /**< A goal for move_base to pursue in the world */
+  ros::Subscriber predicted_pose_sub_;
 
   ros::Publisher init_pose_pub_;
   ros::Publisher cancel_goal_pub_;

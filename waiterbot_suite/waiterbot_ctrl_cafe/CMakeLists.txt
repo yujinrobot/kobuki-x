@@ -31,9 +31,11 @@ add_executable(waiterbot_ctrl_cafe_node src/waiter_node.cpp
                                         src/waiter_tasks.cpp
                                         src/waiter_delivery_handles.cpp
                                         src/waiter_callbacks.cpp
-                                        src/ar_markers.cpp
-                                        src/nav_watchdog.cpp
-                                        src/navigator.cpp)
+                                        src/ar_markers/ar_markers.cpp
+                                        src/ar_markers/ar_marker_utils.cpp
+                                        src/ar_markers/tf_handlers.cpp
+                                        src/nav/nav_watchdog.cpp
+                                        src/nav/navigator.cpp)
 
 
 ## Add cmake target dependencies of the executable/library
