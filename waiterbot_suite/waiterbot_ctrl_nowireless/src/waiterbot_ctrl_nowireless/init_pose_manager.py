@@ -22,14 +22,14 @@ class InitPoseManager(object):
         if self._simulation:
             rospy.loginfo("InitPoseManager: Running in simulation mode.")
 
-        self._sub_init = rospy.Subscriber('~initialise', std_msgs.Empty, self._initCB)
-        self._pub_result = rospy.Publisher('~initialised', std_msgs.Empty, latch=True)
         if not self._simulation:
             self._client = dynamic_reconfigure.client.Client(rospy.get_param('~pose_tracker', 'ar_track_alvar'))
             self._sub_tracked_poses = rospy.Subscriber('pose_tracker/poses', geometry_msgs.PoseWithCovarianceStamped,
                                                        self._trackedPosesCB)
         self._pub_init_pose = rospy.Publisher('fake_localization/initialpose', geometry_msgs.PoseWithCovarianceStamped,
                                               latch=True)
+        self._pub_result = rospy.Publisher('~initialised', std_msgs.Empty, latch=True)
+        self._sub_init = rospy.Subscriber('~initialise', std_msgs.Empty, self._initCB)
 
     def _trackedPosesCB(self, msg):
         if self._initialise:
