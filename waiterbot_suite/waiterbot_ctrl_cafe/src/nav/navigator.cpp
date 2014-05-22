@@ -351,7 +351,7 @@ bool Navigator::dockInBase_(const move_base_msgs::MoveBaseGoal& mb_goal)
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
     ROS_INFO("Successfully docked...  zzz...   zzz...");
-    return cleanupAndSuccess("yawn.wav");
+    return cleanupAndSuccess("at_charger.wav");
   }
   else
   {
@@ -444,7 +444,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At pickup point! Waiting for 맛있는 커피...");
-      return cleanupAndSuccess("pab.wav");
+      return cleanupAndSuccess("at_kitchen.wav");
     }
     else
     {
@@ -616,7 +616,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
           if (std::abs(to_turn) > 0.3)
             turn(to_turn);
 
-          return cleanupAndSuccess("kaku.wav");
+          return cleanupAndSuccess("at_goal.wav");
         }
         else if (distance_to_goal < close_to_delivery_distance_)
         {
@@ -663,7 +663,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At delivery point! Waiting for user confirmation...");
-      return cleanupAndSuccess("kaku.wav");
+      return cleanupAndSuccess("at_goal.wav");
     }
     else if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::PREEMPTED)
     {
@@ -686,7 +686,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
       {
         // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???  TODO-OOOOOOOOOOOOOOOOO!!!!
         ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-        return cleanupAndSuccess("kaku.wav");
+        return cleanupAndSuccess("at_goal.wav");
       }
       else
       {

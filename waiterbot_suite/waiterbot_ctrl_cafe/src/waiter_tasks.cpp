@@ -22,14 +22,14 @@ bool WaiterNode::waitForPoses()
 
 bool WaiterNode::getReadyToWork()
 {
-  if (initialized_)
-  {
-    return leaveNest();
-  }
-  else
-  {
+//  if (initialized_)
+//  {
+//    return leaveNest();
+//  }
+//  else
+//  {
     return wakeUp();
-  }
+//  }
 }
 
 bool WaiterNode::waitForButton()

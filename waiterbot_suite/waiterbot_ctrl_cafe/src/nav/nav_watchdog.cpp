@@ -187,6 +187,7 @@ bool NavWatchdog::init()
   amcl_p_sub_ = nh.subscribe("amcl_pose", 1, &NavWatchdog::amclPoseMsgCB, this);
   init_p_sub_ = nh.subscribe("amcl_init", 1, &NavWatchdog::initPoseMsgCB, this);
   n_goal_sub_ = nh.subscribe("new_goal",  1, &NavWatchdog::newGoalMsgCB,  this);
+  predicted_pose_sub_ = nh.subscribe("predicted_robot_pose", 1, &NavWatchdog::arMarkerMsgCB, this);
 
   init_pose_pub_   = nh.advertise <geometry_msgs::PoseWithCovarianceStamped> ("reset_pose",  1);
   cancel_goal_pub_ = nh.advertise <actionlib_msgs::GoalID>                   ("cancel_goal", 1);
