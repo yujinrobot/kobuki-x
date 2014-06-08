@@ -22,6 +22,10 @@ bool WaiterNode::init()
   pnh.param("debug_mode",   debug_mode_,   false);
   pnh.param("global_frame", global_frame_, std::string("map"));
 
+  pnh.param("resources_path", resources_path_, std::string("/"));
+  if (resources_path_[resources_path_.length() - 1] != '/')
+    resources_path_ += "/";
+
   // register the goal and preempt callbacks
   as_.registerGoalCallback(boost::bind(&WaiterNode::deliverOrderCB, this));
   as_.registerPreemptCallback(boost::bind(&WaiterNode::preemptOrderCB, this));

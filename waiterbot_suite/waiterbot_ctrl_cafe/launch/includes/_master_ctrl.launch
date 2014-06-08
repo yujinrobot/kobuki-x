@@ -17,7 +17,7 @@
     <param name="global_frame" value="/map"/>
     <param name="odom_frame" value="odom"/>
     <param name="base_frame" value="base_footprint"/>
-    <param name="resources_path" value="$(find waiterbot_ctrl_cafe)/resources"/>
+    <param name="resources_path" value="$(find waiterbot_ctrl_cafe)/resources/default"/>
     <param name="play_sounds" value="true"/>
     <param name="debug_mode" value="$(arg debug_mode)"/>
     

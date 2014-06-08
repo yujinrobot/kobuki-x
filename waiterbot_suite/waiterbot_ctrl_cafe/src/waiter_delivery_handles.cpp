@@ -15,7 +15,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   // wait for semantic pose initialization
   waitForPoses();
 
-  float wait = 0.3;
+  float wait = 0.1;
 
   // 0. wakeup or leave nest WaiterNode::wakeUp,leaveNest
   sendFeedback(cafe_msgs::Status::GO_TO_KITCHEN);
@@ -31,6 +31,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter failed to go to pickup place");
   }
   sendFeedback(cafe_msgs::Status::ARRIVE_KITCHEN);
+  playSound(SoundParam::KITCHEN_ARRIVAL);
   ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_KITCHEN);
   ros::Duration(wait).sleep();
@@ -40,6 +41,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   {
     return setFailure("Waiter didn't receive the button from kitchen");
   }
+  playSound(SoundParam::BY_YOUR_COMMAND);
   sendFeedback(cafe_msgs::Status::IN_DELIVERY);
 
   // 3. goto table     Navigator::deliverOrder
@@ -48,6 +50,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter failed to go to table");
   }
   sendFeedback(cafe_msgs::Status::ARRIVE_TABLE);
+  playSound(SoundParam::TABLE_ARRIVAL);
   ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION);
   ros::Duration(wait).sleep();
@@ -57,6 +60,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   {
     return setFailure("Waiter didn't receive the button from customer");
   }
+  playSound(SoundParam::THANK_YOU_AND_ENJOY);
   sendFeedback(cafe_msgs::Status::COMPLETE_DELIVERY);
   ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::RETURNING_TO_DOCK);
@@ -67,7 +71,7 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
   {
     return setFailure("Waiter failed to go back to nest");
   }
-
+  playSound(SoundParam::STANDING_BY);
   sendFeedback(cafe_msgs::Status::END_DELIVERY_ORDER);
   ros::Duration(0.5).sleep();
 
@@ -131,4 +135,10 @@ void WaiterNode::sendFeedback(int feedback_status)
   order_.status = feedback_status;
 }
 
+
+void WaiterNode::playSound(const std::string& wav_file) {
+  int result;
+  if ((wav_file.length() > 0))
+    result = system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + wav_file).c_str());
+}
 } // namespace waiterbot

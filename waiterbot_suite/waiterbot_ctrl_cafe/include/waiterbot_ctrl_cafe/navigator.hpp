@@ -22,6 +22,9 @@
 
 #include <yocs_math_toolkit/common.hpp>
 #include <yocs_math_toolkit/geometry.hpp>
+
+#include "waiterbot_ctrl_cafe/waiter_sound.hpp"
+
 /*
   ActionClient
     move_base
@@ -256,7 +259,7 @@ private:
    */
   bool dockInBase_(const move_base_msgs::MoveBaseGoal& move_base_goal);
 
-  bool cleanupAndSuccess(const std::string& wav_file = "");
+  bool cleanupAndSuccess();
   bool cleanupAndError();
 
   tf::StampedTransform getOdomTf();

@@ -22,6 +22,7 @@
 #include "waiterbot_ctrl_cafe/ar_markers.hpp"
 #include "waiterbot_ctrl_cafe/nav_watchdog.hpp"
 #include "waiterbot_ctrl_cafe/navigator.hpp"
+#include "waiterbot_ctrl_cafe/waiter_sound.hpp"
 
 namespace waiterbot
 {
@@ -96,6 +97,7 @@ protected:
   kobuki_msgs::SensorState   core_sensors_;
   cafe_msgs::Order           order_;
   std::string                global_frame_;
+  std::string                resources_path_;
 
   // LED blinking attributes; TODO make a separate HRI class
   double blink_frequency_;
@@ -118,6 +120,7 @@ protected:
   void sendFeedback(int feedback_status);
   bool setSucceeded(std::string message);
   bool setFailure(std::string message);
+  void playSound(const std::string& wav_file); 
 
   bool cleanupAndSuccess();
   bool cleanupAndError();

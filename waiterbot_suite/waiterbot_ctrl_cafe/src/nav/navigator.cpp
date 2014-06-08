@@ -351,7 +351,7 @@ bool Navigator::dockInBase_(const move_base_msgs::MoveBaseGoal& mb_goal)
   if (auto_dock_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
     ROS_INFO("Successfully docked...  zzz...   zzz...");
-    return cleanupAndSuccess("at_charger.wav");
+    return cleanupAndSuccess();
   }
   else
   {
@@ -444,7 +444,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At pickup point! Waiting for 맛있는 커피...");
-      return cleanupAndSuccess("at_kitchen.wav");
+      return cleanupAndSuccess();
     }
     else
     {
@@ -486,7 +486,7 @@ bool Navigator::pickUpOrder(const geometry_msgs::PoseStamped& pickup_pose)
             // Do not moo at more than 0.1 Hz... we don't want to be bothersome...
             ROS_INFO("Pickup point looks crowded... wait for %.2f seconds before retrying", wait_for_pickup_point_);
             int result;
-            if (play_sounds_) result = system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + "/moo.wav").c_str());
+            if (play_sounds_) result = system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + SoundParam::STAND_ASIDE).c_str());
 
             // Clear also the costmaps (at this point we have disabled recovery behaviors!)
             clearCostmaps();
@@ -616,7 +616,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
           if (std::abs(to_turn) > 0.3)
             turn(to_turn);
 
-          return cleanupAndSuccess("at_goal.wav");
+          return cleanupAndSuccess();
         }
         else if (distance_to_goal < close_to_delivery_distance_)
         {
@@ -663,7 +663,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
     if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
       ROS_INFO("At delivery point! Waiting for user confirmation...");
-      return cleanupAndSuccess("at_goal.wav");
+      return cleanupAndSuccess();
     }
     else if (move_base_ac_.getState() == actionlib::SimpleClientGoalState::PREEMPTED)
     {
@@ -686,7 +686,7 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
       {
         // Busy sector surrounds the table! use our crappy delivery fallback;  maybe increase tables_serving_distance_ and retry???  TODO-OOOOOOOOOOOOOOOOO!!!!
         ROS_INFO("All delivery points looks busy (%d attempts). Just stand and cry...", attempts);
-        return cleanupAndSuccess("at_goal.wav");
+        return cleanupAndSuccess();
       }
       else
       {
@@ -713,12 +713,8 @@ bool Navigator::deliverOrder(const geometry_msgs::PoseStamped& table_pose, doubl
   } while (true);
 }
 
-bool Navigator::cleanupAndSuccess(const std::string& wav_file)
+bool Navigator::cleanupAndSuccess()
 {
-  int result;
-  if ((wav_file.length() > 0) && (play_sounds_))
-    result = system(("rosrun waiterbot_ctrl_cafe play_sound.bash " + resources_path_ + wav_file).c_str());
-
   // Revert to standard configuration after completing a task
   //  - clear costmaps, mostly to restore global map to source bitmap
   //  - (re)enable safety controller for normal operation
