@@ -17,7 +17,7 @@ subscribers:
   - name:        "Teleoperation"
     topic:       "input/teleop"
     timeout:     1.0
-    priority:    8
+    priority:    3
   - name:        "Waiterbot control"
     topic:       "input/special_task"
     timeout:     1.0
@@ -29,5 +29,5 @@ subscribers:
   - name:        "Navigation"
     topic:       "input/navigation"
     timeout:     1.0
-    priority:    3
+    priority:    8
 publisher: "/mobile_base/commands/velocity"

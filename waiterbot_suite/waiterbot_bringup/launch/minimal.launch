@@ -5,6 +5,7 @@
   <arg name="concert_whitelist" default="$(optenv HUB_WHITELIST Cafe Concert)"/>
 
 
+  <!--
   <include file="$(find rocon_app_manager)/launch/concert_client.launch">
     <arg name="concert_whitelist" value="$(arg concert_whitelist)"/>
     <arg name="robot_name" value="$(arg robot_name)"/>
@@ -12,6 +13,7 @@
     <arg name="rapp_package_whitelist" value="$(arg rapp_package_whitelist)"/>
     <arg name="screen" value="true"/>
   </include>
+  -->
   
   <arg name="base"       value="kobuki"/>
   <arg name="battery"    value="/sys/class/power_supply/BAT0"/>
