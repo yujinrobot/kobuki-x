@@ -12,12 +12,12 @@ DWAPlannerROS:
   max_trans_vel: 0.55
   min_trans_vel: 0.0
 
-  max_rot_vel: 1.5  # 1.0
+  max_rot_vel: 5.0  # 1.0
   min_rot_vel: 0.4  # could set this lower
   # DEPRECATED? min_in_place_vel_theta: 0.6  # TrajectoryPlannerRos
   
   acc_lim_x: 0.5 
-  acc_lim_theta: 5.0 
+  acc_lim_theta: 2.4  # 1.0 
   acc_lim_y: 0.0      # diff drive robot
 
 # Goal Tolerance Parameters
