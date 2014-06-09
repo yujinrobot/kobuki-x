@@ -3,4 +3,5 @@
   <include file="$(find waiterbot_bringup)/launch/minimal.launch"/>
   <include file="$(find waiterbot_ctrl_cafe)/launch/controller.launch"/>
   <include file="$(find waiterbot_ctrl_cafe)/launch/cafe_database.launch"/>
+  <!-- <include file="$(find waiterbot_ctrl_cafe)/launch/control_database.launch"/> -->
 </launch>
