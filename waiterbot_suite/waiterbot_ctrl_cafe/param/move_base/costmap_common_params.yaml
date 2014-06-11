@@ -3,8 +3,9 @@ obstacle_range: 2.0  # half map side
 raytrace_range: 2.5
 
 #inflation_layer:
-robot_radius: 0.18
+robot_radius: 0.20
 inflation_radius: 0.40
+cost_scaling_factor: 5
 
 #obstacles_layer:
 # voxel map configuration; z-voxels 0, 1, 2 and 4 are filled respectivelly by bumpers, ir_scan, kn_scan and vs_scan
