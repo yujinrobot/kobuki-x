@@ -34,7 +34,7 @@ void ARMarkersCafe::broadcastMarkersTF()
   }
 }
   
-void ARMarkersCafe::publishMarkerTFs(const std::string prefix, const ar_track_alvar::AlvarMarkers& markers)
+void ARMarkersCafe::publishMarkerTFs(const std::string prefix, const ar_track_alvar_msgs::AlvarMarkers& markers)
 {
   char child_frame[32];
   tf::StampedTransform tf;
@@ -50,7 +50,7 @@ void ARMarkersCafe::publishMarkerTFs(const std::string prefix, const ar_track_al
   }
 }
 
-void ARMarkersCafe::publishTargetTFs(const std::string prefix, const ar_track_alvar::AlvarMarkers& markers)
+void ARMarkersCafe::publishTargetTFs(const std::string prefix, const ar_track_alvar_msgs::AlvarMarkers& markers)
 {
   char parent_frame[32];
   char child_frame[32];

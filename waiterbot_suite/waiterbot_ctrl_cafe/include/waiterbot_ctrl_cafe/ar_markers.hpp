@@ -17,7 +17,7 @@
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <ar_track_alvar/AlvarMarkers.h>
+#include <ar_track_alvar_msgs/AlvarMarkers.h>
 #include <yocs_ar_marker_tracking/tracking.hpp>
 #include <yocs_msgs/ARPair.h>
 #include <yocs_msgs/ARPairList.h>
@@ -36,7 +36,7 @@ public:
   bool init();
 
 
-  void arMarkerCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
+  void arMarkerCB(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg);
   void setRobotPoseCB(boost::function<void (const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)> cb);
   void baseSpottedCB(boost::function<void (const geometry_msgs::PoseStamped::ConstPtr&, uint32_t)> cb);
 
@@ -48,32 +48,32 @@ public:
   static bool enableTracker();
   static bool disableTracker();
 
-  bool spotted(double younger_than, double min_confidence, ar_track_alvar::AlvarMarkers& spotted_markers);
-  bool closest(double younger_than, double min_confidence, ar_track_alvar::AlvarMarker& closest_marker);
-  bool spotted(double younger_than, const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarkers& spotted_markers);
-  bool closest(const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarker& closest_marker);
+  bool spotted(double younger_than, double min_confidence, ar_track_alvar_msgs::AlvarMarkers& spotted_markers);
+  bool closest(double younger_than, double min_confidence, ar_track_alvar_msgs::AlvarMarker& closest_marker);
+  bool spotted(double younger_than, const ar_track_alvar_msgs::AlvarMarkers& including, const ar_track_alvar_msgs::AlvarMarkers& excluding, ar_track_alvar_msgs::AlvarMarkers& spotted_markers);
+  bool closest(const ar_track_alvar_msgs::AlvarMarkers& including, const ar_track_alvar_msgs::AlvarMarkers& excluding, ar_track_alvar_msgs::AlvarMarker& closest_marker);
 
 
-  bool spotted(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar::AlvarMarkers& spotted_markers);
-  bool closest(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar::AlvarMarker& closest_marker);
+  bool spotted(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar_msgs::AlvarMarkers& spotted_markers);
+  bool closest(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar_msgs::AlvarMarker& closest_marker);
 
 
 
 
 protected:
-  void customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<yocs::TrackedMarker> &tracked_markers);
+  void customCB(const ar_track_alvar_msgs::AlvarMarkers& spotted_markers, const std::vector<yocs::TrackedMarker> &tracked_markers);
 
   void broadcastMarkersTF();
-    void publishMarkerTFs(const std::string prefix, const ar_track_alvar::AlvarMarkers& markers);
-    void publishTargetTFs(const std::string prefix, const ar_track_alvar::AlvarMarkers& markers);
+    void publishMarkerTFs(const std::string prefix, const ar_track_alvar_msgs::AlvarMarkers& markers);
+    void publishTargetTFs(const std::string prefix, const ar_track_alvar_msgs::AlvarMarkers& markers);
 
-  void globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
+  void globalMarkersCB(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg);
     void createFixedMarkers();
     void createMirrorMarkers();
     void notifyARPairTracker();
 
 
-  void arPoseMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg);
+  void arPoseMarkersCB(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg);
 
   bool getMarkerTf(const std::string& ref_frame, const std::string& prefix, uint32_t marker_id,
                      const ros::Time& timestamp, tf::StampedTransform& tf, const float timeout);
@@ -101,8 +101,8 @@ private:
   tf::TransformBroadcaster tf_brcaster_;
   double                   tf_broadcast_freq_;  /**< Allows enabling tf broadcasting; mostly for debug */
 
-  ar_track_alvar::AlvarMarker  docking_marker_;  /**< AR markers described in the semantic map */
-  ar_track_alvar::AlvarMarkers global_markers_, global_markers_fix_, global_markers_mirrors;  /**< AR markers described in the semantic map */
+  ar_track_alvar_msgs::AlvarMarker  docking_marker_;  /**< AR markers described in the semantic map */
+  ar_track_alvar_msgs::AlvarMarkers global_markers_, global_markers_fix_, global_markers_mirrors;  /**< AR markers described in the semantic map */
 
   bool               tracker_enabled_;
   ros::Subscriber    tracked_markers_sub_;

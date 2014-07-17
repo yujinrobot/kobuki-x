@@ -18,7 +18,7 @@ void ARMarkersCafe::createMirrorMarkers()
                            tf::Vector3(1.0, 0.0, 0.0));
     marker_gb *= in_front;
 
-    ar_track_alvar::AlvarMarker kk;
+    ar_track_alvar_msgs::AlvarMarker kk;
     mtk::tf2pose(marker_gb, kk.pose);
     global_markers_mirrors.markers.push_back(kk);
 
@@ -31,30 +31,30 @@ void ARMarkersCafe::createFixedMarkers()
   global_markers_fix_ = global_markers_;
   for(unsigned int i=0; i < global_markers_.markers.size(); i++)
   {
-    ar_track_alvar::AlvarMarker m = global_markers_.markers[i];
+    ar_track_alvar_msgs::AlvarMarker m = global_markers_.markers[i];
     m.id = m.id - 3;
     global_markers_fix_.markers.push_back(m);
   }
 }
 
-bool ARMarkersCafe::spotted(double younger_than, double min_confidence, ar_track_alvar::AlvarMarkers& spotted_markers)
+bool ARMarkersCafe::spotted(double younger_than, double min_confidence, ar_track_alvar_msgs::AlvarMarkers& spotted_markers)
 {
   return ARMarkerTracking::spotted(younger_than, min_confidence, spotted_markers);
 }
-bool ARMarkersCafe::closest(double younger_than, double min_confidence, ar_track_alvar::AlvarMarker& closest_marker)
+bool ARMarkersCafe::closest(double younger_than, double min_confidence, ar_track_alvar_msgs::AlvarMarker& closest_marker)
 {
   return ARMarkerTracking::closest(younger_than, min_confidence, closest_marker);
 }
-bool ARMarkersCafe::spotted(double younger_than, const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarkers& spotted_markers)
+bool ARMarkersCafe::spotted(double younger_than, const ar_track_alvar_msgs::AlvarMarkers& including, const ar_track_alvar_msgs::AlvarMarkers& excluding, ar_track_alvar_msgs::AlvarMarkers& spotted_markers)
 {
   return ARMarkerTracking::spotted(younger_than, including, excluding, spotted_markers);
 }
-bool ARMarkersCafe::closest(const ar_track_alvar::AlvarMarkers& including, const ar_track_alvar::AlvarMarkers& excluding, ar_track_alvar::AlvarMarker& closest_marker)
+bool ARMarkersCafe::closest(const ar_track_alvar_msgs::AlvarMarkers& including, const ar_track_alvar_msgs::AlvarMarkers& excluding, ar_track_alvar_msgs::AlvarMarker& closest_marker)
 {
   return ARMarkerTracking::closest(including, excluding, closest_marker);
 }
 
-bool ARMarkersCafe::spotted(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar::AlvarMarkers& spotted)
+bool ARMarkersCafe::spotted(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar_msgs::AlvarMarkers& spotted)
 {
   ROS_INFO("Spotted MArker Size = %d",(int)spotted_markers_.markers.size());
   if (spotted_markers_.markers.size() == 0)
@@ -63,7 +63,7 @@ bool ARMarkersCafe::spotted(double younger_than, double min_confidence, bool exc
   if ((ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec() >= younger_than)
   {
     // We must check the timestamp from an element in the markers list, as the one on message's header is always zero!
-    // WARNING: parameter younger_than must be high enough, as ar_track_alvar publish at Kinect rate but only updates
+    // WARNING: parameter younger_than must be high enough, as ar_track_alvar_msgs publish at Kinect rate but only updates
     // timestamps about every 0.1 seconds (and now we can set it to run slower, as frequency is a dynamic parameter!)
     ROS_WARN("Spotted markers too old:   %f  >=  %f",   (ros::Time::now() - spotted_markers_.markers[0].header.stamp).toSec(), younger_than);
     return false;
@@ -89,9 +89,9 @@ bool ARMarkersCafe::spotted(double younger_than, double min_confidence, bool exc
   return (spotted.markers.size() > 0);
 }
 
-bool ARMarkersCafe::closest(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar::AlvarMarker& closest)
+bool ARMarkersCafe::closest(double younger_than, double min_confidence, bool exclude_globals, ar_track_alvar_msgs::AlvarMarker& closest)
 {
-  ar_track_alvar::AlvarMarkers spotted_markers;
+  ar_track_alvar_msgs::AlvarMarkers spotted_markers;
   if (spotted(younger_than, min_confidence, exclude_globals, spotted_markers) == false)
     return false;
 

@@ -69,7 +69,7 @@ bool WaiterNode::wakeUp()
   // Move back until we detect the AR marker identifying this robot's docking station
   bool timeout = false;
   ros::Time t0 = ros::Time::now();
-  ar_track_alvar::AlvarMarkers spotted_markers;
+  ar_track_alvar_msgs::AlvarMarkers spotted_markers;
   while ((ar_markers_.spotted(1.0, 0.3, true, spotted_markers) == false) && (timeout == false))
   {
     if ((ros::Time::now() - t0).toSec() < SPOT_BASE_MARKER_TIMEOUT)
@@ -98,7 +98,7 @@ bool WaiterNode::wakeUp()
     // Possible fallback: assume that odom + robot radius + docking base width is its pose
   }
 
-  ar_track_alvar::AlvarMarker closest_marker;
+  ar_track_alvar_msgs::AlvarMarker closest_marker;
   ar_markers_.closest(1.0, 0.3, true, closest_marker);
   ROS_INFO("Docking station AR marker %d spotted! Look for a global marker to find where I am...", closest_marker.id);
 

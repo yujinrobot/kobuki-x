@@ -78,12 +78,12 @@ bool ARMarkersCafe::init()
   return true;
 }
 
-void ARMarkersCafe::arMarkerCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
+void ARMarkersCafe::arMarkerCB(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg)
 {
   ARMarkerTracking::arPoseMarkersCB(msg);
 }
 
-void ARMarkersCafe::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr& msg)
+void ARMarkersCafe::globalMarkersCB(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg)
 {
   // Just take first message; ignore the rest, as global markers list is not dynamic
   global_markers_ = *msg;
@@ -95,7 +95,7 @@ void ARMarkersCafe::globalMarkersCB(const ar_track_alvar::AlvarMarkers::ConstPtr
   notifyARPairTracker();
 }
 
-void ARMarkersCafe::customCB(const ar_track_alvar::AlvarMarkers& spotted_markers, const std::vector<yocs::TrackedMarker> &tracked_markers)
+void ARMarkersCafe::customCB(const ar_track_alvar_msgs::AlvarMarkers& spotted_markers, const std::vector<yocs::TrackedMarker> &tracked_markers)
 {
   for(unsigned int i = 0; i < spotted_markers.markers.size(); i++)
   {
@@ -136,7 +136,7 @@ void ARMarkersCafe::notifyARPairTracker()
   // Instead, it use the given global marker id as left id and leftid -3 as right id.
   for(i = 0; i < global_markers_.markers.size(); i++)
   {
-    ar_track_alvar::AlvarMarker m = global_markers_.markers[i];
+    ar_track_alvar_msgs::AlvarMarker m = global_markers_.markers[i];
     yocs_msgs::ARPair p;
     char frame[32];
     sprintf(frame, "%s_%d_%s", global_marker_prefix_.c_str(), m.id, target_frame_postfix_.c_str());
@@ -162,7 +162,7 @@ bool ARMarkersCafe::spotDockMarker(uint32_t base_marker_id)
     {
       if (tracked_markers_[spotted_markers_.markers[i].id].confidence < 0.3)
       {
-        ROS_WARN("Low confidence on spotted docking marker. Very dangerous...",
+        ROS_WARN("Low confidence[%.2f] on spotted docking marker. Very dangerous...",
                  tracked_markers_[spotted_markers_.markers[i].id].confidence);
       }
 
