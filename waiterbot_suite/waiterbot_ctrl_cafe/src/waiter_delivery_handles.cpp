@@ -31,10 +31,10 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter failed to go to pickup place");
   }
   sendFeedback(cafe_msgs::Status::ARRIVE_KITCHEN);
-  playSound(SoundParam::KITCHEN_ARRIVAL);
   ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_KITCHEN);
   ros::Duration(wait).sleep();
+  playSound(SoundParam::KITCHEN_ARRIVAL);
   
   // 2. Wait for button
   if (waitForButton() == false)
@@ -50,10 +50,10 @@ bool WaiterNode::processOrder(cafe_msgs::Order& order)
     return setFailure("Waiter failed to go to table");
   }
   sendFeedback(cafe_msgs::Status::ARRIVE_TABLE);
-  playSound(SoundParam::TABLE_ARRIVAL);
   ros::Duration(wait).sleep();
   sendFeedback(cafe_msgs::Status::WAITING_FOR_USER_CONFIRMATION);
   ros::Duration(wait).sleep();
+  playSound(SoundParam::TABLE_ARRIVAL);
 
   // 4. wait for button
   if (waitForButton() == false)
