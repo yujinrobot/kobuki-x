@@ -15,4 +15,3 @@ catkin_package()
 ## Install ##
 #############
 
-# TODO

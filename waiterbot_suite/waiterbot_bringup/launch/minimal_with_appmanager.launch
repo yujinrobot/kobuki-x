@@ -1,7 +1,7 @@
 <launch>
   <arg name="robot_name" default="$(optenv ROBOT_NAME whoola)"/>
   <arg name="robot_type" default="waiterbot|turtlebot"/>
-  <arg name="rapp_package_whitelist" default="[rocon_apps, ces_rapps, cafe_rapps]"/>
+  <arg name="rapp_package_whitelist" default="[rocon_apps, ces_rapps, cafe_rapps, office_rapps]"/>
   <arg name="concert_whitelist" default="$(optenv HUB_WHITELIST Cafe Concert)"/>
 
 
