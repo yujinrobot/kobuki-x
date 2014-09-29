@@ -5,7 +5,7 @@
 
 import copy
 import rospy
-import kobuki_msgs.msg import DigitalInputEvent
+from kobuki_msgs.msg import DigitalInputEvent
 
 SUB_DIGITAL_INPUT = '~digital_input'
 
@@ -25,7 +25,7 @@ class ButtonControl(object):
 
     def __init__(self, callback):
         self.sub = rospy.Subscriber(SUB_DIGITAL_INPUT, DigitalInputEvent, self._process_digital_input)
-        self._previous_button None
+        self._previous_button = None
         self.callback = callback
 
     def _process_digital_input(self, msg):

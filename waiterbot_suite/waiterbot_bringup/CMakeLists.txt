@@ -9,7 +9,9 @@ find_package(catkin REQUIRED COMPONENTS)
 ###################################
 ## catkin specific configuration ##
 ###################################
+catkin_python_setup()
 catkin_package()
+
 
 #############
 ## Install ##
