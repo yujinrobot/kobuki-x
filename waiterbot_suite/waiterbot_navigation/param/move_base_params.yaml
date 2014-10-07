@@ -21,8 +21,8 @@ base_local_planner: "dwa_local_planner/DWAPlannerROS"
 recovery_behavior_enabled: true
 
 recovery_behaviors:
-  - name: 'stepping_back'
-    type: 'stepback_recovery/StepbackRecovery'
+  #- name: 'stepping_back'
+   # type: 'stepback_recovery/StepbackRecovery'
   - name: 'super_conservative_reset1'
     type: 'clear_costmap_recovery/ClearCostmapRecovery'
   - name: 'conservative_reset1'
