@@ -3,7 +3,7 @@
   <name>waiterbot_navigation</name>
   <version>0.0.1</version>
   <description>The waiterbot_navigation package</description>
-
+  <author>Mehdi Tlili</author>
   <maintainer email="mehdi.tlili@gmail.com">Mehdi Tlili</maintainer>
   <license>BSD</license>
   <buildtool_depend>catkin</buildtool_depend>
