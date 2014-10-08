@@ -26,10 +26,8 @@
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
   </include>
 
-  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
-  <!-- Include ir_sensors into the costmap -->
-  <rosparam file="$(find waiterbot_navigation)/param/ir_costmap_params.yaml" command="load" ns="move_base/global_costmap"/>
-  <rosparam file="$(find waiterbot_navigation)/param/ir_costmap_params.yaml" command="load" ns="move_base/local_costmap"/>
-
-</launch>
+  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
+    <arg name="custom_param_file" value="$(find waiterbot_navigation)/param/ir_costmap_params.yaml"/>
+  </include>
+ </launch>
 
