@@ -1,0 +1,11 @@
+<launch>
+  <arg name="map_file" default="$(find turtlebot_navigation)/maps/willow-2010-02-18-0.10.yaml"/> 
+  <arg name="custom_param_file" default="$(find waiterbot_navigation)/param/ir_costmap_params.yaml"/>
+<!-- Additional sensors -->    
+  <include file="$(find waiterbot_sensors)/launch/ir_sensors.launch"/>
+  
+  <include file="$(find turtlebot_navigation)/launch/amcl_demo.launch">
+    <arg name="custom_param_file" value="$(arg custom_param_file)"/>
+    <arg name="map_file" value="$(arg map_file)"/>
+  </include>
+</launch>
