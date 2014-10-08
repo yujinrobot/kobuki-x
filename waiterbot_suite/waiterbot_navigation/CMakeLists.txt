@@ -11,4 +11,3 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-catkin_add_env_hooks(25.waiterbot-navigation SHELLS sh DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
