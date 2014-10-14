@@ -28,7 +28,7 @@ class DockingARTracker : public yocs::ARMarkerTracking
     bool isDockRegistered();
     bool enableTracker();
     bool disableTracker();
-    bool setClosestAsDockingMarker();
+    bool setClosestAsDockingMarker(int& id);
     bool registerDockingOnGlobalFrame(const std::string global_frame, const std::string base_frame, std::string& message);
     void getRobotDockPose(geometry_msgs::PoseStamped& pose);
     bool isDockMarkerSpotted(geometry_msgs::PoseStamped& pose, std::string& message);

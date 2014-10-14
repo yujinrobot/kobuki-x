@@ -38,7 +38,12 @@ void DockingInteractor::wakeUp(double distance)
   }
  
   bmc_->backward(distance);
-  success = docking_ar_tracker_->setClosestAsDockingMarker();
+  int id;
+  success = docking_ar_tracker_->setClosestAsDockingMarker(id);
+
+  std::stringstream ss;
+  ss << id << "has been registered as Docking marker"; 
+  loginfo(ss.str());
 
   docking_ar_tracker_->disableTracker();
 

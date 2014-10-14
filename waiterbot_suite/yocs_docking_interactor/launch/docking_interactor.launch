@@ -20,8 +20,8 @@
     <param name="base_frame"                value="$(arg base_frame)"/>
     <param name="auto_dock_timeout"         value="$(arg auto_dock_timeout)"/>
     <remap from="cmd_vel"                 to="$(arg cmd_vel_mux_input)"/>
-    <remap from="odom_topic"              to="$(arg odom_topic)"/>
-    <remap from="global_ar_pair_topic"    to="$(arg global_ar_pair_topic)"/>
+    <remap from="odom"                    to="$(arg odom_topic)"/>
+    <remap from="global_markers"          to="$(arg global_ar_pair_topic)"/>
   </node>
 
   <!-- move base & Vel smoother-->

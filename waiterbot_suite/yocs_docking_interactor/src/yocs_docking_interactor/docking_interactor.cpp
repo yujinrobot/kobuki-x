@@ -37,7 +37,7 @@ bool DockingInteractor::init()
   // global marker subscriber
   loginfo("Wait for docking ar tracker");
   docking_ar_tracker_.reset(new DockingARTracker(nh_));
-  while(ros::ok() && docking_ar_tracker_->isReady()) {
+  while(ros::ok() && !docking_ar_tracker_->isReady()) {
     ros::spinOnce();
     ros::Duration(0.5).sleep();
   }

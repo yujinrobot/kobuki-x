@@ -67,6 +67,7 @@ class DockingInteractor {
     boost::shared_ptr<DockingInteractorActionServer> as_command_;
     boost::shared_ptr<KobukiAutoDockActionClient> ac_auto_dock_;
     boost::shared_ptr<MoveBaseActionClient> ac_move_base_;
+    //yocs_navigator::BasicMoveController bmc_;
     boost::shared_ptr<yocs_navigator::BasicMoveController> bmc_;
 
     boost::thread command_process_thread_; 

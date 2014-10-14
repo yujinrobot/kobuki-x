@@ -47,13 +47,17 @@ bool DockingARTracker::reset()
 
 void DockingARTracker::processGlobalMarkers(const ar_track_alvar_msgs::AlvarMarkers::ConstPtr& msg)
 {
-  global_markers_ = *msg;
 
-  for(unsigned int i=0; i < global_markers_.markers.size(); i++)
+  for(unsigned int i=0; i < msg->markers.size(); i++)
   {
-    ar_track_alvar_msgs::AlvarMarker m = global_markers_.markers[i];
-    m.id = m.id - 3;
-    global_markers_.markers.push_back(m);
+    ar_track_alvar_msgs::AlvarMarker m_right, m_left;
+
+    m_right = msg->markers[i];
+    m_left = msg->markers[i];
+    m_left.id = m_left.id -3;
+
+    global_markers_.markers.push_back(m_right);
+    global_markers_.markers.push_back(m_left);
   }
 
   global_marker_received_ = true;
@@ -63,10 +67,13 @@ void DockingARTracker::customCB(const ar_track_alvar_msgs::AlvarMarkers& spotted
 {
 }
 
-bool DockingARTracker::setClosestAsDockingMarker()
+bool DockingARTracker::setClosestAsDockingMarker(int& id)
 {
+  bool success;
   // the closest ar marker is the docking marker.
-  return ARMarkerTracking::closest(1.0, min_confidence_, global_markers_,  docking_marker_in_robot_frame_);
+  success = ARMarkerTracking::closest(1.0, min_confidence_, global_markers_,  docking_marker_in_robot_frame_);
+  id = docking_marker_in_robot_frame_.id;
+  return success;
 }
 
 bool DockingARTracker::registerDockingOnGlobalFrame(const std::string global_frame, const std::string base_frame,  std::string& message)
