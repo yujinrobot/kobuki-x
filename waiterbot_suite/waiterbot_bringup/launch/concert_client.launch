@@ -43,7 +43,7 @@
   <arg name="robot_description"                 default="Kick-ass ROS turtle"/>
 
   <!-- Capabilities --> 
-  <arg name="capabilities"                      default="true"/> <!-- enable/disable a capability server -->
+  <arg name="capabilities"                      default="false"/> <!-- enable/disable a capability server -->
   <arg name="capabilities_parameters"           default="$(find turtlebot_bringup)/param/capabilities/defaults_tb2.yaml" /> <!-- defaults_tb.yaml, defaults_tb2.yaml -->
   <arg name="capabilities_package_whitelist"    default="[kobuki_capabilities, std_capabilities, turtlebot_capabilities]" /> <!-- get capabilities from these packages only -->
   <arg name="capabilities_blacklist"            default="['std_capabilities/Navigation2D', 'std_capabilities/MultiEchoLaserSensor']" /> <!-- blacklist specific capabilities -->
@@ -62,7 +62,6 @@
 
   <!-- Rapp Manager Concert Client mode -->
   <include file="$(find rocon_app_manager)/launch/concert_client.launch">
-
     <!-- Rapp Manager --> 
     <arg name="robot_name"                        value="$(arg robot_name)" />
     <arg name="robot_type"                        value="$(arg robot_type)" />
