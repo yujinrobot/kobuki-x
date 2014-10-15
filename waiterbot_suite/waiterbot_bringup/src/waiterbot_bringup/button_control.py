@@ -23,8 +23,8 @@ def check_button_event(prev, curr):
 
 class ButtonControl(object):
 
-    def __init__(self, callback):
-        self.sub = rospy.Subscriber(SUB_DIGITAL_INPUT, DigitalInputEvent, self._process_digital_input)
+    def __init__(self, digital_input_topic, callback):
+        self.sub = rospy.Subscriber(digital_input_topic, DigitalInputEvent, self._process_digital_input)
         self._previous_button = None
         self.callback = callback
 
