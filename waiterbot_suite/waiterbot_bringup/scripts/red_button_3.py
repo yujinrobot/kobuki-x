@@ -11,7 +11,7 @@ import kobuki_msgs.msg
 if __name__ == '__main__':
     rospy.init_node('dummy_buttons')
 
-    input_pub = rospy.Publisher('/mobile_base/events/digital_input', kobuki_msgs.msg.DigitalInputEvent)
+    input_pub = rospy.Publisher('/mobile_base/events/digital_input', kobuki_msgs.msg.DigitalInputEvent, queue_size=10)
     rospy.sleep(0.5)
 
     m = kobuki_msgs.msg.DigitalInputEvent()
