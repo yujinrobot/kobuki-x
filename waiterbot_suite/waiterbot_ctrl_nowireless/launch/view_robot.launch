@@ -1,6 +1,0 @@
-<!--
-  Use this for visualise the Waiterbot in RViz
- -->
-<launch>
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find waiterbot_ctrl_nowireless)/rviz/view_robot.rviz"/>
-</launch>
