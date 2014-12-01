@@ -1,6 +1,0 @@
-free_thresh: 0.196
-image: yujin.pgm
-negate: 0
-occupied_thresh: 0.65
-origin: [-3.75, -5.349999999999999, 0.0]
-resolution: 0.05
