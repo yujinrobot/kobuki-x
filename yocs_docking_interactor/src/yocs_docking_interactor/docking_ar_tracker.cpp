@@ -95,18 +95,29 @@ bool DockingARTracker::registerDockingOnGlobalFrame(const std::string global_fra
 
   try
   {
+    ROS_INFO_STREAM("" << current_dock_marker);
     geometry_msgs::PoseStamped after;
     docking_marker_in_robot_frame_ = current_dock_marker;
+    docking_marker_in_robot_frame_.pose.header = docking_marker_in_robot_frame_.header;
+    docking_marker_in_robot_frame_.pose.header.stamp = ros::Time::now();
     docking_marker_in_global_frame_ = docking_marker_in_robot_frame_;
+    ROS_INFO_STREAM("" << docking_marker_in_robot_frame_);
 
-    getDockPoseInGlobal(global_frame, docking_marker_in_robot_frame_.pose, after);
+    ROS_INFO("Get dock pose in global");
+    getDockPoseInGlobal(global_frame, base_frame, docking_marker_in_robot_frame_.pose, after);
+
+    ROS_INFO("Got get Dock pose in global frame");
     docking_marker_in_global_frame_.header = after.header;
     docking_marker_in_global_frame_.pose = after;
     getRobotPose(global_frame, base_frame, robot_dock_pose_);
+
+    ROS_INFO("Got robot pose");
   }catch(tf::TransformException& e)
   {
 //    ROS_ERROR("Cannot get tf %s -> %s : %s", docking_marker_in_robot_frame_.pose.header.frame_id.c_str(), global_frame.c_str(), e.what());
-    message = "cannot get tranform to global frame";
+    std::stringstream ss;
+    ss << "cannot get tranform to global frame. " << "Global Frame[" <<global_frame << "] base frame["<<base_frame <<"] " << e.what();
+    message = ss.str();
     return false;
   }
 
@@ -115,12 +126,49 @@ bool DockingARTracker::registerDockingOnGlobalFrame(const std::string global_fra
   return true;
 }
 
-void DockingARTracker::getDockPoseInGlobal(const std::string& global_frame, const geometry_msgs::PoseStamped before, geometry_msgs::PoseStamped& pose)
+void DockingARTracker::getDockPoseInGlobal(const std::string& global_frame, const std::string& base_frame, const geometry_msgs::PoseStamped before, geometry_msgs::PoseStamped& pose)
 {
-  geometry_msgs::PoseStamped after;
+  geometry_msgs::PoseStamped a;
+/*
+  ROS_INFO_STREAM("global frame : " << global_frame);
+  ROS_INFO_STREAM("before : " << before);
+  tf_listener_.waitForTransform(global_frame, before.header.frame_id, before.header.stamp, ros::Duration(1.0));
+  ROS_INFO_STREAM("Transform watied");
   tf_listener_.transformPose(global_frame, before, after);
+*/
+  tf::StampedTransform tf_global_frame_to_base_frame;
+  tf::Transformer transformer;
+  ROS_INFO("look up transform global base");
+  tf_listener_.waitForTransform(global_frame, base_frame, ros::Time(0), ros::Duration(0.5));
+  tf_listener_.lookupTransform(global_frame, base_frame, ros::Time(0), tf_global_frame_to_base_frame);
 
-  pose = after;
+  mtk::tf2pose(tf_global_frame_to_base_frame, a);
+  
+  ROS_INFO_STREAM(""<< a);
+  //tf_global_frame_to_base_frame.stamp_ = ros::Time::now();
+  //ROS_INFO_STREAM("GLOBAL to base : " << tf_global_frame_to_base_frame);
+  transformer.setTransform(tf_global_frame_to_base_frame);
+
+  tf::StampedTransform tf_marker_to_base;
+  geometry_msgs::PoseStamped dock_marker_in_base;
+  ROS_INFO("Transform camera to base");
+  tf_listener_.transformPose(base_frame, before, dock_marker_in_base);
+  mtk::pose2tf(dock_marker_in_base, tf_marker_to_base);
+  tf_marker_to_base.child_frame_id_ = "dock";
+  ROS_INFO_STREAM("Base to Marker : " << dock_marker_in_base);
+  tf_marker_to_base.stamp_ = ros::Time::now();
+  transformer.setTransform(tf_marker_to_base);
+
+  tf::StampedTransform tf_dock_to_global;
+  //ROS_INFO("lookup between global to base");
+//  transformer.lookupTransform(global_frame,  base_frame, ros::Time(0), tf_dock_to_global);
+  ROS_INFO("lookup between base to dock");
+  transformer.lookupTransform(base_frame,  "dock", ros::Time(0), tf_dock_to_global);
+    
+  mtk::tf2pose(tf_dock_to_global, pose);
+  ROS_INFO_STREAM("Pose in global " << pose);
+
+//  pose = after;
 }
 
 void DockingARTracker::getRobotPose(const std::string& global_frame, const std::string& base_frame, geometry_msgs::PoseStamped& pose) {

@@ -9,6 +9,8 @@ namespace yocs_docking_interactor {
 void DockingInteractor::processCommand(yocs_msgs::DockingInteractorGoal::ConstPtr goal)
 {
   int command = goal->command;
+  bool success;
+  std::string message;
 
   switch(command) {
     case yocs_msgs::DockingInteractorGoal::WAKE_UP:
@@ -19,6 +21,14 @@ void DockingInteractor::processCommand(yocs_msgs::DockingInteractorGoal::ConstPt
       break;
     case yocs_msgs::DockingInteractorGoal::RETURN_TO_DOCK:
       returnToDock();
+      break;
+    case yocs_msgs::DockingInteractorGoal::GOTO_DOCK_FRONT:
+      success = moveToDockFront(message);
+      terminateCommand(success, message);
+      break;
+    case yocs_msgs::DockingInteractorGoal::CALL_AUTODOCK:
+      success = callAutoDock(message);
+      terminateCommand(success, message);
       break;
     default:
       terminateCommand(false,"Unknown command");
@@ -42,7 +52,7 @@ void DockingInteractor::wakeUp(double distance)
   success = docking_ar_tracker_->setClosestAsDockingMarker(id);
 
   std::stringstream ss;
-  ss << id << "has been registered as Docking marker"; 
+  ss << id << " has been registered as Docking marker"; 
   loginfo(ss.str());
 
   docking_ar_tracker_->disableTracker();
@@ -103,6 +113,9 @@ bool DockingInteractor::callAutoDock(std::string& message)
   {
     if ((ros::Time::now() - t1).toSec() < auto_dock_timeout_)
     {
+    }
+    else if((ros::Time::now() - t0).toSec() < auto_dock_timeout_ * 1.5)
+    {
       if (retry == false)
       {
         // Go back a bit and retry for an extra half timeout period  TODO really poor-man recovery...
@@ -110,6 +123,7 @@ bool DockingInteractor::callAutoDock(std::string& message)
     
         std::stringstream ss;
         ss << "Cannot auto-dock after " << std::setprecision(3) << (ros::Time::now() - t1).toSec() << " seconds; current state is "<< ac_auto_dock_->getState().toString() << ". Going backward to retry...";
+        loginfo(ss.str());
         sendFeedback(yocs_msgs::DockingInteractorFeedback::WARN,ss.str()); 
         retry = true;
         t1 = ros::Time::now();
@@ -121,6 +135,12 @@ bool DockingInteractor::callAutoDock(std::string& message)
                (ros::Time::now() - t0).toSec(), ac_auto_dock_->getState().toString().c_str());
       break;
     }
+
+    if(as_command_->isPreemptRequested())
+    {
+      break;
+    }
+
   }
   if (ac_auto_dock_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
@@ -145,26 +165,32 @@ bool DockingInteractor::moveToDockFront(std::string& message)
   ros::Time t0;
 
   while(!dock_infront) {
-    switch(state) { 
-      case START_GLOBAL_DOCKING:
-        state = startGlobalNaviToDock();
-        t0 = ros::Time::now();
-        break;
-      case GLOBAL_DOCKING:
-        state = underGlobalNavigation();
-        break;
-      case CANCEL_GLOBAL_NAVIGATION_AND_START_MARKER_DOCKING:
-        state = startSpottedMarkerBasedNaivgation();
-        break;
-      case MARKER_DOCKING:
-        state = underSpottedMarkerBasedNavigation(); 
-        break;
-      case TERMINATE_GLOBAL_DOCKING:
-      case TERMINATE_MARKER_DOCKING:
-      case TERMINATE_ON_ERROR:
-        dock_infront = true;
-      default:
-        break;
+    if(as_command_->isPreemptRequested())
+    {
+      cancelAllGoals(*ac_move_base_);
+    }
+    else {
+      switch(state) { 
+        case START_GLOBAL_DOCKING:
+          state = startGlobalNaviToDock();
+          t0 = ros::Time::now();
+          break;
+        case GLOBAL_DOCKING:
+          state = underGlobalNavigation();
+          break;
+        case CANCEL_GLOBAL_NAVIGATION_AND_START_MARKER_DOCKING:
+          state = startSpottedMarkerBasedNaivgation();
+          break;
+        case MARKER_DOCKING:
+          state = underSpottedMarkerBasedNavigation(); 
+          break;
+        case TERMINATE_GLOBAL_DOCKING:
+        case TERMINATE_MARKER_DOCKING:
+        case TERMINATE_ON_ERROR:
+          dock_infront = true;
+        default:
+          break;
+      }
     }
   }
 

@@ -44,7 +44,7 @@
   <arg name="robot_description"                 default="Kick-ass ROS turtle"/>
 
   <!-- Capabilities --> 
-  <arg name="capabilities"                      default="true"/> <!-- enable/disable a capability server -->
+  <arg name="capabilities"                      default="false"/> <!-- enable/disable a capability server -->
   <arg name="capabilities_server_name"          default="capability_server"/>
   <arg name="capabilities_nodelet_manager_name" default="capability_server_nodelet_manager" />
   <arg name="capabilities_parameters"           default="$(find turtlebot_bringup)/param/capabilities/defaults_tb2.yaml" /> <!-- defaults_tb.yaml, defaults_tb2.yaml -->
@@ -52,7 +52,7 @@
   <arg name="capabilities_blacklist"            default="['std_capabilities/Navigation2D', 'std_capabilities/MultiEchoLaserSensor']" /> <!-- blacklist specific capabilities -->
 
   <!-- Interactions --> 
-  <arg name="interactions"      default="true"/>
+  <arg name="interactions"      default="false"/>
   <arg name="interactions_list" default="$(optenv INTERACTIONS_LIST [turtlebot_bringup/admin.interactions, turtlebot_bringup/documentation.interactions, turtlebot_bringup/pairing.interactions])"/>
 
   <!-- Zeroconf -->
