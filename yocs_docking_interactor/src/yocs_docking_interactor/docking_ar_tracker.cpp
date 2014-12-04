@@ -126,49 +126,34 @@ bool DockingARTracker::registerDockingOnGlobalFrame(const std::string global_fra
   return true;
 }
 
-void DockingARTracker::getDockPoseInGlobal(const std::string& global_frame, const std::string& base_frame, const geometry_msgs::PoseStamped before, geometry_msgs::PoseStamped& pose)
+void DockingARTracker::getDockPoseInGlobal(const std::string& global_frame, const std::string& base_frame, const geometry_msgs::PoseStamped dock, geometry_msgs::PoseStamped& pose)
 {
-  geometry_msgs::PoseStamped a;
-/*
-  ROS_INFO_STREAM("global frame : " << global_frame);
-  ROS_INFO_STREAM("before : " << before);
-  tf_listener_.waitForTransform(global_frame, before.header.frame_id, before.header.stamp, ros::Duration(1.0));
-  ROS_INFO_STREAM("Transform watied");
-  tf_listener_.transformPose(global_frame, before, after);
-*/
+
+  // somehow it is better to wait 1 or 2sec to get the latest base pose in map frame. Without waiting, it gets old transform which is no longer valid.
+  ros::Duration(2.0).sleep();
+
+  // get global frame to base transform 
   tf::StampedTransform tf_global_frame_to_base_frame;
   tf::Transformer transformer;
-  ROS_INFO("look up transform global base");
-  tf_listener_.waitForTransform(global_frame, base_frame, ros::Time(0), ros::Duration(0.5));
+  tf_listener_.waitForTransform(global_frame, base_frame, ros::Time(0), ros::Duration(1.0));
   tf_listener_.lookupTransform(global_frame, base_frame, ros::Time(0), tf_global_frame_to_base_frame);
-
-  mtk::tf2pose(tf_global_frame_to_base_frame, a);
-  
-  ROS_INFO_STREAM(""<< a);
-  //tf_global_frame_to_base_frame.stamp_ = ros::Time::now();
-  //ROS_INFO_STREAM("GLOBAL to base : " << tf_global_frame_to_base_frame);
   transformer.setTransform(tf_global_frame_to_base_frame);
 
+  // get base to docking marker transform
   tf::StampedTransform tf_marker_to_base;
   geometry_msgs::PoseStamped dock_marker_in_base;
   ROS_INFO("Transform camera to base");
-  tf_listener_.transformPose(base_frame, before, dock_marker_in_base);
+  tf_listener_.transformPose(base_frame, dock, dock_marker_in_base);
   mtk::pose2tf(dock_marker_in_base, tf_marker_to_base);
   tf_marker_to_base.child_frame_id_ = "dock";
-  ROS_INFO_STREAM("Base to Marker : " << dock_marker_in_base);
   tf_marker_to_base.stamp_ = ros::Time::now();
   transformer.setTransform(tf_marker_to_base);
 
+  // get transform from map to docking marker
   tf::StampedTransform tf_dock_to_global;
-  //ROS_INFO("lookup between global to base");
-//  transformer.lookupTransform(global_frame,  base_frame, ros::Time(0), tf_dock_to_global);
-  ROS_INFO("lookup between base to dock");
   transformer.lookupTransform(base_frame,  "dock", ros::Time(0), tf_dock_to_global);
     
   mtk::tf2pose(tf_dock_to_global, pose);
-  ROS_INFO_STREAM("Pose in global " << pose);
-
-//  pose = after;
 }
 
 void DockingARTracker::getRobotPose(const std::string& global_frame, const std::string& base_frame, geometry_msgs::PoseStamped& pose) {
