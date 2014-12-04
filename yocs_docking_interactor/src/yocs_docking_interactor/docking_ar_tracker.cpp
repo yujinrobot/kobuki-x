@@ -130,7 +130,7 @@ void DockingARTracker::getDockPoseInGlobal(const std::string& global_frame, cons
 {
 
   // somehow it is better to wait 1 or 2sec to get the latest base pose in map frame. Without waiting, it gets old transform which is no longer valid.
-  ros::Duration(2.0).sleep();
+  ros::Duration(3.0).sleep();
 
   // get global frame to base transform 
   tf::StampedTransform tf_global_frame_to_base_frame;
