@@ -16,6 +16,7 @@ VM_ORDER_RESULT     = 'drink_order_result'
 VM_DRINK_ORDER            = 'drink_order'
 
 ENABLE_AR_PAIR_APPROACH = 'enable_ar_pair_approach'
+DISABLE_AR_PAIR_APPROACH = 'disable_ar_pair_approach'
 RESULT_AR_PAIR_APPROACH = 'result_ar_pair_approach'
 
 class VendingMachineInteractor(object):
@@ -29,6 +30,7 @@ class VendingMachineInteractor(object):
         
         self._thread = None
         self._wait_for_drink_timeout = 10.0
+        self._cancel_requested = False
 
         self._init_params()
         self._init_ros_handles()
@@ -57,6 +59,7 @@ class VendingMachineInteractor(object):
 
         # AR Pair Approach
         self._pub[ENABLE_AR_PAIR_APPROACH] = rospy.Publisher(ENABLE_AR_PAIR_APPROACH, std_msgs.String, queue_size=2)
+        self._pub[DISABLE_AR_PAIR_APPROACH] = rospy.Publisher(DISABLE_AR_PAIR_APPROACH, std_msgs.String, queue_size=2)
         self._sub[RESULT_AR_PAIR_APPROACH] = rospy.Subscriber(RESULT_AR_PAIR_APPROACH, std_msgs.Bool, self._process_ar_pair_approach_result)
 
     def _create_target_frame(self):
@@ -88,9 +91,11 @@ class VendingMachineInteractor(object):
         else:
             message = "Invalid Command %s"%str(goal.command) 
             self._send_result(False, message)
+        self._cancel_requested = False
     
     def _process_interactor_preempt(self): 
         self.logwarn('Received Preempt Request')
+        self._cancel_requested = True
 
     def _process_ar_pair_approach_result(self, msg):
         self._ar_pair_approach_result = msg
@@ -101,9 +106,14 @@ class VendingMachineInteractor(object):
         self.loginfo("target frame : %s"%self._vending_machine_target_frame)
         self._pub[ENABLE_AR_PAIR_APPROACH].publish(self._vending_machine_target_frame)
 
-        while not self._ar_pair_approach_result and not rospy.is_shutdown():
+        while not self._ar_pair_approach_result and not self._cancel_requested and not rospy.is_shutdown():
             rospy.sleep(0.1)
         self._update_tracker(False)
+
+        if self._cancel_requested == True:
+            self._pub[ENABLE_AR_PAIR_APPROACH].publish()
+            self._send_result(False, "Preempted!")
+            return
 
         if self._ar_pair_approach_result.data:
             self._send_result(True, "Success")
@@ -143,7 +153,7 @@ class VendingMachineInteractor(object):
     def _wait_for_drink(self):
         t1 = rospy.Time.now()
 
-        while not self._drink_received and not rospy.is_shutdown():
+        while not self._drink_received and not self._cancel_requested and not rospy.is_shutdown():
             t2 = rospy.Time.now()
 
             #if (t2 - t1) > rospy.Duration.from_sec(self._wait_for_drink_timeout):
@@ -151,6 +161,9 @@ class VendingMachineInteractor(object):
             #    self.loginfo(rospy.Duration.from_sec(self._wait_for_drink_timeout))
             #    return False
             rospy.sleep(0.1)
+
+        if self._cancel_requested == True:
+            return False
 
         return True
 

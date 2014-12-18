@@ -7,6 +7,7 @@
   <arg name="odom_topic"/>
   <arg name="robot_cmd_feed"/>
   <arg name="base_frame"/>
+  <arg name="odom_frame"/>
   <arg name="vm_interactor_action"      default="vm_interactor"/>
   <arg name="vel_smoother_param"        default="$(find yocs_vm_interactor)/params/vel_smoother_pose_controller.yaml"/>
 
@@ -19,12 +20,14 @@
   </node>
 
   <node pkg="yocs_ar_pair_approach" type="approach.py" name="ar_pair_approach">
+    <param name="odom_frame"      value="$(arg odom_frame)"/>
+
     <!--<remap from="ar_pair_approach/initialise"       to="$(arg predicted_robot_pose_topic)"/>-->
     <remap from="ar_pair_approach/enable"           to="enable_ar_pair_approach"/>
+    <remap from="ar_pair_approach/disable"           to="disable_ar_pair_approach"/>
     <remap from="ar_pair_approach/result"           to="result_ar_pair_approach"/>
     <remap from="ar_pair_approach/cmd_vel"          to="$(arg cmd_vel_mux_input)"/>
     <remap from="ar_pair_approach/spotted_markers"  to="$(arg spotted_markers_topic)"/>
-    <remap from="ar_pair_approach/relative_target_pose" to="$(arg relative_target_pose_topic)"/>
   </node>
 
   <node pkg="nodelet" type="nodelet" name="pose_controller_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet /mobile_base_nodelet_manager">
@@ -35,20 +38,22 @@
   </node>
 
   <node pkg="nodelet" type="nodelet" name="diff_drive_pose_controller" args="load yocs_diff_drive_pose_controller/DiffDrivePoseControllerNodelet /mobile_base_nodelet_manager">
-    <param name="spin_rate" value="30"/>
+    <param name="spin_rate" value="25"/>
     <param name="start_enabled" value="false"/>
     <param name="base_frame_name" value="$(arg base_frame)"/>
     <param name="v_min" value="0.01"/>
     <param name="v_max" value="0.10"/>
+    <param name="w_min" value="0.00"/>
+    <param name="w_max" value="0.60"/>
     <param name="k_1" value="1.0"/>
     <param name="k_2" value="10.0"/>
     <param name="beta" value="0.1"/>
     <param name="lambda" value="1.0"/>
-    <param name="dist_thres" value="0.03"/>
+    <param name="dist_thres" value="0.02"/>
     <param name="orient_thres" value="0.06"/>
     <param name="dist_eps" value="0.004"/>
     <param name="orient_eps" value="0.012"/>
-<!--    <remap from="diff_drive_pose_controller/command_velocity" to="pose_controller_velocity_smoother/raw_cmd_vel"/>-->
+    <!--<remap from="diff_drive_pose_controller/command_velocity" to="pose_controller_velocity_smoother/raw_cmd_vel"/>-->
     <remap from="diff_drive_pose_controller/command_velocity" to="$(arg cmd_vel_mux_input)"/>
     <remap from="diff_drive_pose_controller/enable"           to="ar_pair_approach/enable_approach_controller"/>
     <remap from="diff_drive_pose_controller/disable"          to="ar_pair_approach/disable_approach_controller"/>
