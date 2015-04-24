@@ -1,6 +1,6 @@
 <launch>
   <arg name="robot_name" default="$(optenv ROBOT_NAME young)"/>
-  <arg name="robot_type" default="waiterbot|turtlebot"/>
+  <arg name="robot_type" default="waiterbot"/>
 
   <arg name="base"       value="kobuki"/>
   <arg name="battery"    value="/sys/class/power_supply/BAT0"/>
