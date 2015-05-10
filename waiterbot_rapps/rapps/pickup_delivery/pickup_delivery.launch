@@ -1,0 +1,13 @@
+<launch>
+<!--  <include file="$(find simple_delivery_robot_ctrl)/launch/controller.launch"/>-->
+  <arg name="volume" default="80"/>
+  <include file="$(find simple_delivery_robot_ctrl)/launch/controller.launch">
+    <arg name="volume" value="$(arg volume)"/>
+  </include>
+  <node pkg="robot_pose_publisher" name="robot_pose_publisher" type="robot_pose_publisher">
+    <rosparam>
+      is_stamped: true
+      base_frame: base_footprint
+    </rosparam>
+  </node>
+</launch>

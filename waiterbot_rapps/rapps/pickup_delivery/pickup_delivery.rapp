@@ -1,0 +1,5 @@
+display: Pick deliverybot
+description: The waiter navigate around the some place to serve package. 
+compatibility: rocon:/waiterbot
+launch: pickup_delivery.launch
+parent_name: concert_common_rapps/pickup_delivery
