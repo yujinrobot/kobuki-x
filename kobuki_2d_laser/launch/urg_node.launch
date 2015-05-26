@@ -1,10 +1,10 @@
 <launch>
-  <arg name="frame_id"    default="base_scan"/>
+  <arg name="frame_id"    default="laser_scan"/>
 
   <node pkg="urg_node" name="urg_node" type="urg_node"> 
     <param name="frame_id"  value="$(arg frame_id)"/>
   </node>
 
-  <node pkg="tf" type="static_transform_publisher" name="link_to_scan" args="1 0 0 0 0 0 1 base_scan base_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="link_to_scan" args="-0.014 0 0.187 0 0 0 base_link $(arg frame_id) 100" />
 
 </launch>
