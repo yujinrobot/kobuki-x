@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <name>kobuki_2d_laser</name>
+  <version>0.0.0</version>
+  <description>The kobuki_2d_laser package</description>
+
+  <maintainer email="kobuki@todo.todo">kobuki</maintainer>
+
+  <license>BSD</license>
+
+  <!-- Url tags are optional, but mutiple are allowed, one per tag -->
+  <!-- Optional attribute type can be: website, bugtracker, or repository -->
+  <!-- Example: -->
+  <!-- <url type="website">http://wiki.ros.org/kobuki_2d_laser</url> -->
+
+  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>urg_node</build_depend>
+  <run_depend>urg_node</run_depend>
+
+  <export>
+  </export>
+</package>
