@@ -1,0 +1,6 @@
+display:          Teleop
+description:      Drive a kobuki with a touch joystick.
+compatibility:    rocon:/kobuki
+launch:           video_teleop.launch
+icon:             teleop_bubble_icon.png
+parent_name:      rocon_apps/video_teleop

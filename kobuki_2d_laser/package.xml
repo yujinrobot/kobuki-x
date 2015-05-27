@@ -21,5 +21,7 @@
   <run_depend>rocon_apps</run_depend>
 
   <export>
+    <rocon_app>rapps/video_teleop/video_teleop.rapp</rocon_app>
+    <rocon_app>rapps/make_a_map/make_a_map.rapp</rocon_app>
   </export>
 </package>

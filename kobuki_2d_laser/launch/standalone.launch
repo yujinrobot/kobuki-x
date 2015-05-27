@@ -1,0 +1,71 @@
+<launch>
+  <arg name="robot_name"    default="$(optenv ROBOT_NAME zach)"/>
+  <arg name="robot_type"    default="kobuki"/>
+  <arg name="battery"       default="/sys/class/power_supply/BAT0"/>
+
+  <include file="$(find kobuki_node)/launch/robot_with_tf.launch"/>
+
+  <!-- velocity commands multiplexer -->
+  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
+    <param name="yaml_cfg_file" value="$(find kobuki_2d_laser)/param/mux.yaml"/>
+    <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
+  </node>
+
+  <node pkg="laptop_battery_monitor" type="laptop_battery.py" name="kobuki_laptop_battery">
+        <param name="acpi_path" type="string" value="$(arg battery)" />
+  </node>
+
+  <!-- Rapp Manager --> 
+  <arg name="rapp_auto_installation"            default="false"  doc="automatically install rapps from the web (not typically used)"/> <!-- http://wiki.ros.org/rocon_app_manager/Tutorials/indigo/Automatic Rapp Installation -->
+  <arg name="rapp_auto_start"                   default=""       doc="pick an app to autostart, e.g. 'rocon_apps/talker'"/>
+  <arg name="rapp_package_whitelist"            default="[rocon_apps, kobuki_2d_laser]" doc="a list of catkin packages that provide rapps to be loaded by the app manager."/>
+  <arg name="rapp_package_blacklist"            default="[]" doc="a list of catkin packages to blacklist from providing rapps."/>
+  <arg name="robot_icon"                        default="kobuki_node/kobuki_icon.png"        doc="passed to user interfaces to socialise the turtlebot's appearance"/>
+  <arg name="rapp_verbose"                      default="true"   doc="show verbose output from running apps (aka roslaunch --screen)"/>
+
+  <!-- ***************************** Rocon Master Info ************************** -->
+  <arg name="robot_description"                 default="Kick-ass kobuki"/>
+
+  <!-- Capabilities --> 
+  <arg name="capabilities"                      default="false" doc="start and register an underlying capability server"/>
+
+  <!-- Interactions --> 
+  <arg name="interactions"      default="true"  doc="start an interactions manager"/>
+  <arg name="interactions_list" default="[kobuki_2d_laser/admin.interactions, kobuki_2d_laser/pairing.interactions]" doc="a list of filenames that provide interactions specifications."/>
+
+  <!-- Zeroconf -->
+  <arg name="zeroconf"                          default="true"              doc="publish the master information on zeroconf"/>
+  <arg name="zeroconf_name"                     default="$(arg robot_name)" doc="the name to identify the master on zeroconf"/>
+  <arg name="zeroconf_port"                     default="11311"             doc="port number of the ros master"/>
+
+  <!-- Rapp Manager -->
+  <include file="$(find rocon_app_manager)/launch/standalone.launch">
+
+    <!-- Rapp Manager --> 
+    <arg name="robot_name"                        value="$(arg robot_name)" />
+    <arg name="robot_type"                        value="$(arg robot_type)" />
+    <arg name="robot_icon"                        value="$(arg robot_icon)" />
+    <arg name="rapp_package_whitelist"            value="$(arg rapp_package_whitelist)" />
+    <arg name="rapp_package_blacklist"            value="$(arg rapp_package_blacklist)" />
+    <arg name="auto_start_rapp"                   value="$(arg rapp_auto_start)" />
+    <arg name="screen"                            value="$(arg rapp_verbose)" />
+    <arg name="auto_rapp_installation"            value="$(arg rapp_auto_installation)" />
+
+    <!-- Rocon Master Info -->
+    <arg name="robot_description"                 value="$(arg robot_description)" />
+
+    <!-- Capabilities --> 
+    <arg name="capabilities"                      value="$(arg capabilities)" />
+
+    <!-- Interactions --> 
+    <arg name="interactions"                      value="$(arg interactions)"/>
+    <arg name="interactions_list"                 value="$(arg interactions_list)"/>
+
+    <!-- Zeroconf --> 
+    <arg name="zeroconf"                          value="$(arg zeroconf)"/>
+    <arg name="zeroconf_name"                     value="$(arg zeroconf_name)"/>
+    <arg name="zeroconf_port"                     value="$(arg zeroconf_port)"/>
+
+  </include>
+
+</launch>

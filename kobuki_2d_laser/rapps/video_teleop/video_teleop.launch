@@ -1,0 +1,26 @@
+<launch>
+  <!--  
+    Right now, the android app is hard coded to look for /cmd_vel as the input
+    topic.
+   -->
+  <arg name="application_namespace"/>
+  <arg name="simulation" default="false"/>
+  <group unless="$(arg simulation)">
+    <node pkg="nodelet" type="nodelet" name="teleop_velocity_smoother" args="load yocs_velocity_smoother/VelocitySmootherNodelet /mobile_base_nodelet_manager">
+      <rosparam file="$(find turtlebot_bringup)/param/defaults/smoother.yaml" command="load"/>
+      <remap from="teleop_velocity_smoother/raw_cmd_vel" to="/teleop/cmd_vel"/>
+      <remap from="teleop_velocity_smoother/smooth_cmd_vel" to="/cmd_vel_mux/input/teleop"/>
+
+      <!-- Robot velocity feedbacks; use the one configured as base default -->
+      <remap from="teleop_velocity_smoother/odometry" to="/odom"/>
+      <remap from="teleop_velocity_smoother/robot_cmd_vel" to="/mobile_base/commands/velocity"/>
+    </node>
+
+    <param name="camera/rgb/image_rect_color/compressed/jpeg_quality" value="22"/>
+
+  </group>
+
+  <!-- for gazebo simulation -->
+  <group if="$(arg simulation)">
+  </group>
+</launch>
