@@ -31,7 +31,7 @@
     <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
       <arg name="odom_topic" value="/odom" />
     </include>
-    <include file="$(find turtlebot_navigation)/launch/includes/gmapping.launch.xml">
+    <include file="$(find kobuki_2d_laser)/launch/includes/gmapping.launch.xml">
     </include>
     <node pkg="robot_pose_publisher" name="robot_pose_publisher" type="robot_pose_publisher">
       <param name="is_stamped" value="true"/>
