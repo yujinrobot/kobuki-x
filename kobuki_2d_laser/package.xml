@@ -18,6 +18,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>urg_node</build_depend>
   <run_depend>urg_node</run_depend>
+  <run_depend>rocon_apps</run_depend>
 
   <export>
   </export>

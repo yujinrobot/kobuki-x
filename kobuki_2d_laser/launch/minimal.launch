@@ -1,0 +1,17 @@
+<launch>
+  <arg name="robot_name"    default="$(optenv ROBOT_NAME zach)"/>
+  <arg name="robot_type"    default="kobuki"/>
+  <arg name="battery"       default="/sys/class/power_supply/BAT0"/>
+
+  <include file="$(find kobuki_node)/launch/robot_with_tf.launch"/>
+
+  <!-- velocity commands multiplexer -->
+  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
+    <param name="yaml_cfg_file" value="$(find kobuki_2d_laser)/param/mux.yaml"/>
+    <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
+  </node>
+
+  <node pkg="laptop_battery_monitor" type="laptop_battery.py" name="kobuki_laptop_battery">
+        <param name="acpi_path" type="string" value="$(arg battery)" />
+  </node>
+</launch>
