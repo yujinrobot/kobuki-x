@@ -1,0 +1,8 @@
+<launch>
+  <arg name="concert_whitelist"     default="$(optenv CONCERT_WHITELIST [])"/>
+  <arg name="capabilities"          default="false"/>
+  <include file="$(find turtlebot_bringup)/launch/concert_client.launch">
+    <arg name="concert_whitelist" value="$(arg concert_whitelist)"/>
+    <arg name="capabilities"      value="$(arg capabilities)"/>
+  </include>
+</launch>
