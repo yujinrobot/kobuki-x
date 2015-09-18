@@ -1,0 +1,5 @@
+display: P2P deliverybot
+description: The waiter navigate around the some place to serve package. 
+compatibility: rocon:/waiterbot
+launch: p2p_delivery.launch
+parent_name: concert_demo_rapps/p2p_delivery
