@@ -50,8 +50,7 @@
     <rocon_app>rapps/3dsensor/3dsensor.rapp</rocon_app>
 
     <rocon_app>rapps/pickup_delivery/pickup_delivery.rapp</rocon_app>
-
-
+    <rocon_app>rapps/p2p_delivery/p2p_delivery.rapp</rocon_app>
   </export>
 
 </package>
